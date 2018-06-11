@@ -1,4 +1,4 @@
-#Pure C++ Implementation
+# Pure C++ Implementation
 This directory contains codes related to __PURE C++ IMPLEMENTATION__, __LINEAR ALGEBRA C++__.
 
 
@@ -9,8 +9,8 @@ and optimization for speed and memory footprint. _class implementation could be 
 * __model0x.cpp:__
 bla blah blah blah!
 
-#Model01 Details
-##Task List
+# Model01 Details
+## Task List
 - [ ] Managing dynamic memory management
 - [ ] Trying more optimized approach for computing variance
 - [ ] Reuse median and/or variance within another methods when possible(like median within variance)
@@ -19,7 +19,7 @@ bla blah blah blah!
 - [ ] Implement adjustable batch offset and batch size
 - [ ] Dynamic job assignment on different threads(using dedicated library)
 
-##Methods
+## Methods
 Method Name | Description | is a BatchOP | Implemented | Notes
 ----------- | ----------- | ------------ | ------------ | -----
 Pairwise_Distance |  | Yes | Yes | -
