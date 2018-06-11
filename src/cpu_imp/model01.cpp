@@ -1779,6 +1779,7 @@ template<typename T> int ModelArch::DumpMatrix(
                         int dim3,
                         int dim4,
                         string npy_dir){
+#ifdef DUMP_ENABLED
     if(rank==1){
         cnpy::npy_save<T>(npy_dir+npy_fname,&mat[0],{(long unsigned int)dim0},"w");
     }
@@ -1803,4 +1804,5 @@ template<typename T> int ModelArch::DumpMatrix(
                                                   (long unsigned int)dim3,
                                                   (long unsigned int)dim4},"w");
     }
+#endif
 }
