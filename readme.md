@@ -1,6 +1,6 @@
 # DeepPoint-V1 Project
 This repository contains the code base for pure C++, OpenCL, CUDA, LinearAlgebra Implementation
-of DGCNN official model.
+of official DGCNN model.
 
 ## Pure C++
 Related Directories:

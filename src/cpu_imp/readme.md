@@ -31,16 +31,16 @@ FullyConnected_Forward |  | Yes | Yes | -
 ReLU |  | Yes | Yes | -
 TransformNet |  | Yes | Yes | -
 LA_transpose |  | Yes | Yes | -
-LA_MatMul |  | ? | Yes | -
+LA_MatMul |  | Yes | Yes | -
 LA_Square |  | Yes | Yes | -
-LA_Sum |  | ? | Yes | -
-LA_Sum4D |  | ? | Yes | -
-LA_Mean |  | ? | Yes | -
-LA_Variance |  | ? | Yes | -
-LA_ADD |  | ? | Yes | -
-LA_SUB |  | ? | Yes | -
+LA_Sum |  | No | Yes | -
+LA_Sum4D |  | No | Yes | -
+LA_Mean |  | No | Yes | -
+LA_Variance |  | No | Yes | -
+LA_ADD |  | No | Yes | -
+LA_SUB |  | No | Yes | -
 LA_Concat2 |  | No | Yes | -
-LA_ReduceMax |  | ? | Yes | -
+LA_ReduceMax |  | No | Yes | -
 LA_Tile | | No | No | -
 
 
