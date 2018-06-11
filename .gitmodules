@@ -1,0 +1,6 @@
+[submodule "submodules/cnpy"]
+	path = submodules/cnpy
+	url = https://github.com/rogersce/cnpy.git
+[submodule "submodules/viennacl-dev"]
+	path = submodules/viennacl-dev
+	url = https://github.com/viennacl/viennacl-dev.git
