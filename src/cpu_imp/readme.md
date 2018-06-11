@@ -11,7 +11,7 @@ bla blah blah blah!
 
 # Model01 Details
 ## Task List
-- [ ] Managing dynamic memory management
+- [ X ] Managing dynamic memory
 - [ ] Trying more optimized approach for computing variance
 - [ ] Reuse median and/or variance within another methods when possible(like median within variance)
 - [ ] Manage file names for matrix dumps
