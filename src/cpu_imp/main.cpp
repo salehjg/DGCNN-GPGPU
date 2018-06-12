@@ -40,7 +40,7 @@ void task2(string msg)
 {
     cout << "task1 says: " << msg;
 
-    ModelArch model(20,1024,20);
+    ModelArch model(5,1024,20);
     model.SetModelInput_data("/home/saleh/00_repos/tensorflow_repo/"
                              "00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/"
                              "data/dataset/pcl_100.npy");

@@ -93,9 +93,11 @@ float* ModelArch::TransformNet(
                 "transform_net1.tconv1.bn.transform_net1.tconv1.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B, N, K, ConvOutputLastDim);
+        free(net1);
         DumpMatrix<DType>("A02_tnet_bn.npy",4,net2,B,N,K,ConvOutputLastDim,0);
 
         float *net3 = ReLU(net2, B * N * K * ConvOutputLastDim);
+        free(net2);
         DumpMatrix<DType>("A03_tnet_relu.npy",4,net3,B,N,K,ConvOutputLastDim,0);
 
         //free(net1);
@@ -122,9 +124,11 @@ float* ModelArch::TransformNet(
                 "transform_net1.tconv2.bn.transform_net1.tconv2.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B, N, K, ConvOutputLastDim);
+        free(net1);
         DumpMatrix<DType>("A05_tnet_bn.npy",4,net2,B,N,K,ConvOutputLastDim,0);
 
         float *net3 = ReLU(net2, B * N * K * ConvOutputLastDim);
+        free(net2);
         DumpMatrix<DType>("A06_tnet_relu.npy",4,net3,B,N,K,ConvOutputLastDim,0);
 
         //free(net1);
@@ -161,10 +165,12 @@ float* ModelArch::TransformNet(
                 "transform_net1.tconv3.bn.transform_net1.tconv3.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B, N, 1, ConvOutputLastDim);
+        free(net1);
         DumpMatrix<DType>("A09_tnet_bn.npy",4,net2,B,N,1,ConvOutputLastDim,0);
 
         //ATTENTION: DIM2 (zero based index) of input is 1, NOT 'K'
         float *net3 = ReLU(net2, B * N * 1 * ConvOutputLastDim);
+        free(net2);
         DumpMatrix<DType>("A10_tnet_relu.npy",4,net3,B,N,1,ConvOutputLastDim,0);
 
         //free(net1);
@@ -201,9 +207,11 @@ float* ModelArch::TransformNet(
                 "transform_net1.tfc1.bn.transform_net1.tfc1.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 2,
                 B, (1 * 1 * ConvOutputLastDim), 0, 0);
+        free(net1);
         DumpMatrix<DType>("A13_tnet_bn.npy",2,net2,B,512,0,0,0);
 
         float *net3 = ReLU(net2, B * 1 * 1 * ConvOutputLastDim);
+        free(net2);
         DumpMatrix<DType>("A13_tnet_relu.npy",2,net3,B,512,0,0,0);
 
         //free(net1);
@@ -234,9 +242,11 @@ float* ModelArch::TransformNet(
                 "transform_net1.tfc2.bn.transform_net1.tfc2.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 2,
                 B, (1 * 1 * ConvOutputLastDim), 0, 0);
+        free(net1);
         DumpMatrix<DType>("A15_tnet_bn.npy",2,net2,B,256,0,0,0);
 
         float *net3 = ReLU(net2, B * 1 * 1 * ConvOutputLastDim);
+        free(net2);
         DumpMatrix<DType>("A16_tnet_relu.npy",2,net3,B,256,0,0,0);
 
         //free(net1);
@@ -324,8 +334,11 @@ float ModelArch::execute() {
         int *nn_idx = KNN(adj_matrix);
         DumpMatrix<int>("B02_tnet_nn_idx.npy",3,nn_idx,B,N,K,0,0);
         float *edge_features = Get_Edge_Features(net_BxNx3, nn_idx, InputLastDim);
+        free(nn_idx);
+        free(adj_matrix);
         DumpMatrix<float >("B03_tnet_edgef.npy",4,edge_features,B,N,K,6,0);
         float *transform =TransformNet(edge_features,3);
+        free(edge_features);
         DumpMatrix<DType>("B04_tnet_3x3.npy",3,transform,B,3,3,0,0); //Confirmed
 
         net = LA_MatMul(
@@ -336,6 +349,7 @@ float ModelArch::execute() {
                 N,3,    // pcl's shape
                 3,3);   // transform's shape
 
+        free(transform);
         DumpMatrix<DType>("C01_pcl.npy",3,net,B,N,3,0,0);
     }
 
@@ -351,6 +365,8 @@ float ModelArch::execute() {
                 net,
                 nn_idx,
                 InputLastDim);
+        free(nn_idx);
+        free(adj_matrix);
 
         float *net1 = Conv2D(
                 edge_features,
@@ -358,6 +374,7 @@ float ModelArch::execute() {
                 "dgcnn1.weights.npy",
                 "dgcnn1.biases.npy",
                 &ConvOutputLastDim);
+        free(edge_features);
         DumpMatrix<DType>("C02_dg1_conv.npy",4,net1,B,N,K,ConvOutputLastDim,0); //CONFIRMED
 
         float *net2 = Batchnorm_Forward(
@@ -368,10 +385,15 @@ float ModelArch::execute() {
                 "dgcnn1.bn.dgcnn1.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B,N,K,ConvOutputLastDim);
+        free(net1);
         DumpMatrix<DType>("C03_dg1_bn.npy",4,net2,B,N,K,ConvOutputLastDim,0); //CONFIRMED
 
         float *net3 = ReLU(net2,B*N*K*ConvOutputLastDim);
+        free(net2);
+
         float *net4 = LA_ReduceMax(net3,2,4,B,N,K,ConvOutputLastDim);
+        free(net3);
+
         DumpMatrix<DType>("B05_dg1_pool.npy",3,net4,B,N,ConvOutputLastDim,0,0);//CONFIRMED
 
         //free(adj_matrix);
@@ -392,6 +414,8 @@ float ModelArch::execute() {
         float *adj_matrix = Pairwise_Distance(net,ConvOutputLastDim);
         int *nn_idx = KNN(adj_matrix);
         float *edge_features = Get_Edge_Features(net, nn_idx, ConvOutputLastDim);
+        free(nn_idx);
+        free(adj_matrix);
 
         float *net1 = Conv2D(
                 edge_features,
@@ -399,6 +423,7 @@ float ModelArch::execute() {
                 "dgcnn2.weights.npy",
                 "dgcnn2.biases.npy",
                 &ConvOutputLastDim);
+        free(edge_features);
 
         float *net2 = Batchnorm_Forward(
                 net1,
@@ -408,9 +433,14 @@ float ModelArch::execute() {
                 "dgcnn2.bn.dgcnn2.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B,N,K,ConvOutputLastDim);
+        free(net1);
 
         float *net3 = ReLU(net2,B*N*K*ConvOutputLastDim);
+        free(net2);
+
         float *net4 = LA_ReduceMax(net3,2,4,B,N,K,ConvOutputLastDim);
+        free(net3);
+
         DumpMatrix<DType>("B06_dg2_pool.npy",3,net4,B,N,ConvOutputLastDim,0,0);//CONFIRMED
         //free(adj_matrix);
         //free(nn_idx);
@@ -430,6 +460,9 @@ float ModelArch::execute() {
         float *adj_matrix = Pairwise_Distance(net,ConvOutputLastDim);
         int *nn_idx = KNN(adj_matrix);
         float *edge_features = Get_Edge_Features(net, nn_idx, ConvOutputLastDim);
+        free(adj_matrix);
+        free(nn_idx);
+
 
         float *net1 = Conv2D(
                 edge_features,
@@ -437,6 +470,7 @@ float ModelArch::execute() {
                 "dgcnn3.weights.npy",
                 "dgcnn3.biases.npy",
                 &ConvOutputLastDim);
+        free(edge_features);
 
         float *net2 = Batchnorm_Forward(
                 net1,
@@ -446,9 +480,13 @@ float ModelArch::execute() {
                 "dgcnn3.bn.dgcnn3.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B,N,K,ConvOutputLastDim);
+        free(net1);
 
         float *net3 = ReLU(net2,B*N*K*ConvOutputLastDim);
+        free(net2);
+
         float *net4 = LA_ReduceMax(net3,2,4,B,N,K,ConvOutputLastDim);
+        free(net3);
         DumpMatrix<DType>("B07_dg3_pool.npy",3,net4,B,N,ConvOutputLastDim,0,0);//CONFIRMED
         //free(adj_matrix);
         //free(nn_idx);
@@ -468,6 +506,8 @@ float ModelArch::execute() {
         float *adj_matrix = Pairwise_Distance(net,ConvOutputLastDim);
         int *nn_idx = KNN(adj_matrix);
         float *edge_features = Get_Edge_Features(net, nn_idx, ConvOutputLastDim);
+        free(adj_matrix);
+        free(nn_idx);
 
         float *net1 = Conv2D(
                 edge_features,
@@ -475,6 +515,8 @@ float ModelArch::execute() {
                 "dgcnn4.weights.npy",
                 "dgcnn4.biases.npy",
                 &ConvOutputLastDim);
+        free(edge_features);
+
 
         float *net2 = Batchnorm_Forward(
                 net1,
@@ -484,9 +526,14 @@ float ModelArch::execute() {
                 "dgcnn4.bn.dgcnn4.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B,N,K,ConvOutputLastDim);
+        free(net1);
 
         float *net3 = ReLU(net2,B*N*K*ConvOutputLastDim);
+        free(net2);
+
         float *net4 = LA_ReduceMax(net3,2,4,B,N,K,ConvOutputLastDim);
+        free(net3);
+
         DumpMatrix<DType>("B08_dg4_pool.npy",3,net4,B,N,ConvOutputLastDim,0,0);//CONFIRMED
         //free(adj_matrix);
         //free(nn_idx);
@@ -510,6 +557,8 @@ float ModelArch::execute() {
                 3,
                 B,N,1,dim_endpoint_0,
                 B,N,1,dim_endpoint_1);
+        free(endpoint_0);
+        free(endpoint_1);
 
         float *concatB = LA_Concat2(
                 concatA,
@@ -518,6 +567,8 @@ float ModelArch::execute() {
                 3,
                 B,N,1,dim_endpoint_0+dim_endpoint_1,
                 B,N,1,dim_endpoint_2);
+        free(endpoint_2);
+        free(concatA);
 
         float *concatC = LA_Concat2(
                 concatB,
@@ -526,6 +577,8 @@ float ModelArch::execute() {
                 3,
                 B,N,1,dim_endpoint_0+dim_endpoint_1+dim_endpoint_2,
                 B,N,1,dim_endpoint_3);
+        free(concatB);
+        free(endpoint_3);
 
         //COMFIRMED
         DumpMatrix<DType>("B09_agg_concat.npy",4,concatC,B,N,1,dim_endpoint_0+dim_endpoint_1+dim_endpoint_2+dim_endpoint_3,0);
@@ -542,6 +595,7 @@ float ModelArch::execute() {
                 "agg.biases.npy",
                 &ConvOutputLastDim,
                 1);
+        free(concatC);
 
         DumpMatrix<DType>("B10_agg_conv.npy",4,net1,B,N,1,ConvOutputLastDim,0);//CONFIRMED
 
@@ -553,11 +607,14 @@ float ModelArch::execute() {
                 "agg.bn.agg.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 4,
                 B,N,1,ConvOutputLastDim);
+        free(net1);
         DumpMatrix<DType>("B11_agg_bn.npy",4,net2,B,N,1,ConvOutputLastDim,0);//CONFIRMED
 
         float *net3 = ReLU(net2,B*N*1*ConvOutputLastDim);
+        free(net2);
 
         float *net4 = LA_ReduceMax(net3,1,4,B,N,1,ConvOutputLastDim);
+        free(net3);
         DumpMatrix<DType>("B12_agg_pool.npy",4,net4,B,1,1,ConvOutputLastDim,0);//CONFIRMED
 
         //free(concatC);
@@ -595,10 +652,12 @@ float ModelArch::execute() {
                 "fc1.bn.fc1.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 2,
                 B, (1 * 1 * ConvOutputLastDim), 0, 0);
+        free(net1);
 
         DumpMatrix<DType>("B14_fc.npy",2,net2,B,ConvOutputLastDim,0,0,0);
 
         float *net3 = ReLU(net2, B * 1 * 1 * ConvOutputLastDim);
+        free(net2);
 
         //free(net1);
         //free(net2);
@@ -629,10 +688,12 @@ float ModelArch::execute() {
                 "fc2.bn.fc2.bn.moments.Squeeze_1.ExponentialMovingAverage.npy",
                 2,
                 B, (1 * 1 * ConvOutputLastDim), 0, 0);
+        free(net1);
 
         DumpMatrix<DType>("B16_fc.npy",2,net2,B,ConvOutputLastDim,0,0,0);//CONFIRMED
 
         float *net3 = ReLU(net2, B * 1 * 1 * ConvOutputLastDim);
+        free(net2);
 
         //free(net1);
         //free(net2);
@@ -689,6 +750,8 @@ float ModelArch::execute() {
                 correct[b]=false;
             }
         }
+
+        free(a1);
     }
     //----------------------------------------------------------------------------------------
     // compute accuracy using correct array.
@@ -752,12 +815,12 @@ float* ModelArch::Pairwise_Distance(float* input_BxNxD,int input_last_dim){
 
 
 
-    //free(point_cloud_transpose);
-    //free(point_cloud_inner);
-    //free(point_cloud_inner2);
-    //free(point_cloud_inner2p2);
-    //free(point_cloud_sum);
-    //free(point_cloud_sum_transpose);
+    free(point_cloud_transpose);
+    free(point_cloud_inner);
+    free(point_cloud_inner2);
+    free(point_cloud_inner2p2);
+    free(point_cloud_sum);
+    free(point_cloud_sum_transpose);
 
 
     return rslt;
@@ -842,6 +905,10 @@ float* ModelArch::Get_Edge_Features(float* input_BxNxD,
     //concatenate centrals and features (BxNxKxD) and (BxNxKxD)
     float* edge_feature=LA_Concat2(point_cloud_central,features,4,3,B,N,K,D,B,N,K,D);
     //DumpMatrix<DType>("tmp4.npy",4,edge_feature,B,N,K,2*D,0);
+
+    free(point_cloud_central);
+    free(point_cloud_neighbors);
+    free(features);
 
     return edge_feature;
 }
@@ -969,6 +1036,16 @@ float* ModelArch::Batchnorm_Forward(
                 }
             }
         }
+        free(mu);
+        free(var);
+        free(X_norm);
+        free(final_ave);
+        free(final_var);
+        free(update_delta_ave);
+        free(update_delta_ave2);
+        free(update_delta_var);
+        free(update_delta_var2);
+
         return rslt;
     }
     /*
@@ -1033,6 +1110,16 @@ float* ModelArch::Batchnorm_Forward(
                 rslt[indxS1] = gamma_ptr[d1] * X_norm[indxS1] + beta_ptr[d1];
             }
         }
+
+        free(final_ave);
+        free(final_var);
+        free(X_norm);
+        free(update_delta_ave);
+        free(update_delta_ave2);
+        free(update_delta_var);
+        free(update_delta_var2);
+        free(mu);
+        free(var);
 
         return rslt;
     }
@@ -1348,7 +1435,7 @@ float* ModelArch::LA_Mean(
             for(int d3=0;d3<dim3;d3++){
                 mean[d3] = (sum[d3])/(float)(dim0*dim1*dim2);
             }
-
+            free(sum);
             return mean;
         }
         cout<<"LA_MEAN: ERROR_UNDEFINED_AXES_COMB"<<endl;
@@ -1360,6 +1447,7 @@ float* ModelArch::LA_Mean(
             float* sum = LA_Sum(mat,false,true,false,1,dim0,dim1); //result is of shape dim1
             float *mean ;
             mean = LA_MatMul(sum,(1.0f/dim0),1,3,1,dim1);
+            free(sum);
             return mean;
         }
         cout<<"LA_MEAN: ERROR_UNDEFINED_AXES_COMB"<<endl;
@@ -1370,6 +1458,7 @@ float* ModelArch::LA_Mean(
         float* sum = LA_Sum(mat,true,true,true,1,1,dim0);
         float *mean = (float*)malloc(sizeof(float) * 1);
         *mean = (*sum)/(float)(dim0);
+        free(sum);
         return mean;
     }
     cout<<"LA_MEAN: ERROR_UNDEFINED_MATRIX_RANK"<<endl;
@@ -1426,8 +1515,8 @@ float* ModelArch::LA_Variance(
 
             float* variance_final = LA_MatMul(variance,(float)(1.0f/(dim0*dim1*dim2)),1,3,1,dim3);
 
-            //free(variance);
-            //free(mean);
+            free(variance);
+            free(mean);
 
             return variance_final;
         }
@@ -1464,8 +1553,8 @@ float* ModelArch::LA_Variance(
 
             float* variance_final = LA_MatMul(variance,(float)(1.0f/dim0),1,3,1,dim1);
 
-            //free(variance);
-            //free(mean);
+            free(variance);
+            free(mean);
 
             return variance_final;
         }
@@ -1779,6 +1868,7 @@ template<typename T> int ModelArch::DumpMatrix(
                         int dim3,
                         int dim4,
                         string npy_dir){
+#ifdef DUMP_ENABLED
     if(rank==1){
         cnpy::npy_save<T>(npy_dir+npy_fname,&mat[0],{(long unsigned int)dim0},"w");
     }
@@ -1803,4 +1893,5 @@ template<typename T> int ModelArch::DumpMatrix(
                                                   (long unsigned int)dim3,
                                                   (long unsigned int)dim4},"w");
     }
+#endif
 }

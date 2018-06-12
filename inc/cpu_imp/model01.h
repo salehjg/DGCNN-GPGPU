@@ -8,6 +8,10 @@
 #include <string>
 using namespace std;
 
+//#define DUMP_ENABLED
+//#undef DUMP_ENABLED
+#undef DUMP_ENABLED
+
 struct ModelInfo{
     string Version="";
     string DesignNotes="";
