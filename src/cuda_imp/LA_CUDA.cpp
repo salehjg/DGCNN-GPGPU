@@ -28,6 +28,20 @@ LA_CUDA::LA_CUDA(){
 
 }
 
+
+/// \param handle
+/// \param matA input left, column-major
+/// \param matB input right, column-major
+/// \param matR output will be set to this matrix as " alpha * matA x matB + beta*matR "
+/// \param batch_size
+/// \param m output's dim(matR)
+/// \param n output's dim(matR)
+/// \param k
+/// \param alpha AxB's coef
+/// \param beta matR's coef
+/// \param transposeA if matA is row-major,this should be true, otherwise should be false
+/// \param transposeB if matB is row-major,this should be true, otherwise should be false
+/// \return
 int LA_CUDA::MatMul(
         cublasHandle_t handle,
         float** matA, // "batch_size" pointers of mxk col-major matrix on device mem ptr.
@@ -36,13 +50,15 @@ int LA_CUDA::MatMul(
         int batch_size,
         int m,
         int n,
-        int k)
+        int k,
+        float alpha=1.0f,
+        float beta=0.0f,
+        bool transposeA=false,
+        bool transposeB=false)
 {  //cublasSgemm : C = alpha * OP(A) * OP(B) + beta * C
 
     cublasStatus_t stat ;
     cudaError_t cuda_stat;
-
-    const float alpha = 1.0f, beta = 0.0f;
     int ldA,ldB,ldR;
     ldA = m; //leading dim of col-major 2d matrix which is of shape mxk
     ldB = k; //leading dim of col-major 2d matrix which is of shape kxn
@@ -60,8 +76,8 @@ int LA_CUDA::MatMul(
     stat =
     cublasSgemmBatched(
             handle,
-            CUBLAS_OP_N, // means that we are feeding column-major matrices into cuBLAS.
-            CUBLAS_OP_N,
+            transposeA?CUBLAS_OP_T:CUBLAS_OP_N, // means that we are feeding column-major matrices into cuBLAS.
+            transposeB?CUBLAS_OP_T:CUBLAS_OP_N,
             m,n,k,
             &alpha,
             (const float **)matA,

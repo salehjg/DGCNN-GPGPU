@@ -22,7 +22,11 @@ public:
             int batch_size,
             int m,
             int n,
-            int k);
+            int k,
+            float alpha,
+            float beta,
+            bool transposeA,
+            bool transposeB);
 
     void GPU_Multi(float **M, float **N, float **P, size_t pr, size_t pc, size_t mc, size_t num_mat, float alpha, float beta);
 

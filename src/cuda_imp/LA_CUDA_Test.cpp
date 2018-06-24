@@ -33,6 +33,59 @@ void PrintMatrix(string mname, float* mat, int h, int w){
     cout<<"==========================================================================\n";
 }
 
+float** ConvertHost1D_to_Device2D(
+        float* input_batched_1d,
+        int batchsize,
+        int dim0,
+        int dim1){
+    cout<<"converting ( host batched array of shape 1D float* ) to ( device batched array of shape 2D float** )"<<endl;
+    int B = batchsize;
+    cudaError_t cuda_stat;
+    int M = dim0;
+    int K = dim1;
+    //matrices on host memory are ALWAYS row-major, but on device(gpu) are column-major!
+    for(int b=0;b<B;b++)
+    {
+        int rows = M;
+        int cols = K;
+        for (int row = 0; row < rows; row++) { // height
+            for (int col = 0; col < cols; col++) { //width
+                input_batched_1d[b*rows*cols+ row * cols + col] = (float)(row * cols + col);
+            }
+        }
+    }
+
+
+    //------------------------------------------------------------------------------------------------------------------
+    //3. copy matrices into device(gpu) memory
+    float** matA_ptr_device;
+    float** matA_ptr_host = new float*[B];
+    float* matA_device;
+
+
+    //create device side pointer list
+    cuda_stat = cudaMalloc((void**)&matA_ptr_device, B*sizeof(float *));
+    assert(cuda_stat==cudaSuccess);
+    cudaCheckErrors("ERROR1");
+
+    //assign pointers in list to respective locations of contiguous device memory buffer.
+    cuda_stat = cudaMalloc((void**)&matA_device, B*M*K*sizeof(float));
+    assert(cuda_stat==cudaSuccess);
+    cudaCheckErrors("ERROR2");
+
+    //copy cpu batched buffers to gpu batched buffers
+    cuda_stat =cudaMemcpy(matA_device,input_batched_1d,B*M*K*sizeof(float),cudaMemcpyHostToDevice);
+    assert(cuda_stat==cudaSuccess);
+    cudaCheckErrors("ERROR3");
+
+    for(int b=0;b<B;b++){
+        matA_ptr_host[b] = matA_device + b*M*K;
+    }
+
+    cudaMemcpy(matA_ptr_device, matA_ptr_host, B*sizeof(float *), cudaMemcpyHostToDevice);
+    cudaCheckErrors("ERROR4");
+}
+
 void Test_LA_MatMul(int mode){
     /* Testing Steps:
      * 1. create a cublas handle
@@ -153,7 +206,7 @@ void Test_LA_MatMul(int mode){
     //------------------------------------------------------------------------------------------------------------------
     //4. feed them into LinearAlgebra method under test
     LA_CUDA pLA;
-    pLA.MatMul(myhandle,matA_ptr_device,matB_ptr_device,matR_ptr_device,B,M,N,K);
+    pLA.MatMul(myhandle,matA_ptr_device,matB_ptr_device,matR_ptr_device,B,M,N,K,1.0f,0.0f,true,true);
     //pLA.GPU_Multi(matA,matB,matR,M,N,K,B,1.0f,0.0f);
     //------------------------------------------------------------------------------------------------------------------
     //5. copy resulted matrix back into host(cpu) memory
