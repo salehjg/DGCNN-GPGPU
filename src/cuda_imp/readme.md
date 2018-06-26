@@ -9,8 +9,9 @@ bla blah blah blah!
 
 # Model01 Details
 ## Task List
-- [ ] 
-- [ ] 
+- [ ] Implement int32 Tensor Class
+- [ ] Implement int32 CudaMemHelper Class
+
 
 ## Methods
 Method Name | Description | is a BatchOP | Implemented(GPU) | Notes
