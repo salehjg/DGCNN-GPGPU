@@ -12,7 +12,7 @@ bla blah blah blah!
 # Model01 Details
 ## Task List
 - [x] Managing dynamic memory
-- [ ] Implement adjustable batch offset and batch size
+- [x] Implement adjustable batch offset and batch size
 - [ ] Implement new type for tensor with shape details
 - [ ] Trying more optimized approach for computing variance
 - [ ] Reuse median and/or variance within another methods when possible(like median within variance)

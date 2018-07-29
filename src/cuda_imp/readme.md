@@ -24,15 +24,15 @@ Batchnorm_Forward |  | No |  | -
 FullyConnected_Forward |  | Yes |  | -
 ReLU |  | Yes |  | -
 TransformNet |  | Yes |  | -
-LA_transpose |  | Yes |  | -
-LA_MatMul |  | Yes | Yes | -
-LA_Square |  | Yes |  | -
+LA_transpose |  | Yes |  | GEMM
+LA_MatMul |  | Yes | Yes | GEMM
+LA_Square |  | Yes |  | GEMM
 LA_Sum |  | No |  | -
 LA_Sum4D |  | No |  | -
 LA_Mean |  | No |  | -
 LA_Variance |  | No |  | -
-LA_ADD |  | No |  | -
-LA_SUB |  | No |  | -
+LA_ADD |  | No |  | GEMM
+LA_SUB |  | No |  | GEMM
 LA_Concat2 |  | No |  | -
 LA_ReduceMax |  | No |  | -
 LA_Tile | | No | No | -

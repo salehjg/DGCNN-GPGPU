@@ -6,6 +6,7 @@
 #define DEEPPOINTV1_MODEL01_H
 
 #include <string>
+#include <sys/time.h>
 using namespace std;
 
 //#define DUMP_ENABLED
@@ -20,12 +21,20 @@ struct ModelInfo{
     string Date="";
 };
 
+inline double seconds()
+{
+    struct timeval tp;
+    struct timezone tzp;
+    int i = gettimeofday(&tp, &tzp);
+    return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
+}
+
 class ModelArch {
 
 
 public:
     typedef float DType;
-    ModelArch(int batchsize, int pointcount, int knn_k);
+    ModelArch(int dataset_offset, int batchsize, int pointcount, int knn_k);
     ModelInfo   GetModelInfo();
     void        SetModelInput_data(string npy_pcl);
     void        SetModelInput_labels(string npy_labels);
@@ -87,6 +96,7 @@ private:
     int B=-1;
     int N=-1;
     int K=-1;
+    int DB_OFFSET=-1;
     map<string,float*> weights_map;
     map<string, vector<size_t> > weightsshape_map;
     float* input_pcl_BxNxD;

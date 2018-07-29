@@ -1,2 +1,2 @@
 subdirs(cpu_imp
-        ocl_imp)
+        cuda_imp)

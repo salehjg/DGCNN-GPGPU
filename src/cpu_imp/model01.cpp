@@ -11,7 +11,8 @@
 #include <string>
 
 
-ModelArch::ModelArch(int batchsize, int pointcount, int knn_k) {
+ModelArch::ModelArch(int dataset_offset, int batchsize, int pointcount, int knn_k) {
+    DB_OFFSET = dataset_offset;
     B = batchsize;
     N = pointcount;
     K = knn_k;
@@ -31,6 +32,7 @@ ModelInfo ModelArch::GetModelInfo() {
 void ModelArch::SetModelInput_data(string npy_pcl) {
     _npy_pcl = cnpy::npy_load(npy_pcl);
     input_pcl_BxNxD = _npy_pcl.data<float>();
+    input_pcl_BxNxD += DB_OFFSET*N*3;
     //B = (int)(_npy_pcl.shape[0]);
     N = (int)(_npy_pcl.shape[1]);
 
@@ -39,6 +41,7 @@ void ModelArch::SetModelInput_data(string npy_pcl) {
 void ModelArch::SetModelInput_labels(string npy_labels) {
     _npy_labels = cnpy::npy_load(npy_labels);
     input_labels_B = _npy_labels.data<unsigned char>();
+    input_labels_B += DB_OFFSET;
     //if(B == -1)
     //    B = batch_size;
     //else

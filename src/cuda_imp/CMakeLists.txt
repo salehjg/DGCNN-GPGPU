@@ -1,10 +1,12 @@
+subdirs(kernel_tests)
+
 SET(CUDA_INCLUDE_DIRS /opt/cuda/include)
 SET(CUDA_LIBRARIES cudart cublas)
 SET(CUDA_LIBRARY_DIRS /opt/cuda/lib64)
 
 include_directories(${PROJECT_SOURCE_DIR}/inc/cuda_imp ${CUDA_INCLUDE_DIRS})
-
 set(SOURCE_FILES cublas_test.cpp)
+
 
 link_directories(${PROJECT_SOURCE_DIR}/submodules/cnpy ${CUDA_LIBRARY_DIRS})
 
