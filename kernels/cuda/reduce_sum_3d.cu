@@ -239,6 +239,7 @@ __global__ void kernel_reduce_sum_3d_try03(
         const bool overaxis1,
         const bool overaxis2)
 {
+    // WANING : dim0 means dim2 and dim2 means dim0
     __shared__ float sm[BLOCK_SIZE];
     if (overaxis2 && !overaxis1 && !overaxis0)
     {
@@ -275,11 +276,13 @@ __global__ void kernel_reduce_sum_3d_try03(
         unsigned int idx = threadIdx.x+blockDim.x*blockIdx.x;
         if (idx < (dim0*dim2))
         {
-            unsigned int tidx = idx%dim0 + (idx/dim0)*(dim0*dim1);
+            unsigned int tidx = idx%dim0 + (idx/dim0)*(dim0*dim1); //indices over input tensor (begining of axis1 slices)
+
             float tsum = 0;
 
             for (unsigned int i = 0; i < dim1; i++)
             {
+                printf("idx: %03d \t\t tidx: %03d\n",idx,tidx);
                 tsum += g_idata[tidx];
                 tidx += dim0;
             }

@@ -155,9 +155,9 @@ int main(int argc, char **argv)
     CHECK(cudaSetDevice(dev));
 
     // initialization
-    const unsigned int  dim0 = 16 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 2x8x16 , STH IS WRONG WHIT THAT KERNEL!
-                        dim1 = 4096 ,
-                        dim2 = 4096;
+    const unsigned int  dim0 = 2 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 2x8x16 , STH IS WRONG WHIT THAT KERNEL!
+                        dim1 = 2 ,
+                        dim2 = 4;
 
     unsigned int size = dim0 * dim1 * dim2;
     printf("\nwith array size %d  \n", size);
@@ -215,8 +215,8 @@ int main(int argc, char **argv)
     //reduce_sum_3d_try02(d_f_idata, d_f_odata_overdim2, dim0, dim1, dim2, 0,0,1);
 
 
-    reduce_sum_3d_try03(d_f_idata, d_f_odata_overdim0, dim0, dim1, dim2, true,false,false);
-    //reduce_sum_3d_try03(d_f_idata, d_f_odata_overdim1, dim0, dim1, dim2, false,true,false);
+    //reduce_sum_3d_try03(d_f_idata, d_f_odata_overdim0, dim0, dim1, dim2, true,false,false);
+    reduce_sum_3d_try03(d_f_idata, d_f_odata_overdim1, dim0, dim1, dim2, false,true,false);
     //reduce_sum_3d_try03(d_f_idata, d_f_odata_overdim2, dim0, dim1, dim2, false,false,true);
 
 
