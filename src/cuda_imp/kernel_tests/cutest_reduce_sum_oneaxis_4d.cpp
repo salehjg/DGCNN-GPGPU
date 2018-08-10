@@ -11,6 +11,7 @@
 
 using namespace std;
 
+extern
 void reduce_sum_4d_try03(
         float* g_idata,
         float* g_odata,
@@ -22,6 +23,21 @@ void reduce_sum_4d_try03(
         bool overaxis1,
         bool overaxis2,
         bool overaxis3);
+
+extern
+void reduce_sum_4d_try04(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3);
+
+
 
 //[axis0,axis1,axis2,axis3] //No batch op, uses data as is(as a matrix)
 float* LA_Sum4D(float* mat1,
@@ -84,10 +100,15 @@ int main(int argc, char **argv)
     CHECK(cudaSetDevice(dev));
 
     // initialization
-    const unsigned int  dim0 = 32 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 2x8x16 , STH IS WRONG WHIT THAT KERNEL!
+    /*      60,1024,20,64  ---------> 1.4788 ms
+     *      60,1024,20,128 ---------> 2.9376 ms
+     *      60,1024,1 ,1024---------> 1.1873 ms
+     *
+     */
+    const unsigned int  dim0 = 60 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 17x1024x1024x2 , STH IS WRONG WHIT THAT KERNEL!
                         dim1 = 1024 ,
-                        dim2 = 1024,
-                        dim3 = 2;
+                        dim2 = 1,
+                        dim3 = 1024;
 
     unsigned int size = dim0 * dim1 * dim2 * dim3;
     printf("\nwith array size %d  \n", size);
@@ -106,7 +127,7 @@ int main(int argc, char **argv)
                 for(int d2=0;d2<dim2;d2++){
                     for(int d3=0;d3<dim3;d3++){
                         indx = d0*dim1*dim2*dim3 + d1*dim2*dim3 + d2*dim3 + d3;
-                        h_f_idata[indx] = (float)1.0;
+                        h_f_idata[indx] = (float)(1.0);
                     }
                 }
             }
@@ -132,7 +153,8 @@ int main(int argc, char **argv)
 
 
     //reduce_sum_4d_try02(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try03(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    //reduce_sum_4d_try03(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
 
 
 

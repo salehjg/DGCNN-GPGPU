@@ -6,7 +6,7 @@
 #include <cuda_runtime_api.h>
 #include "common.h"
 
-#define BLOCK_SIZE 256
+#define BLOCK_SIZE 1024
 
 
 ///
@@ -230,18 +230,18 @@ __global__ void kernel_reduce_sum_4d_try04(
 
                     thread_sum += g_idata[gidx];
                 }
-                else
-                {
-                    printf("** gidx: %ld, GroupIndex: %ld, sum: %f\n",gidx,GroupIndex,thread_sum);
-                }
+                //else
+                //{
+                //    printf("** gidx: %ld, GroupIndex: %ld, sum: %f\n",gidx,GroupIndex,thread_sum);
+                //}
             }
 
             //------------------------------------------------------------
             // |---element0s---|-----element1s----|------....|
             smem_buff[TIITG*TGPB + GroupIndexWithinBlock] = thread_sum;
-            if(GroupIndex==18225)
-                printf("bid: %06d, tid: %06d, GroupIndex: %06ld, ThreadIndexInGroup: %06ld, thread_sum: %f, smem_buff[%06ld]: %f \n",
-                       blockIdx.x, threadIdx.x, GroupIndex, TIITG, thread_sum, TIITG*TGPB + GroupIndexWithinBlock , smem_buff[TIITG*TGPB + GroupIndexWithinBlock]);
+            //if(thread_sum!=10.0)
+            //    printf("bid: %06d, tid: %06d, GroupIndex: %06ld, ThreadIndexInGroup: %06ld, thread_sum: %f, smem_buff[%06ld]: %f \n",
+            //           blockIdx.x, threadIdx.x, GroupIndex, TIITG, thread_sum, TIITG*TGPB + GroupIndexWithinBlock , smem_buff[TIITG*TGPB + GroupIndexWithinBlock]);
 
 
         }
@@ -251,18 +251,21 @@ __global__ void kernel_reduce_sum_4d_try04(
         // parallel reduction of current block's shared memory buffer
         unsigned int thid = threadIdx.x;
         while(thid<TGPB){ // block stride loop
-            if(thid >= TGPB) break;
-            // -------------------
+
             for(unsigned long stride=TGPB/2; stride>0; stride >>= 1){
                 if (thid < stride){
-                    for(int d3=0;d3<TPG;d3++)
+                    for(int d3=0;d3<TPG;d3++){
                         smem_buff[d3*TGPB + (thid)] += smem_buff[d3*TGPB + (thid+stride)];
+                        //printf("#P.Reduc.# bid: %06d, tid: %06d, stride: %06ld, d3: %06d, indx1: %06ld, indx2: %06ld, val1++: %f,\tval2: %f\n",
+                        //        blockIdx.x,threadIdx.x,stride,d3, d3*TGPB + (thid) ,d3*TGPB + (thid+stride), smem_buff[d3*TGPB + (thid)] ,smem_buff[d3*TGPB + (thid+stride)]);
+                    }
                 }
                 __syncthreads();
             }
             // -------------------
             thid += blockDim.x;
         }
+
 
         __syncthreads();
 
@@ -303,6 +306,31 @@ __global__ void kernel_reduce_sum_4d_try04(
 
 }
 
+/* BUGS:
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  Input: 16x1024x1024x16
+ *  SPT=15
+ *  BLOCKSIZE=1024
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  Mismatch when TGPB isn't a pure multiply of 2.(being odd is a subset of this bug)
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  Fixed       Mismatch when TGPB gets equal to zero(when dim3 > BLOCKSIZE)
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  Fixed       Mismatch when input shape is greater than 8x8x8x8 in any dimension!
+ *              BLOCKSIZE=1024
+ *              SPT=512
+ *              INPUT TENSOR VALUES : 0.0001f  ---------> but it works with sth like 1.0f
+ *              Answer: https://developer.nvidia.com/sites/default/files/akamai/cuda/files/NVIDIA-CUDA-Floating-Point.pdf
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  --------------------------------------------------------------------------------------------------------------------
+ *  --------------------------------------------------------------------------------------------------------------------
+ *
+ *
+ */
 
 void reduce_sum_4d_try04(
         float* g_idata,
@@ -321,12 +349,10 @@ void reduce_sum_4d_try04(
     }
 
     unsigned long block = BLOCK_SIZE;
-
-
     unsigned long SPT,TGC,TGO,TGPB, grid,TPG;
 
     //Dim3 slice per thread
-    SPT = 10; //cte
+    SPT = 2048; //cte
 
     //thread group offset
     TGO = dim3 * SPT;
@@ -335,7 +361,8 @@ void reduce_sum_4d_try04(
     TGC = (unsigned long)((dim0*dim1*dim2+(SPT-1))/SPT);
 
     //thread group per block
-    TGPB = (unsigned long)(BLOCK_SIZE / dim3);
+    TGPB = (unsigned long)((BLOCK_SIZE)/ dim3);
+    if(TGPB%2 && TGPB > 1) TGPB--;
 
     //grid size
     grid = ( TGC+(TGPB-1) ) / TGPB;
