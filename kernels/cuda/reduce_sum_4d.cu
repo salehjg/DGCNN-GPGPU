@@ -176,6 +176,7 @@ void reduce_sum_4d_try03(
 /// \param g_idata
 /// \param g_buff           Temporary global memory buffer
 /// \param g_odata
+/// \param pow_y            The value that each element of input tensor will be powered to
 /// \param dim0
 /// \param dim1
 /// \param dim2
@@ -192,6 +193,7 @@ __global__ void kernel_reduce_sum_4d_try04(
         const float * __restrict__  g_idata,
         float * __restrict__  g_buff,
         float * __restrict__  g_odata,
+        const int pow_y,
         const unsigned long dim0,
         const unsigned long dim1,
         const unsigned long dim2,
@@ -227,8 +229,11 @@ __global__ void kernel_reduce_sum_4d_try04(
                     //if(blockIdx.x==35)
                     //    printf("bid: %06d, tid: %06d, GroupIndex: %06ld, ThreadIndexInGroup: %06ld, gidx: %06ld\n",
                     //        blockIdx.x, threadIdx.x, GroupIndex, TIITG, gidx);
-
-                    thread_sum += g_idata[gidx];
+                    float pow_rslt=g_idata[gidx];
+                    for(int ipwr=0;ipwr<pow_y-1;ipwr++){
+                        pow_rslt = pow_rslt * pow_rslt;
+                    }
+                    thread_sum += pow_rslt;
                 }
                 //else
                 //{
@@ -278,31 +283,6 @@ __global__ void kernel_reduce_sum_4d_try04(
         }
 
     }
-    //-------------------------------------------------------------------------------------------------------------
-    //
-    //
-    //مشکل یا در بخش پارالل ریداکشن است ولی چرا در هر دو حالت تیرای ۰۳ و ۰۴ که روش ها متفاوت هستند مشکل پا برجا بوده است؟
-    //
-    //مشکل یا در بخش آخر جمع کردن حاصل جمع ها هست ولی چطور اخه؟
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-
-
-
-
-
-
-
 
 }
 
@@ -381,7 +361,7 @@ void reduce_sum_4d_try04(
     CHECK(cudaMalloc((float**)&g_buffer, (TGC*TPG)*sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
     CHECK(cudaMemset(g_buffer,0,(TGC*TPG)*sizeof(float)));
     kernel_reduce_sum_4d_try04 <<<grid, block, TGPB*TPG*sizeof(float)>>> (
-            g_idata, g_buffer, g_odata,
+            g_idata, g_buffer, g_odata, 1,
                     dim0, dim1, dim2, dim3,
                     overaxis0, overaxis1, overaxis2, overaxis3,
                     TGC,

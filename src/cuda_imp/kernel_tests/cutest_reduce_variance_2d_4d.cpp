@@ -13,7 +13,7 @@
 using namespace std;
 
 extern
-void reduce_mean_4d_try02(
+void reduce_variance_4d_try01(
         float* g_idata,
         float* g_odata,
         unsigned long dim0,
@@ -201,8 +201,6 @@ float* LA_Mean(
         int dim1,
         int dim2,
         int dim3){
-    cout      <<"**LA_Mean: Rank: "<< rank << "  dims: "<<dim0<<","<<dim1<<","<<dim2<<","<<dim3<<
-              "  overaxes: "<<mean_axis0<<","<<mean_axis1<<","<<mean_axis2<<","<<mean_axis3<<";\n";
 
     if(rank==4){
         if(!mean_axis3 && mean_axis0 && mean_axis1 && mean_axis2){
@@ -252,7 +250,129 @@ float* LA_Mean(
 
 
 
+float* LA_Variance(
+        float* mat,
+        int rank,
+        bool variance_axis0,
+        bool variance_axis1,
+        bool variance_axis2,
+        bool variance_axis3,
+        int dim0,
+        int dim1,
+        int dim2,
+        int dim3
 
+){
+    if(rank==4){
+        if(!variance_axis3 && variance_axis0 && variance_axis1 && variance_axis2) {
+            float *mean = LA_Mean(mat,
+                                  rank,
+                                  variance_axis0,
+                                  variance_axis1,
+                                  variance_axis2,
+                                  false,
+                                  dim0,
+                                  dim1,
+                                  dim2,
+                                  dim3);
+
+            float* variance = new float[dim3];
+
+            int indxS1,indxS2,indxD;
+            for (int d3 = 0; d3 < dim3; d3++) { //over last-dim
+                variance[d3]=0;
+
+
+                for (int d0 = 0; d0 < dim0; d0++) {
+                    for (int d1 = 0; d1 < dim1; d1++) {
+                        for (int d2 = 0; d2 < dim2; d2++) {
+                            indxS1 = d0*dim1*dim2*dim3+
+                                     d1*dim2*dim3+
+                                     d2*dim3+
+                                     d3;
+
+                            float delta = (mat[indxS1]-mean[d3]);
+                            variance[d3] += delta*delta;
+                        }
+                    }
+                }
+            }
+
+            float* variance_final = LA_MatMul(variance,(float)(1.0f/(dim0*dim1*dim2)),1,3,1,dim3);
+
+            free(variance);
+            free(mean);
+
+            return variance_final;
+        }
+        cout<<"LA_MEAN: ERROR_UNDEFINED_AXES_COMB"<<endl;
+        return nullptr;
+    }
+
+    if(rank==2){
+        if(!variance_axis1 && variance_axis0 ) {
+            float *mean = LA_Mean(mat,
+                                  2,
+                                  true,
+                                  false,
+                                  false,
+                                  false,
+                                  dim0,
+                                  dim1,
+                                  0,
+                                  0);
+
+            float* variance = new float[dim1];
+
+            int indxS1,indxS2,indxD;
+            for (int d1 = 0; d1 < dim1; d1++) { //over last-dim
+                variance[d1]=0;
+
+                for (int d0 = 0; d0 < dim0; d0++) {
+                    indxS1 = d0*dim1 + d1;
+
+                    float delta = (mat[indxS1]-mean[d1]);
+                    variance[d1] += delta*delta;
+                }
+            }
+
+            float* variance_final = LA_MatMul(variance,(float)(1.0f/dim0),1,3,1,dim1);
+
+            free(variance);
+            free(mean);
+
+            return variance_final;
+        }
+        cout<<"LA_MEAN: ERROR_UNDEFINED_AXES_COMB"<<endl;
+        return nullptr;
+    }
+
+    if(rank==1){
+        float *mean = LA_Mean(mat,
+                              rank,
+                              true,
+                              true,
+                              true,
+                              true,
+                              dim0,
+                              1,
+                              1,
+                              1);
+
+        float *variance = (float*)malloc(sizeof(float) * 1);
+
+        for (int d0 = 0; d0 < dim0; d0++) {
+            float delta = (mat[d0]-mean[0]);
+            *variance += delta*delta;
+        }
+
+        *variance = *variance * (float)(dim0);
+        return variance;
+
+    }
+    cout<<"LA_MEAN: ERROR_UNDEFINED_MATRIX_RANK"<<endl;
+    return nullptr;
+}
 
 
 int Test_4d_FFTF() //FFTF
@@ -287,14 +407,14 @@ int Test_4d_FFTF() //FFTF
                 for(int d2=0;d2<dim2;d2++){
                     for(int d3=0;d3<dim3;d3++){
                         indx = d0*dim1*dim2*dim3 + d1*dim2*dim3 + d2*dim3 + d3;
-                        h_f_idata[indx] = (float)(1.0f);
+                        h_f_idata[indx] = (float)(1.5f);
                     }
                 }
             }
         }
     }
 
-    float *h_f_resultTTTF = LA_Mean(h_f_idata,4, true,true,true,false ,dim0,dim1,dim2,dim3); //cpu results FFTF
+    float *h_f_resultTTTF = LA_Variance(h_f_idata,4, true,true,true,false ,dim0,dim1,dim2,dim3); //cpu results FFTF
 
 
 
@@ -311,7 +431,7 @@ int Test_4d_FFTF() //FFTF
     iStart = seconds();
 
 
-    reduce_mean_4d_try02(d_f_idata, d_f_odata_TTTF, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_variance_4d_try01(d_f_idata, d_f_odata_TTTF, dim0, dim1, dim2, dim3, true,true,true,false);
 
 
 
