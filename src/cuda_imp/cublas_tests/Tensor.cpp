@@ -2,15 +2,15 @@
 // Created by saleh on 6/25/18.
 //
 
-#include "Tensor.h"
+#include "TensorF_OLD.h"
 #include "CudaMemHelper.h"
 using namespace std;
 
-Tensor::Tensor(){
+TensorF::TensorF(){
 
 }
 
-void Tensor::InitWithDeviceData(float* deviceBuffer, vector<int> bufferShape){
+void TensorF::InitWithDeviceData(float* deviceBuffer, vector<int> bufferShape){
     this->deviceBuffer = deviceBuffer;
     this->shape = bufferShape;
     this->rank = (int)bufferShape.size()-1;
@@ -18,7 +18,7 @@ void Tensor::InitWithDeviceData(float* deviceBuffer, vector<int> bufferShape){
     ///TODO: assign deviceBatchPtr using new deviceBuffer
 }
 
-void Tensor::InitWithDeviceData(float* deviceBuffer, float** deviceBatchPtr, vector<int> bufferShape){
+void TensorF::InitWithDeviceData(float* deviceBuffer, float** deviceBatchPtr, vector<int> bufferShape){
     this->deviceBuffer = deviceBuffer;
     this->deviceBatchPtr = deviceBatchPtr;
     this->shape = bufferShape;
@@ -26,14 +26,14 @@ void Tensor::InitWithDeviceData(float* deviceBuffer, float** deviceBatchPtr, vec
     this->initialized=true;
 }
 
-void Tensor::InitWithHostData(float* hostBuffer, std::vector<int> bufferShape){
+void TensorF::InitWithHostData(float* hostBuffer, std::vector<int> bufferShape){
     this->deviceBatchPtr = CudaMemHelper::ConvertHost1D_to_Device2D(hostBuffer,&(this->deviceBuffer),bufferShape);
     this->shape = bufferShape;
     this->rank = (int)bufferShape.size()-1;
     this->initialized=true;
 }
 
-void Tensor::Init(std::vector<int> bufferShape){
+void TensorF::Init(std::vector<int> bufferShape){
     cudaError_t cuda_stat;
 
     this->shape = bufferShape;
@@ -52,7 +52,7 @@ void Tensor::Init(std::vector<int> bufferShape){
     this->deviceBatchPtr = CudaMemHelper::ConvertDevice1D_to_Device2D(this->deviceBuffer,B,Len);
 }
 
-float* Tensor::TransferDeviceBufferToHost() {
+float* TensorF::TransferDeviceBufferToHost() {
     cudaError_t cuda_stat;
     if (!this->initialized) throw exception();
     int B = shape[0];

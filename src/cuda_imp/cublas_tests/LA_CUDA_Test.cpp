@@ -152,9 +152,9 @@ void Test_LA_MatMul(){
     int M=20; // first  matrix is MxK
     int N=20; // second matrix is KxN
     int K=20; // result matrix is MxN
-    Tensor matA;
-    Tensor matB;
-    Tensor matR;
+    TensorF matA;
+    TensorF matB;
+    TensorF matR;
     //------------------------------------------------------------------------------------------------------------------
     // 1. create a cublas handle
     cublas_result = cublasCreate(&myhandle);

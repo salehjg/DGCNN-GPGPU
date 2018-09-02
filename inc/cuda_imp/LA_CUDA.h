@@ -8,7 +8,7 @@
 #include <cuda_runtime.h>
 #include <cublas_v2.h>
 #include <vector>
-#include "Tensor.h"
+#include "TensorF_OLD.h"
 using namespace std;
 
 
@@ -31,9 +31,9 @@ public:
 
     int MatMul(
             cublasHandle_t handle,
-            Tensor matA, // "batch_size" pointers of mxk col-major matrix on device mem ptr.
-            Tensor matB, // "batch_size" pointers of kxn col-major matrix on device mem ptr.
-            Tensor matR, // "batch_size" pointers of mxn col-major matrix on device mem ptr.
+            TensorF matA, // "batch_size" pointers of mxk col-major matrix on device mem ptr.
+            TensorF matB, // "batch_size" pointers of kxn col-major matrix on device mem ptr.
+            TensorF matR, // "batch_size" pointers of mxn col-major matrix on device mem ptr.
             float alpha,
             float beta,
             bool transposeA,

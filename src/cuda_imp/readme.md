@@ -11,6 +11,11 @@ bla blah blah blah!
 ## Task List
 - [ ] Implement int32 Tensor Class
 - [ ] Implement int32 CudaMemHelper Class
+    --------------
+- [ ] New tensor class with ability to be compared with another tensor
+- [ ]
+- [ ]
+- [ ]
 
 
 ## Methods
@@ -24,6 +29,8 @@ Batchnorm_Forward |  | No |  | -
 FullyConnected_Forward |  | Yes |  | -
 ReLU |  | Yes |  | -
 TransformNet |  | Yes |  | -
+KNN |  | Yes |  | -
+Gather |  | Yes |  | -
 LA_transpose |  | Yes | Yes | -
 LA_MatMul |  | Yes |  | GEMM
 LA_Square |  | Yes |  | GEMM
@@ -35,7 +42,9 @@ LA_ADD |  | No |  | GEMM
 LA_SUB |  | No |  | GEMM
 LA_Concat2 |  | No | Yes | -
 LA_ReduceMax |  | No | Yes | -
-LA_Tile | | No | No | -
+LA_Tile | | No | Yes | -
+
+
 
 
  

@@ -8,9 +8,9 @@
 #include <vector>
 
  
-class Tensor{
+class TensorF_OLD{
 public:
-    Tensor();
+    TensorF();
     void InitWithDeviceData(float* deviceBuffer, std::vector<int> bufferShape);
     void InitWithDeviceData(float* deviceBuffer, float** deviceBatchPtr, std::vector<int> bufferShape);
     void InitWithHostData(float* hostBuffer, std::vector<int> bufferShape);
