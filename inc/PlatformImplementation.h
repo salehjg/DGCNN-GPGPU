@@ -8,12 +8,12 @@
 #include "../inc/WorkScheduler.h"
 #include "../inc/TensorF.h"
 #include "../inc/TensorI.h"
+#include <string>
+using namespace std;
 
 
 class PlatformImplementation {
 public:
-    PlatformImplementation();
-
     virtual TensorF* Transpose(WorkScheduler scheduler, TensorF *batchedMat)=0;
     virtual TensorF* MatMul(WorkScheduler scheduler, TensorF* batchedMat1, TensorF* batchedMat2)=0;
     virtual TensorF* MatMul(WorkScheduler scheduler, TensorF* batchedMat, float scalar)=0;

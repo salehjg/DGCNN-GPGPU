@@ -5,12 +5,14 @@
 #ifndef DEEPPOINTV1_CUDAIMPLEMENTATION_H
 #define DEEPPOINTV1_CUDAIMPLEMENTATION_H
 
+#include <PlatformImplementation.h>
 
-class CudaImplementation {
+class CudaImplementation: public PlatformImplementation {
 public:
-    CudaImplementation(); ///TODO: Constructor should handle platform initialization procedure!
+    CudaImplementation(int aa); ///TODO: Constructor should handle platform initialization procedure!
 
 private:
+    int a;
 };
 
 

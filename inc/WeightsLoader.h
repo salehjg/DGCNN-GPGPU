@@ -14,7 +14,7 @@ using namespace std;
 class WeightsLoader {
 public:
     WeightsLoader(vector<PLATFORMS> neededPlatforms);
-    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList)
+    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList);
     TensorF* AccessWeights(PLATFORMS platform, string name);
 private:
     map<string,TensorF*> weightsMapCPU;

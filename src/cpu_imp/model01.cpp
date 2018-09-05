@@ -11,14 +11,14 @@
 #include <string>
 
 
-ModelArch::ModelArch(int dataset_offset, int batchsize, int pointcount, int knn_k) {
+ModelArch01::ModelArch(int dataset_offset, int batchsize, int pointcount, int knn_k) {
     DB_OFFSET = dataset_offset;
     B = batchsize;
     N = pointcount;
     K = knn_k;
 }
 
-ModelInfo ModelArch::GetModelInfo() {
+ModelInfo ModelArch01::GetModelInfo() {
     ModelInfo tmplt;
     tmplt.Version="0.10";
     tmplt.DesignNotes="";
@@ -29,7 +29,7 @@ ModelInfo ModelArch::GetModelInfo() {
     return tmplt;
 }
 
-void ModelArch::SetModelInput_data(string npy_pcl) {
+void ModelArch01::SetModelInput_data(string npy_pcl) {
     _npy_pcl = cnpy::npy_load(npy_pcl);
     input_pcl_BxNxD = _npy_pcl.data<float>();
     input_pcl_BxNxD += DB_OFFSET*N*3;
@@ -38,7 +38,7 @@ void ModelArch::SetModelInput_data(string npy_pcl) {
 
 }
 
-void ModelArch::SetModelInput_labels(string npy_labels) {
+void ModelArch01::SetModelInput_labels(string npy_labels) {
     _npy_labels = cnpy::npy_load(npy_labels);
     input_labels_B = _npy_labels.data<unsigned char>();
     input_labels_B += DB_OFFSET;
@@ -49,7 +49,7 @@ void ModelArch::SetModelInput_labels(string npy_labels) {
     //        cout<<"Error, inconsistent batchsize for label's npy file respect to the pcl npy file."<<endl;
 }
 
-int ModelArch::LoadWeights(string weights_base_dir, string path_txt_fnamelist) {
+int ModelArch01::LoadWeights(string weights_base_dir, string path_txt_fnamelist) {
     ifstream txtfile (path_txt_fnamelist);
 
     if (!txtfile.is_open())
@@ -70,7 +70,7 @@ int ModelArch::LoadWeights(string weights_base_dir, string path_txt_fnamelist) {
     txtfile.close();
 }
 
-float* ModelArch::TransformNet(
+float* ModelArch01::TransformNet(
         float* edge_features, //of shape B x N x K x InputLastDim
         int k){
 
@@ -309,7 +309,7 @@ float* ModelArch::TransformNet(
 }
 
 
-float ModelArch::execute() {
+float ModelArch01::execute() {
 
     float* net; float* net_BxNx3;
     float* endpoint_0;float* endpoint_1;float* endpoint_2;float* endpoint_3;
@@ -778,7 +778,7 @@ float ModelArch::execute() {
  * OUTPUTS:
  *      -BxNxN
  * */
-float* ModelArch::Pairwise_Distance(float* input_BxNxD,int input_last_dim){
+float* ModelArch01::Pairwise_Distance(float* input_BxNxD,int input_last_dim){
     float* point_cloud_transpose = LA_transpose(input_BxNxD,B,3,N,input_last_dim);
     float* point_cloud_inner = LA_MatMul(input_BxNxD,point_cloud_transpose,B,3,N,input_last_dim,input_last_dim,N);
     float* point_cloud_inner2 = LA_MatMul(point_cloud_inner,-2.0f,B,3,N,N);
@@ -829,7 +829,7 @@ float* ModelArch::Pairwise_Distance(float* input_BxNxD,int input_last_dim){
     return rslt;
 }
 
-int* ModelArch::KNN(float* adj_matrix_BxNxN){
+int* ModelArch01::KNN(float* adj_matrix_BxNxN){
     //we will use std::sort in ascending order.
     int indxS=0;
     int* rslt = new int[B*N*K];
@@ -858,7 +858,7 @@ int* ModelArch::KNN(float* adj_matrix_BxNxN){
     return rslt;
 }
 
-float* ModelArch::Get_Edge_Features(float* input_BxNxD,
+float* ModelArch01::Get_Edge_Features(float* input_BxNxD,
                                     int*   knn_output_BxNxK,
                                     int    D){
 
@@ -916,7 +916,7 @@ float* ModelArch::Get_Edge_Features(float* input_BxNxD,
     return edge_feature;
 }
 
-float* ModelArch::Conv2D(
+float* ModelArch01::Conv2D(
         float* input,
         int input_last_dim,
         string weight_key,
@@ -972,7 +972,7 @@ float* ModelArch::Conv2D(
 }
 
 
-float* ModelArch::Batchnorm_Forward(
+float* ModelArch01::Batchnorm_Forward(
         float* input,
         string gamma_key,
         string beta_key,
@@ -1130,7 +1130,7 @@ float* ModelArch::Batchnorm_Forward(
 }
 
 
-float* ModelArch::FullyConnected_Forward(
+float* ModelArch01::FullyConnected_Forward(
         float* input_BxD,
         string weight_key,
         string bias_key,
@@ -1155,7 +1155,7 @@ float* ModelArch::FullyConnected_Forward(
     return tmp;
 }
 
-float* ModelArch::ReLU(
+float* ModelArch01::ReLU(
         float* input,
         int dim){
 
@@ -1175,7 +1175,7 @@ float* ModelArch::ReLU(
 
 
 
-float* ModelArch::LA_transpose(float* input,int batchsize, int matrix_rank, int matrixH, int matrixW){
+float* ModelArch01::LA_transpose(float* input,int batchsize, int matrix_rank, int matrixH, int matrixW){
     if(matrix_rank!=3){cout<<"LA_transpose: ERROR_BAD_MATRIX_RANK"<<endl;return nullptr;}
     float* rslt = new float[batchsize*matrixW*matrixH];
     int indxS=0;
@@ -1195,7 +1195,7 @@ float* ModelArch::LA_transpose(float* input,int batchsize, int matrix_rank, int 
 }
 
 // rslt = MAT1 * MAT2
-float* ModelArch::LA_MatMul(float* mat1,float* mat2,
+float* ModelArch01::LA_MatMul(float* mat1,float* mat2,
                             int batchsize, int matrix_rank,
                             int matrixH1,int matrixW1,
                             int matrixH2,int matrixW2){
@@ -1236,7 +1236,7 @@ float* ModelArch::LA_MatMul(float* mat1,float* mat2,
 }
 
 // rslt = MAT1 * scalar
-float* ModelArch::LA_MatMul(float* mat1,float scalar,
+float* ModelArch01::LA_MatMul(float* mat1,float scalar,
                             int batchsize, int matrix_rank,
                             int matrixH1,int matrixW1){
     if(matrix_rank!=3){cout<<"LA_MatMul: ERROR_BAD_MATRIX_RANK"<<endl;return nullptr;}
@@ -1249,7 +1249,7 @@ float* ModelArch::LA_MatMul(float* mat1,float scalar,
     return rslt;
 }
 
-float* ModelArch::LA_Square(float* mat1,
+float* ModelArch01::LA_Square(float* mat1,
                             int batchsize, int matrix_rank,
                             int matrixH1,int matrixW1){
     if(matrix_rank!=3){cout<<"LA_MatMul: ERROR_BAD_MATRIX_RANK"<<endl;return nullptr;}
@@ -1263,7 +1263,7 @@ float* ModelArch::LA_Square(float* mat1,
 }
 
 //[axis0,axis1,axis2]
-float* ModelArch::LA_Sum(float* mat1,
+float* ModelArch01::LA_Sum(float* mat1,
                          bool over_axis0,
                          bool over_axis1,
                          bool over_axis2,
@@ -1360,7 +1360,7 @@ float* ModelArch::LA_Sum(float* mat1,
 }
 
 //[axis0,axis1,axis2,axis3] //No batch op, uses data as is(as a matrix)
-float* ModelArch::LA_Sum4D(float* mat1,
+float* ModelArch01::LA_Sum4D(float* mat1,
                            bool over_axis0,
                            bool over_axis1,
                            bool over_axis2,
@@ -1369,6 +1369,7 @@ float* ModelArch::LA_Sum4D(float* mat1,
                            int dim1,
                            int dim2,
                            int dim3){
+    //cout<<"**LA_SUM4D: "<<dim0<<","<<dim1<<","<<dim2<<","<<dim3<<";\n";
     int indxS=0;
     int indxD=0;
     float* rslt;
@@ -1409,7 +1410,7 @@ float* ModelArch::LA_Sum4D(float* mat1,
 }
 
 
-float* ModelArch::LA_Mean(
+float* ModelArch01::LA_Mean(
         float* mat,
         int rank,
         bool mean_axis0,
@@ -1422,6 +1423,9 @@ float* ModelArch::LA_Mean(
         int dim3
 
 ){
+    //cout      <<"**LA_Mean: Rank: "<< rank << "  dims: "<<dim0<<","<<dim1<<","<<dim2<<","<<dim3<<
+    //            "  overaxes: "<<mean_axis0<<","<<mean_axis1<<","<<mean_axis2<<","<<mean_axis3<<";\n";
+
     if(rank==4){
         if(!mean_axis3 && mean_axis0 && mean_axis1 && mean_axis2){
             float* sum = LA_Sum4D(mat,
@@ -1468,7 +1472,7 @@ float* ModelArch::LA_Mean(
     return nullptr;
 }
 
-float* ModelArch::LA_Variance(
+float* ModelArch01::LA_Variance(
         float* mat,
         int rank,
         bool variance_axis0,
@@ -1481,6 +1485,8 @@ float* ModelArch::LA_Variance(
         int dim3
 
 ){
+    //cout      <<"**LA_Variance: Rank: "<< rank << "  dims: "<<dim0<<","<<dim1<<","<<dim2<<","<<dim3<<
+    //          "  overaxes: "<<variance_axis0<<","<<variance_axis1<<","<<variance_axis2<<","<<variance_axis3<<";\n";
     if(rank==4){
         if(!variance_axis3 && variance_axis0 && variance_axis1 && variance_axis2) {
             float *mean = LA_Mean(mat,
@@ -1592,7 +1598,7 @@ float* ModelArch::LA_Variance(
     return nullptr;
 }
 
-float* ModelArch::LA_ADD(
+float* ModelArch01::LA_ADD(
         float* mat1,
         float* mat2,
         int    rank,
@@ -1613,7 +1619,7 @@ float* ModelArch::LA_ADD(
 }
 
 //mat1 - mat2
-float* ModelArch::LA_SUB(
+float* ModelArch01::LA_SUB(
         float* mat1,
         float* mat2,
         int    rank,
@@ -1651,7 +1657,7 @@ float* ModelArch::LA_SUB(
 
 //concat 2 matrices
 // [matA, matB]
-float* ModelArch::LA_Concat2(
+float* ModelArch01::LA_Concat2(
         float* matA,
         float* matB,
         int rank,
@@ -1665,6 +1671,9 @@ float* ModelArch::LA_Concat2(
         int dimB2,
         int dimB3
         ){
+    cout      <<"**LA_Concat2: Rank: "<< rank << "  concatDim: "<<concat_dim<<
+              "  dimA: "<<dimA0<<","<<dimA1<<","<<dimA2<<","<<dimA3<<
+              "  dimB: "<<dimB0<<","<<dimB1<<","<<dimB2<<","<<dimB3<<";\n";
     if(rank==4){
         int dimR0,dimR1,dimR2,dimR3;
         int mat2_offset_dim0=0;
@@ -1749,7 +1758,7 @@ float* ModelArch::LA_Concat2(
     return nullptr;
 }
 
-float* ModelArch::LA_ReduceMax(
+float* ModelArch01::LA_ReduceMax(
         float* input,
         int axis,
         int rank,
@@ -1757,7 +1766,7 @@ float* ModelArch::LA_ReduceMax(
         int dim1,
         int dim2,
         int dim3){
-
+    //cout<< "reduceMax: "<< "Rank: " << rank << ", Axis: "<< axis <<", Dim: " << dim0 << "x" << dim1 << "x" << dim2 << "x" << dim3 << endl;
     if(rank==4){
         if(axis==3){
             float* rslt= new float[dim0*dim1*dim2];
@@ -1861,7 +1870,7 @@ float* ModelArch::LA_ReduceMax(
     return nullptr;
 }
 
-template<typename T> int ModelArch::DumpMatrix(
+template<typename T> int ModelArch01::DumpMatrix(
                         string npy_fname,
                         int rank,
                         T* mat,

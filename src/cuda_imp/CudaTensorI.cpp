@@ -105,13 +105,13 @@ CudaTensorI::~CudaTensorI() {
     cudaCheckErrors("~CudaTensorI@CudaTensorI: ERR04");
 }
 
-TensorF* CudaTensorI::TransferToHost() {
-    TensorF* rsltTn;
+TensorI* CudaTensorI::TransferToHost() {
+    TensorI* rsltTn;
     cudaError_t cuda_stat;
     int* hostBuff = new int[getLength()];
     cuda_stat =cudaMemcpy(hostBuff, this->_buff, getLengthBytes(), cudaMemcpyDeviceToHost);
     assert(cuda_stat==cudaSuccess);
-    rsltTn = new TensorF(getShape(),hostBuff);
+    rsltTn = new TensorI(getShape(),hostBuff);
     return rsltTn;
 }
 

@@ -17,6 +17,11 @@ public:
     virtual void Init(std::vector<unsigned int> shape, int* buff);
     std::vector<unsigned int> getShape();
     int getRank();
+    void ExpandDims(int axis);
+    void SqueezeDims();
+    void ExpandDimZero();
+    void SqueezeDimZero();
+    void Reshape(std::vector<unsigned int> newShape);
     PLATFORMS getPlatform();
     unsigned long getLength();
     unsigned long getLengthBytes();

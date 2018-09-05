@@ -6,6 +6,7 @@
 #define DEEPPOINTV1_MODELARCHTOP_H
 
 #include <iostream>
+#include <sys/time.h>
 #include "../../submodules/cnpy/cnpy.h"
 #include "../inc/TensorF.h"
 #include "../inc/TensorI.h"
@@ -49,11 +50,13 @@ public:
     TensorF*    Batchnorm_Forward(WorkScheduler scheduler, TensorF* input, TensorF* gamma, TensorF* beta, TensorF* ema_ave, TensorF* ema_var);
     TensorF*    GetEdgeFeatures(WorkScheduler scheduler, TensorF* input_BxNxD, TensorI* knn_output_BxNxK);
     TensorF*    PairwiseDistance(WorkScheduler scheduler, TensorF* input_BxNxD);
+    TensorF*    TransformNet(WorkScheduler scheduler, TensorF* edgeFeatures);
+    TensorF*    Execute(WorkScheduler scheduler);
 
-        private:
-    int B=-1;
-    int N=-1;
-    int K=-1;
+private:
+    unsigned int B=-1;
+    unsigned int N=-1;
+    unsigned int K=-1;
     int DB_OFFSET=-1;
     TensorF* input_pcl_BxNxD;
     TensorI* input_labels_B; ///TODO: CHANGE TYPE

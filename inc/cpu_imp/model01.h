@@ -29,12 +29,12 @@ inline double seconds()
     return ((double)tp.tv_sec + (double)tp.tv_usec * 1.e-6);
 }
 
-class ModelArch {
+class ModelArch01 {
 
 
 public:
     typedef float DType;
-    ModelArch(int dataset_offset, int batchsize, int pointcount, int knn_k);
+    ModelArch01(int dataset_offset, int batchsize, int pointcount, int knn_k);
     ModelInfo   GetModelInfo();
     void        SetModelInput_data(string npy_pcl);
     void        SetModelInput_labels(string npy_labels);

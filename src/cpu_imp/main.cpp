@@ -16,9 +16,9 @@ template<typename T> void printv(vector<T> vec)
 
 void task1(int batchsize)
 {
-    cout << "running thread on batchsize of : " << batchsize;
+    cout << "running thread on batchsize of : " << batchsize<<endl;
 
-    ModelArch model(0,batchsize,1024,20);
+    ModelArch01 model(0,batchsize,1024,20);
     model.SetModelInput_data("/home/saleh/00_repos/tensorflow_repo/"
                              "00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/"
                              "data/dataset/"
@@ -48,13 +48,13 @@ int main() {
     cout << "Pure C++, Without Linear Algebra Libraries"<<endl;
 
     // Constructs the new thread and runs it. Does not block execution.
-    thread t1(task1, 60);
-    thread t2(task1, 80);
-    thread t3(task1, 100);
+    thread t1(task1, 5);
+    //thread t2(task1, 10);
+    //thread t3(task1, 15);
 
     // Makes the main thread wait for the new thread to finish execution, therefore blocks its own execution.
     t1.join();
-    t2.join();
-    t3.join();
+    //t2.join();
+    //t3.join();
 
 }

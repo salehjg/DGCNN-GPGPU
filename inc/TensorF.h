@@ -7,7 +7,7 @@
 
 #include <vector>
 
-enum PLATFORMS{
+enum class PLATFORMS{
     DEFAULT,
     CPU,
     GPU_CUDA,
@@ -23,6 +23,11 @@ public:
     virtual void Init(std::vector<unsigned int> shape, float* buff);
     std::vector<unsigned int> getShape();
     int getRank();
+    void ExpandDims(int axis);
+    void SqueezeDims();
+    void ExpandDimZero();
+    void SqueezeDimZero();
+    void Reshape(std::vector<unsigned int> newShape);
     PLATFORMS getPlatform();
     unsigned long getLength();
     unsigned long getLengthBytes();
@@ -31,8 +36,8 @@ public:
     float* _buff;
 
 protected:
-    std::vector<unsigned int> shape;             // AfloatfloatENfloatION: Dim0 of 'shape' is ALWAYS batch size
-    int rank;                           // matrix rank(without dim0 as it is batch size)
+    std::vector<unsigned int> shape;
+    int rank;
     bool initialized=false;
     PLATFORMS platform;
 };

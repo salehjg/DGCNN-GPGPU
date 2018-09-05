@@ -2,9 +2,10 @@
 // Created by saleh on 8/30/18.
 //
 
+#include <fstream>
 #include "../inc/WeightsLoader.h"
 
-void WeightsLoader::WeightsLoader(vector<PLATFORMS> neededPlatforms) {
+WeightsLoader::WeightsLoader(vector<PLATFORMS> neededPlatforms) {
     for(std::vector<PLATFORMS>::iterator it = neededPlatforms.begin(); it != neededPlatforms.end(); ++it) {
         switch(*it){
             case PLATFORMS::CPU : {
@@ -29,7 +30,7 @@ void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameLis
     if (!txtfile.is_open())
     {
         cout<<"Failed to open text file!";
-        return -1;
+        return;
     }
 
     string line; int i=0;
@@ -41,19 +42,21 @@ void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameLis
         //weights_map.insert(std::make_pair(line,_weights_vector.back().data<float>()));
         //weightsshape_map.insert(std::make_pair(line,_weights_vector.back().shape));
         if(_isUsedCPU){
+            vector<unsigned int> __shape(_weights_vector.back().shape.begin(),_weights_vector.back().shape.end());
             weightsMapCPU.insert(
                     std::make_pair(
                             line,
                             new TensorF(
-                                    _weights_vector.back().shape,
+                                    __shape,
                                     _weights_vector.back().data<float>()
                             )
                     )
             );
         }
         if(_isUsedCUDA){
+            vector<unsigned int> __shape(_weights_vector.back().shape.begin(),_weights_vector.back().shape.end());
             CudaTensorF* cudaWeight = new CudaTensorF();
-            cudaWeight->InitWithHostData(_weights_vector.back().shape,
+            cudaWeight->InitWithHostData(__shape,
                                          _weights_vector.back().data<float>());
             weightsMapCUDA.insert(std::make_pair(line, cudaWeight));
         }

@@ -19,7 +19,7 @@ PlatformSelector::PlatformSelector(PLATFORMS defaultPlatform, vector<PLATFORMS> 
                 break;
             }
             case PLATFORMS::GPU_CUDA : {
-                cudaPlatformClass = new CudaImplementation();
+                //cudaPlatformClass = new CudaImplementation(11);
                 break;
             }
             case PLATFORMS::GPU_OCL : {
@@ -63,9 +63,9 @@ TensorF* PlatformSelector::CrossThePlatform(TensorF *srcTn, PLATFORMS platform) 
         }
         case PLATFORMS::GPU_CUDA :{
             //--------------------------------------------------------------
-            switch(dstPlatform){
+            switch(platform){
                 case PLATFORMS::CPU :{
-                    CudaTensorF * srcTensor = (CudaTensorF)srcTn;
+                    CudaTensorF * srcTensor = (CudaTensorF*)srcTn;
                     return srcTensor->TransferToHost();
                     break;
                 }
@@ -83,7 +83,7 @@ TensorF* PlatformSelector::CrossThePlatform(TensorF *srcTn, PLATFORMS platform) 
         }
         case PLATFORMS::GPU_OCL :{
             //--------------------------------------------------------------
-            switch(dstPlatform){
+            switch(platform){
                 case PLATFORMS::CPU :{
                     throw "Not Implemented.";
                     break;
@@ -128,9 +128,9 @@ TensorI* PlatformSelector::CrossThePlatform(TensorI *srcTn, PLATFORMS platform) 
         }
         case PLATFORMS::GPU_CUDA :{
             //--------------------------------------------------------------
-            switch(dstPlatform){
+            switch(platform){
                 case PLATFORMS::CPU :{
-                    CudaTensorI * srcTensor = (CudaTensorI)srcTn;
+                    CudaTensorI * srcTensor = (CudaTensorI*)srcTn;
                     return srcTensor->TransferToHost();
                     break;
                 }
@@ -148,7 +148,7 @@ TensorI* PlatformSelector::CrossThePlatform(TensorI *srcTn, PLATFORMS platform) 
         }
         case PLATFORMS::GPU_OCL :{
             //--------------------------------------------------------------
-            switch(dstPlatform){
+            switch(platform){
                 case PLATFORMS::CPU :{
                     throw "Not Implemented.";
                     break;
@@ -167,7 +167,7 @@ TensorI* PlatformSelector::CrossThePlatform(TensorI *srcTn, PLATFORMS platform) 
     }
 }
 
-TensorF* PlatformSelector::Transpose(PLATFORM platform, WorkScheduler scheduler, TensorF *batchedMat){
+TensorF* PlatformSelector::Transpose(PLATFORMS platform, WorkScheduler scheduler, TensorF *batchedMat){
     TensorF *__batchedMat = CrossThePlatform(batchedMat, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -186,7 +186,7 @@ TensorF* PlatformSelector::Transpose(PLATFORM platform, WorkScheduler scheduler,
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatMul(PLATFORM platform, WorkScheduler scheduler, TensorF* batchedMat1, TensorF* batchedMat2){
+TensorF* PlatformSelector::MatMul(PLATFORMS platform, WorkScheduler scheduler, TensorF* batchedMat1, TensorF* batchedMat2){
     TensorF* __batchedMat1 = CrossThePlatform(batchedMat1, platform);
     TensorF* __batchedMat2 = CrossThePlatform(batchedMat2, platform);
     switch(platform){
@@ -206,7 +206,7 @@ TensorF* PlatformSelector::MatMul(PLATFORM platform, WorkScheduler scheduler, Te
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatMul(PLATFORM platform, WorkScheduler scheduler, TensorF* batchedMat, float scalar){
+TensorF* PlatformSelector::MatMul(PLATFORMS platform, WorkScheduler scheduler, TensorF* batchedMat, float scalar){
     TensorF* __batchedMat = CrossThePlatform(batchedMat, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -225,7 +225,7 @@ TensorF* PlatformSelector::MatMul(PLATFORM platform, WorkScheduler scheduler, Te
     return nullptr;
 }
 
-TensorF* PlatformSelector::Square(PLATFORM platform, WorkScheduler scheduler, TensorF* batchedMat){
+TensorF* PlatformSelector::Square(PLATFORMS platform, WorkScheduler scheduler, TensorF* batchedMat){
     TensorF* __batchedMat = CrossThePlatform(batchedMat, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -244,7 +244,7 @@ TensorF* PlatformSelector::Square(PLATFORM platform, WorkScheduler scheduler, Te
     return nullptr;
 }
 
-TensorF* PlatformSelector::ReduceSum(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn, bool over_axis0, bool over_axis1, bool over_axis2){
+TensorF* PlatformSelector::ReduceSum(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn, bool over_axis0, bool over_axis1, bool over_axis2){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -263,7 +263,7 @@ TensorF* PlatformSelector::ReduceSum(PLATFORM platform, WorkScheduler scheduler,
     return nullptr;
 }
 
-TensorF* PlatformSelector::ReduceSum4D(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn, bool over_axis0, bool over_axis1, bool over_axis2, bool over_axis3){
+TensorF* PlatformSelector::ReduceSum4D(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn, bool over_axis0, bool over_axis1, bool over_axis2, bool over_axis3){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -282,7 +282,7 @@ TensorF* PlatformSelector::ReduceSum4D(PLATFORM platform, WorkScheduler schedule
     return nullptr;
 }
 
-TensorF* PlatformSelector::Mean(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn, bool mean_axis0, bool mean_axis1, bool mean_axis2, bool mean_axis3){
+TensorF* PlatformSelector::Mean(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn, bool mean_axis0, bool mean_axis1, bool mean_axis2, bool mean_axis3){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -301,7 +301,7 @@ TensorF* PlatformSelector::Mean(PLATFORM platform, WorkScheduler scheduler, Tens
     return nullptr;
 }
 
-TensorF* PlatformSelector::Variance(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn, bool variance_axis0, bool variance_axis1, bool variance_axis2, bool variance_axis3){
+TensorF* PlatformSelector::Variance(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn, bool variance_axis0, bool variance_axis1, bool variance_axis2, bool variance_axis3){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -320,7 +320,7 @@ TensorF* PlatformSelector::Variance(PLATFORM platform, WorkScheduler scheduler, 
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatAdd(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
+TensorF* PlatformSelector::MatAdd(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
     switch(platform){
@@ -340,7 +340,7 @@ TensorF* PlatformSelector::MatAdd(PLATFORM platform, WorkScheduler scheduler, Te
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatSub(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
+TensorF* PlatformSelector::MatSub(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
     switch(platform){
@@ -360,7 +360,7 @@ TensorF* PlatformSelector::MatSub(PLATFORM platform, WorkScheduler scheduler, Te
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatAddTiled(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputSmallTn2){
+TensorF* PlatformSelector::MatAddTiled(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputSmallTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputSmallTn2 = CrossThePlatform(inputSmallTn2, platform);
     switch(platform){
@@ -380,7 +380,7 @@ TensorF* PlatformSelector::MatAddTiled(PLATFORM platform, WorkScheduler schedule
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatSubTiled(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputSmallTn2){
+TensorF* PlatformSelector::MatSubTiled(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputSmallTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputSmallTn2 = CrossThePlatform(inputSmallTn2, platform);
     switch(platform){
@@ -400,7 +400,7 @@ TensorF* PlatformSelector::MatSubTiled(PLATFORM platform, WorkScheduler schedule
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatAddTiled(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, float scalar){
+TensorF* PlatformSelector::MatAddTiled(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, float scalar){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -419,7 +419,7 @@ TensorF* PlatformSelector::MatAddTiled(PLATFORM platform, WorkScheduler schedule
     return nullptr;
 }
 
-TensorF* PlatformSelector::MatSubTiled(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, float scalar){
+TensorF* PlatformSelector::MatSubTiled(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, float scalar){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -438,7 +438,7 @@ TensorF* PlatformSelector::MatSubTiled(PLATFORM platform, WorkScheduler schedule
     return nullptr;
 }
 
-TensorF* PlatformSelector::Sqrt(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn){
+TensorF* PlatformSelector::Sqrt(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -457,7 +457,7 @@ TensorF* PlatformSelector::Sqrt(PLATFORM platform, WorkScheduler scheduler, Tens
     return nullptr;
 }
 
-TensorF* PlatformSelector::Multiply(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
+TensorF* PlatformSelector::Multiply(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
     switch(platform){
@@ -477,7 +477,7 @@ TensorF* PlatformSelector::Multiply(PLATFORM platform, WorkScheduler scheduler, 
     return nullptr;
 }
 
-TensorF* PlatformSelector::Divide(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
+TensorF* PlatformSelector::Divide(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
     switch(platform){
@@ -497,7 +497,7 @@ TensorF* PlatformSelector::Divide(PLATFORM platform, WorkScheduler scheduler, Te
     return nullptr;
 }
 
-TensorF* PlatformSelector::MultiplyTiled(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
+TensorF* PlatformSelector::MultiplyTiled(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
     switch(platform){
@@ -517,7 +517,7 @@ TensorF* PlatformSelector::MultiplyTiled(PLATFORM platform, WorkScheduler schedu
     return nullptr;
 }
 
-TensorF* PlatformSelector::DivideTiled(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
+TensorF* PlatformSelector::DivideTiled(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
     switch(platform){
@@ -537,7 +537,7 @@ TensorF* PlatformSelector::DivideTiled(PLATFORM platform, WorkScheduler schedule
     return nullptr;
 }
 
-TensorF* PlatformSelector::Concat2(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2, int concatDim){
+TensorF* PlatformSelector::Concat2(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2, int concatDim){
     TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
     TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
     switch(platform){
@@ -557,7 +557,7 @@ TensorF* PlatformSelector::Concat2(PLATFORM platform, WorkScheduler scheduler, T
     return nullptr;
 }
 
-TensorF* PlatformSelector::ReduceMax(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn, int reductionDim){
+TensorF* PlatformSelector::ReduceMax(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn, int reductionDim){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -577,7 +577,7 @@ TensorF* PlatformSelector::ReduceMax(PLATFORM platform, WorkScheduler scheduler,
 }
 
 
-TensorI* PlatformSelector::TopK(PLATFORM platform, WorkScheduler scheduler, TensorF* batchedMat, int axis, int k){
+TensorI* PlatformSelector::TopK(PLATFORMS platform, WorkScheduler scheduler, TensorF* batchedMat, int axis, int k){
     TensorF* __batchedMat = CrossThePlatform(batchedMat, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -596,9 +596,9 @@ TensorI* PlatformSelector::TopK(PLATFORM platform, WorkScheduler scheduler, Tens
     return nullptr;
 }
 
-TensorF* PlatformSelector::Gather(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn, TensorI* indices, int indices_axis){
+TensorF* PlatformSelector::Gather(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn, TensorI* indices, int indices_axis){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
-    TensorF* __indices = CrossThePlatform(indices, platform);
+    TensorI* __indices = CrossThePlatform(indices, platform);
     switch(platform){
         case PLATFORMS::CPU :{
             return cpuPlatformClass->Gather(scheduler, __inputTn, __indices, indices_axis);
@@ -617,7 +617,7 @@ TensorF* PlatformSelector::Gather(PLATFORM platform, WorkScheduler scheduler, Te
 }
 
 
-TensorF* PlatformSelector::Conv2D(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2){
+TensorF* PlatformSelector::Conv2D(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     TensorF* __weights = CrossThePlatform(weights, platform);
     TensorF* __biases = CrossThePlatform(biases, platform);
@@ -638,7 +638,7 @@ TensorF* PlatformSelector::Conv2D(PLATFORM platform, WorkScheduler scheduler, Te
     return nullptr;
 }
 
-TensorF* PlatformSelector::ReLU(PLATFORM platform, WorkScheduler scheduler, TensorF* inputTn){
+TensorF* PlatformSelector::ReLU(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -657,7 +657,7 @@ TensorF* PlatformSelector::ReLU(PLATFORM platform, WorkScheduler scheduler, Tens
     return nullptr;
 }
 
-TensorF* PlatformSelector::Tile(PLATFORM platform, WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount){
+TensorF* PlatformSelector::Tile(PLATFORMS platform, WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
@@ -676,11 +676,11 @@ TensorF* PlatformSelector::Tile(PLATFORM platform, WorkScheduler scheduler, Tens
     return nullptr;
 }
 
-void PlatformSelector::DumpMatrix(PLATFORM platform, WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir){
+void PlatformSelector::DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir){
     TensorF* __inputTn = CrossThePlatform(inputTn, platform);
     switch(platform){
         case PLATFORMS::CPU :{
-            return cpuPlatformClass->ReduceMax(scheduler, __inputTn, reductionDim);
+            return cpuPlatformClass->DumpMatrix(scheduler, npy_fname,__inputTn,npy_dir);
             break;
         }
         case PLATFORMS::GPU_CUDA :{
@@ -692,7 +692,7 @@ void PlatformSelector::DumpMatrix(PLATFORM platform, WorkScheduler scheduler, st
             break;
         }
     }
-    return nullptr;
+    return;
 }
 
 

@@ -2,6 +2,7 @@
 // Created by saleh on 8/23/18.
 //
 
+#include <cassert>
 #include "../inc/TensorI.h"
 
 TensorI::TensorI() {
@@ -22,8 +23,9 @@ void TensorI::Init(std::vector<unsigned int> shape) {
         delete(_buff);
     }
     this->shape = shape;
-    _buff = new int[getLength()];
+    this->rank = (int)shape.size();
     initialized = true;
+    _buff = new int[getLength()];
     platform = PLATFORMS::CPU;
 }
 
@@ -32,6 +34,7 @@ void TensorI::Init(std::vector<unsigned int> shape, int* buff){
         delete(_buff);
     }
     this->shape = shape;
+    this->rank = (int)shape.size();
     _buff = buff;
     initialized = true;
     platform = PLATFORMS::CPU;
@@ -43,6 +46,45 @@ std::vector<unsigned int> TensorI::getShape(){
 
 int TensorI::getRank() {
     return rank;
+}
+
+
+void TensorI::ExpandDims(int axis) {
+    assert((axis>=0 && axis<=getRank()) || axis==-1);
+    if(axis==-1) axis=(int)shape.size();
+    shape.insert(shape.begin()+axis,1);
+    this->rank++;
+}
+
+void TensorI::SqueezeDims() {
+    std::vector<unsigned int> shapeNew;
+
+    for (int i = 0; i < shape.size(); i++) {
+        if(shape[i]!=1) shapeNew.push_back(shape[i]);
+    }
+    shape = shapeNew;
+    rank = (int)shape.size();
+}
+
+void TensorI::ExpandDimZero(){
+    ExpandDims(0);
+}
+
+void TensorI::SqueezeDimZero(){
+    if(shape[0]==1){
+        shape.erase(shape.begin());
+        rank--;
+    }
+}
+
+void TensorI::Reshape(std::vector<unsigned int> newShape){
+    unsigned long len = 1;
+    for (int i = 0; i < newShape.size(); i++) {
+        len = len * newShape[i];
+    }
+    assert(len==getLength());
+    shape = newShape;
+    rank = (int)shape.size();
 }
 
 PLATFORMS TensorI::getPlatform(){

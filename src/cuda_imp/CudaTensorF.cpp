@@ -47,7 +47,7 @@ void CudaTensorF::Init(std::vector<unsigned int> shape) {
         assert(cuda_stat==cudaSuccess);
     }
     this->shape = shape;
-    this->rank = (int)shape.size()-1;
+    this->rank = (int)shape.size();
     this->initialized = true;
     unsigned long len = getLengthBytes();
     platform = PLATFORMS::GPU_CUDA;
@@ -64,7 +64,7 @@ void CudaTensorF::Init(std::vector<unsigned int> shape, float* buff){
         assert(cuda_stat==cudaSuccess);
     }
     this->shape = shape;
-    this->rank = (int)shape.size()-1;
+    this->rank = (int)shape.size();
     this->initialized = true;
     this->_buff = buff;
     platform = PLATFORMS::GPU_CUDA;
@@ -78,7 +78,7 @@ void CudaTensorF::InitWithHostData(std::vector<unsigned int> shape, float *hostB
         assert(cuda_stat==cudaSuccess);
     }
     this->shape = shape;
-    this->rank = (int)shape.size()-1;
+    this->rank = (int)shape.size();
     this->initialized = true;
     platform = PLATFORMS::GPU_CUDA;
 
