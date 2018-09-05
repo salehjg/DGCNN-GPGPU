@@ -1,3 +1,5 @@
 cmake-build-debug/
 .idea/
+.idea/vcs.xml
+.idea/misc.xml
 data/
