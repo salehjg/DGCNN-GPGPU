@@ -695,4 +695,23 @@ void PlatformSelector::DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, s
     return;
 }
 
+void PlatformSelector::DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir){
+    TensorI* __inputTn = CrossThePlatform(inputTn, platform);
+    switch(platform){
+        case PLATFORMS::CPU :{
+            return cpuPlatformClass->DumpMatrix(scheduler, npy_fname,__inputTn,npy_dir);
+            break;
+        }
+        case PLATFORMS::GPU_CUDA :{
+            throw "Not Implement.";
+            break;
+        }
+        case PLATFORMS::GPU_OCL :{
+            throw "Not Implement.";
+            break;
+        }
+    }
+    return;
+}
+
 

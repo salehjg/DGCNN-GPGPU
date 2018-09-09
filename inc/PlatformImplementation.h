@@ -37,12 +37,13 @@ public:
     virtual TensorF* ReduceMax(WorkScheduler scheduler, TensorF* inputTn, int reductionDim)=0;
     virtual TensorI* TopK(WorkScheduler scheduler, TensorF* batchedMat, int axis, int k)=0;
     virtual TensorF* Gather(WorkScheduler scheduler, TensorF* inputTn, TensorI* indices, int indices_axis)=0;
-    virtual TensorF* Conv2D(WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2=-1)=0;
+    virtual TensorF* Conv2D(WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2)=0;
     virtual TensorF* ReLU(WorkScheduler scheduler, TensorF* inputTn)=0;
     virtual TensorF* Tile(WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount)=0;
 
     virtual void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir)=0;
-    
+    virtual void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir)=0;
+
 private:
 
 

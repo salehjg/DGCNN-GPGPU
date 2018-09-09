@@ -1,5 +1,4 @@
-#subdirs(cpu_imp
-#        cuda_imp)
+subdirs(cpu_imp)
 
 subdirs(cuda_imp/kernel_tests)
 SET(CUDA_INCLUDE_DIRS /opt/cuda/include)

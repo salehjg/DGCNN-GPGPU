@@ -93,6 +93,9 @@ PLATFORMS TensorF::getPlatform(){
 }
 
 unsigned long TensorF::getLength() {
+    ///TODO: Change the if statement, because if we init a Tensor instance with an external buffer,
+    /// on destruction, the destructor will delete that external buffer which isn't right
+    /// so 'initialized' should represent the presence of internal allocated buffer. NOT an external one!
     if(initialized) {
         unsigned long len = 1;
         for (int i = 0; i < shape.size(); i++) {
@@ -116,6 +119,7 @@ unsigned long TensorF::getLengthBytes() {
     }
 }
 
+// https://stackoverflow.com/questions/9331561/why-does-my-classs-destructor-get-called-when-i-add-instances-to-a-vector
 TensorF::~TensorF() {
     if(initialized){
         delete(_buff);

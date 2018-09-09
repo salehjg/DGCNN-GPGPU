@@ -1328,7 +1328,7 @@ TensorF* CpuImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int 
 
     if(inputTn->getRank()==2 && tileAxis==0) {
         unsigned int K,D;
-        D = inputTn->getShape()[2];
+        D = inputTn->getShape()[1];
         K = (unsigned int)tileCount;
 
         //tile ing input of shape BxNxD into BxNxKxD.
@@ -1337,8 +1337,8 @@ TensorF* CpuImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int 
 
         for (int k = 0; k < K; k++) {
             indxD = k * D + 0;
-            std::copy(inputTn->_buff + indxS1,
-                      inputTn->_buff + indxS1 + D,
+            std::copy(inputTn->_buff ,
+                      inputTn->_buff + D,
                       rsltTn->_buff + indxD);
         }
 
@@ -1363,6 +1363,20 @@ void CpuImplementation::DumpMatrix(
         TensorF* inputTn,
         string npy_dir){
 #ifdef DUMP_ENABLED
-        cnpy::npy_save<T>(npy_dir+npy_fname,inputTn->_buff ,inputTn->getShape(),"w");
+    vector<unsigned int> shape = inputTn->getShape();
+    vector<unsigned long > shape_size_t(shape.begin(), shape.end());
+        cnpy::npy_save<float>(npy_dir+npy_fname,inputTn->_buff ,shape_size_t,"w");
+#endif
+}
+
+void CpuImplementation::DumpMatrix(
+        WorkScheduler scheduler,
+        string npy_fname,
+        TensorI* inputTn,
+        string npy_dir){
+#ifdef DUMP_ENABLED
+        vector<unsigned int> shape = inputTn->getShape();
+        vector<unsigned long  > shape_size_t(shape.begin(), shape.end());
+        cnpy::npy_save<int>(npy_dir+npy_fname,inputTn->_buff ,shape_size_t,"w");
 #endif
 }

@@ -20,7 +20,7 @@ using namespace std;
 
 //#define DUMP_ENABLED
 //#undef DUMP_ENABLED
-#undef DUMP_ENABLED
+
 
 struct ModelInfo{
     string Version="";
@@ -52,14 +52,16 @@ public:
     TensorF*    PairwiseDistance(WorkScheduler scheduler, TensorF* input_BxNxD);
     TensorF*    TransformNet(WorkScheduler scheduler, TensorF* edgeFeatures);
     TensorF*    Execute(WorkScheduler scheduler);
+    TensorI*    GetLabels();
+    int         GetBatchSize();
 
 private:
     unsigned int B=-1;
     unsigned int N=-1;
     unsigned int K=-1;
-    int DB_OFFSET=-1;
     TensorF* input_pcl_BxNxD;
     TensorI* input_labels_B; ///TODO: CHANGE TYPE
+    int DB_OFFSET=-1;
     cnpy::NpyArray _npy_pcl;
     cnpy::NpyArray _npy_labels;
     PlatformSelector* platformSelector;

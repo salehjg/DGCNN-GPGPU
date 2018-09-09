@@ -333,6 +333,20 @@ TensorF* ModelArchTop::TransformNet(WorkScheduler scheduler, TensorF* edgeFeatur
                         platformSelector->defaultPlatform,"transform_net1.tconv1.biases.npy")
                         );
 
+        /*
+        //just for testing weight and bias values
+        TensorF* www_w = platformSelector->weightsLoader->AccessWeights(platformSelector->defaultPlatform,"transform_net1.tconv1.weights.npy");
+        TensorF* www_B = platformSelector->weightsLoader->AccessWeights(platformSelector->defaultPlatform,"transform_net1.tconv1.biases.npy");
+
+        for (int i = 0; i < 64; i++) {
+            cout << (www_w->_buff[i]) << endl;
+        }
+
+        platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"WWW_TST_W.npy",www_w);
+        platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"WWW_TST_B.npy",www_B);
+        */
+
+
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A01_tnet_conv.npy",net1);
 
         TensorF* net2 = Batchnorm_Forward(
@@ -551,7 +565,10 @@ TensorF* ModelArchTop::TransformNet(WorkScheduler scheduler, TensorF* edgeFeatur
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A18_transform_batch.npy",transformTn);
 
         ///TODO: CHECK FOR TILED MULTIPLICATION REQUIREMENT FOR transformTn and biases!
-        TensorF* transformFinalTn = platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,transformTn,biases);
+        //biases->ExpandDimZero();
+        //TensorF* biasesTiled = platformSelector->Tile(platformSelector->defaultPlatform,scheduler,biases,0,B);
+        //biases->SqueezeDims();
+        TensorF* transformFinalTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,transformTn,biases);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A19_transform_batch_bias.npy",transformFinalTn);
         return transformFinalTn;
     }
@@ -585,9 +602,8 @@ TensorF* ModelArchTop::Execute(WorkScheduler scheduler) {
 
         TensorI *nn_idx = platformSelector->TopK(platformSelector->defaultPlatform,scheduler,adj_matrix,2,K);
 
-        ///TODO: IMPLEMENT DUMPMATRIX FOR INTEGER TENSOR CLASS
-        //platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B02_tnet_nn_idx.npy",nn_idx);
-        //DumpMatrix<int>("B02_tnet_nn_idx.npy",3,nn_idx,B,N,K,0,0);
+
+        platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B02_tnet_nn_idx.npy",nn_idx);
 
 
         TensorF *edge_features = GetEdgeFeatures(scheduler,net_BxNx3, nn_idx);
@@ -863,5 +879,14 @@ TensorF* ModelArchTop::Execute(WorkScheduler scheduler) {
         net = net1;
     }
     //----------------------------------------------------------------------------------------
+
     return net;
+}
+
+TensorI* ModelArchTop::GetLabels(){
+    return input_labels_B;
+}
+
+int ModelArchTop::GetBatchSize(){
+    return B;
 }

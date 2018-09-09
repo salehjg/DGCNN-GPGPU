@@ -13,6 +13,9 @@
 
 using namespace std;
 
+#define DUMP_ENABLED
+
+
 class CpuImplementation: public PlatformImplementation {
 public:
     CpuImplementation();///TODO: Constructor should handle platform initialization procedure!
@@ -62,6 +65,7 @@ public:
     TensorF* Tile(WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount);
 
     void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir);
+    void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir);
 
 
 private:
