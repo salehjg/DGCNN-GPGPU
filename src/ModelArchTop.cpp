@@ -17,7 +17,10 @@ ModelInfo ModelArchTop::GetModelInfo() {
     ModelInfo tmplt;
     tmplt.ModelType="Classifier";
     tmplt.Version="1.0";
-    tmplt.DesignNotes="";
+    tmplt.DesignNotes=
+            "1) All Ops are on CPU Platform"
+            "2) CPU Platform is working as it should (compared to the old ModelArch01 version)"
+            ;
     tmplt.ExperimentNotes="";
     tmplt.ToDo=""
                "";
@@ -252,7 +255,7 @@ TensorF* ModelArchTop::GetEdgeFeatures(WorkScheduler scheduler, TensorF *input_B
 
     //concatenate centrals and features (BxNxKxD) and (BxNxKxD)
     //float* edge_feature = LA_Concat2(point_cloud_central,features,4,3,B,N,K,D,B,N,K,D);
-    TensorF* edge_feature = platformSelector->Concat2(PLATFORMS::GPU_CUDA,scheduler, point_cloud_central,features,3);
+    TensorF* edge_feature = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, point_cloud_central,features,3);
     //DumpMatrix<DType>("tmp4.npy",4,edge_feature,B,N,K,2*D,0);
 
 
@@ -762,9 +765,9 @@ TensorF* ModelArchTop::Execute(WorkScheduler scheduler) {
         endpoint_1->ExpandDims(2);
         endpoint_2->ExpandDims(2);
         endpoint_3->ExpandDims(2);
-        TensorF *concatA = platformSelector->Concat2(PLATFORMS::GPU_CUDA,scheduler, endpoint_0, endpoint_1, 3);
-        TensorF *concatB = platformSelector->Concat2(PLATFORMS::GPU_CUDA,scheduler, concatA, endpoint_2, 3);
-        TensorF *concatC = platformSelector->Concat2(PLATFORMS::GPU_CUDA,scheduler, concatB, endpoint_3, 3);
+        TensorF *concatA = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, endpoint_0, endpoint_1, 3);
+        TensorF *concatB = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, concatA, endpoint_2, 3);
+        TensorF *concatC = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, concatB, endpoint_3, 3);
 
         //COMFIRMED
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B09_agg_concat.npy",concatC);
