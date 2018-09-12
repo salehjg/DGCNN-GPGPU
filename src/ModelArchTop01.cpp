@@ -36,7 +36,7 @@ void ModelArchTop01::SetModelInput_data(string npy_pcl) {
 }
 
 void ModelArchTop01::SetModelInput_labels(string npy_labels) {
-    //dataType of npy file should be int32, NOT uchar8!
+    // dataType of npy file should be int32, NOT uchar8!
     // use dataset_B5_labels_int32.npy
     _npy_labels = cnpy::npy_load(npy_labels);
     input_labels_B = new TensorI({B},_npy_labels.data<int>());
@@ -45,18 +45,8 @@ void ModelArchTop01::SetModelInput_labels(string npy_labels) {
 
 TensorF* ModelArchTop01::FullyConnected_Forward(WorkScheduler scheduler, TensorF* input_BxD, TensorF* weights, TensorF* biases){
     int ch_out = (int)weights->getShape().back();
-    //TensorF* tiledBias = platformSelector->Tile(platformSelector->defaultPlatform,scheduler,biases,0,B);
-    //TensorF* rsltTn = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,tmp,tiledBias);
     TensorF* tmp = platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,input_BxD,weights);
     TensorF* rsltTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,tmp,biases);
-    /*
-    float* tmp = LA_MatMul(input_BxD,w_ptr,1,3,B,input_last_dim,input_last_dim,ch_out);
-    for(int b=0;b<B;b++){
-        for(int ch=0;ch<ch_out;ch++){
-            tmp->_buff[b*ch_out+ch] = tmp->_buff[b*ch_out+ch] + biases->_buff[ch];
-        }
-    }
-    */
     return rsltTn;
 }
 
@@ -74,19 +64,7 @@ TensorF* ModelArchTop01::Batchnorm_Forward(WorkScheduler scheduler, TensorF* inp
     dim0 = input->getShape()[0];
     dim1 = input->getShape()[1];
 
-                //float* gamma_ptr = weights_map[gamma_key];
-                //vector<size_t> gamma_shape = weightsshape_map[gamma_key];
-                //float* beta_ptr = weights_map[beta_key];
-                //vector<size_t> beta_shape = weightsshape_map[beta_key];
-
-                //float* ema_var = weights_map[ema_var_key];
-                //vector<size_t> ema_var_shape = weightsshape_map[ema_var_key];
-                //float* ema_ave = weights_map[ema_ave_key];
-                //vector<size_t> ema_ave_shape = weightsshape_map[ema_ave_key];
-
-
     ///TODO: Rank4 and Rank2 branches could be merged into 1 branch with just mu and var lines conditioned!
-
     if(rank==4){
         dim2 = input->getShape()[2];
         dim3 = input->getShape()[3];
@@ -94,9 +72,7 @@ TensorF* ModelArchTop01::Batchnorm_Forward(WorkScheduler scheduler, TensorF* inp
         //mu and var is of shape (dim3)
         mu = platformSelector->Mean(platformSelector->defaultPlatform, scheduler, input, true, true, true, false);
         var = platformSelector->Variance(platformSelector->defaultPlatform, scheduler, input, true, true, true, false);
-        //mu = LA_Mean(input,4,true,true,true,false,dim0,dim1,dim2,dim3);
-        //var = LA_Variance(input,4,true,true,true,false,dim0,dim1,dim2,dim3);
-        //------------------------------------------
+
         // Exponential Moving Average for mu and var
         TensorF *update_delta_ave, *update_delta_var;
         TensorF *update_delta_ave2, *update_delta_var2;
@@ -106,57 +82,24 @@ TensorF* ModelArchTop01::Batchnorm_Forward(WorkScheduler scheduler, TensorF* inp
         update_delta_var = platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, var);
         update_delta_var2 = platformSelector->MatMul(platformSelector->defaultPlatform, scheduler, update_delta_var, bn_decay);
 
-        //float *final_ave =  LA_SUB(ema_ave,update_delta_ave2,3,1,1,dim3,0);
         TensorF *final_ave =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_ave, update_delta_ave2);
-
-        //float *final_var =  LA_SUB(ema_var,update_delta_var2,3,1,1,dim3,0);
         TensorF *final_var =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, update_delta_var2);
-        //------------------------------------------
+
         TensorF* xNormTmp1 = platformSelector->MatSubTiled(platformSelector->defaultPlatform,scheduler,input,final_ave);
         TensorF* xNormTmp2 = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,final_var,1e-8);
         TensorF* xNormTmp3 = platformSelector->Sqrt(platformSelector->defaultPlatform,scheduler,xNormTmp2);
         TensorF* xNorm = platformSelector->DivideTiled(platformSelector->defaultPlatform,scheduler,xNormTmp1,xNormTmp3);
         TensorF* rsltTmp1 = platformSelector->MultiplyTiled(platformSelector->defaultPlatform,scheduler,xNorm,gamma);
         TensorF* rsltTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,rsltTmp1,beta);
-        /*
-        //mu and var is of shape (dim3)
-        for(int d3=0;d3<dim3;d3++) {
-            for (int d0 = 0; d0 < dim0; d0++) {
-                for (int d1 = 0; d1 < dim1; d1++) {
-                    for (int d2 = 0; d2 < dim2; d2++) {
-                        indxS1 = d0*dim1*dim2*dim3+
-                                 d1*dim2*dim3+
-                                 d2*dim3+
-                                 d3;
-
-                        X_norm[indxS1] = (float) ((input[indxS1]-final_ave[d3]) / sqrt(final_var[d3]+1e-8));
-                        rslt[indxS1] = gamma_ptr[d3] * X_norm[indxS1] + beta_ptr[d3];
-                    }
-                }
-            }
-        }
-        free(mu);
-        free(var);
-        free(X_norm);
-        free(final_ave);
-        free(final_var);
-        free(update_delta_ave);
-        free(update_delta_ave2);
-        free(update_delta_var);
-        free(update_delta_var2);
-        */
 
         return rsltTn;
     }
 
     if(rank==2){
-
         //mu and var is of shape (dim1)
         mu = platformSelector->Mean(platformSelector->defaultPlatform, scheduler, input, true, false, false, false);
         var = platformSelector->Variance(platformSelector->defaultPlatform, scheduler, input, true, false, false, false);
-        //mu = LA_Mean(input,2,true,false,false,false,dim0,dim1,0,0);
-        //var = LA_Variance(input,2,true,false,false,false,dim0,dim1,0,0);
-        //------------------------------------------
+
         // Exponential Moving Average for mu and var
         TensorF *update_delta_ave, *update_delta_var;
         TensorF *update_delta_ave2, *update_delta_var2;
@@ -166,104 +109,34 @@ TensorF* ModelArchTop01::Batchnorm_Forward(WorkScheduler scheduler, TensorF* inp
         update_delta_var = platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, var);
         update_delta_var2 = platformSelector->MatMul(platformSelector->defaultPlatform, scheduler, update_delta_var, bn_decay);
 
-        //float *final_ave =  LA_SUB(ema_ave,update_delta_ave2,3,1,1,dim3,0);
         TensorF *final_ave =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_ave, update_delta_ave2);
-
-        //float *final_var =  LA_SUB(ema_var,update_delta_var2,3,1,1,dim3,0);
         TensorF *final_var =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, update_delta_var2);
-        //------------------------------------------
+
         TensorF* xNormTmp1 = platformSelector->MatSubTiled(platformSelector->defaultPlatform,scheduler,input,final_ave);
         TensorF* xNormTmp2 = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,final_var,1e-8);
         TensorF* xNormTmp3 = platformSelector->Sqrt(platformSelector->defaultPlatform,scheduler,xNormTmp2);
         TensorF* xNorm = platformSelector->DivideTiled(platformSelector->defaultPlatform,scheduler,xNormTmp1,xNormTmp3);
         TensorF* rsltTmp1 = platformSelector->MultiplyTiled(platformSelector->defaultPlatform,scheduler,xNorm,gamma);
         TensorF* rsltTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,rsltTmp1,beta);
-        /*
-        for (int d0 = 0; d0 < dim0; d0++) {
-            for (int d1 = 0; d1 < dim1; d1++) {
-                indxS1 = d0*dim1 + d1;
-                X_norm[indxS1] = (float) ((input[indxS1]-final_ave[d1]) / sqrt(final_var[d1]+1e-8));
-                rslt[indxS1] = gamma_ptr[d1] * X_norm[indxS1] + beta_ptr[d1];
-            }
-        }
 
-        free(final_ave);
-        free(final_var);
-        free(X_norm);
-        free(update_delta_ave);
-        free(update_delta_ave2);
-        free(update_delta_var);
-        free(update_delta_var2);
-        free(mu);
-        free(var);
-        */
         return rsltTn;
     }
     return nullptr;
 }
 
 TensorF* ModelArchTop01::GetEdgeFeatures(WorkScheduler scheduler, TensorF *input_BxNxD, TensorI *knn_output_BxNxK) {
-
     //Gather knn's indices from input array.
-    /*
-    float* point_cloud_neighbors = new float[B*N*K*D];
-    for(int b=0;b<B;b++){
-        for(int n=0;n<N;n++){
-            for(int k=0;k<K;k++){
-                indxS1 = b*N*K + n*K + k;
-                for(int d=0;d<D;d++)
-                {
-                    indxD = b*N*K*D + n*K*D + k*D + d;
-                    indxS2 = b*N*D +
-                             knn_output_BxNxK[indxS1]*D +
-                             d;
-                    point_cloud_neighbors[indxD] = input_BxNxD[indxS2];
-                }
-            }
-        }
-    }
-    */
     TensorF* point_cloud_neighbors = platformSelector->Gather(platformSelector->defaultPlatform,scheduler,input_BxNxD,knn_output_BxNxK,1);
-    //DumpMatrix<DType>("tmp1.npy",4,point_cloud_neighbors,B,N,K,D,0);
-
 
     //tile ing input of shape BxNxD into BxNxKxD..
     input_BxNxD->ExpandDims(2);
     TensorF* point_cloud_central = platformSelector->Tile(platformSelector->defaultPlatform,scheduler,input_BxNxD,2,K);
     input_BxNxD->SqueezeDims();
 
-    /*
-    float* point_cloud_central=new float[B*N*K*D];
-    for(int b=0;b<B;b++){
-        for(int n=0;n<N;n++){
-            indxS1= b*N*D + n*D + 0; //beginning of dim2 of input
-            for(int k=0;k<K;k++){
-                indxD = b*N*K*D + n*K*D + k*D + 0;
-                std::copy(input_BxNxD+indxS1,
-                          input_BxNxD+indxS1+D,
-                          point_cloud_central+indxD);
-            }
-        }
-    }*/
-    //DumpMatrix<DType>("tmp2.npy",4,point_cloud_central,B,N,K,D,0);
-
-
-    //float* features= LA_SUB(point_cloud_neighbors,point_cloud_central,4,B,N,K,D);
     TensorF* features = platformSelector->MatSub(platformSelector->defaultPlatform,scheduler, point_cloud_neighbors,point_cloud_central);
-    //DumpMatrix<DType>("tmp3.npy",4,features,B,N,K,D,0);
-
 
     //concatenate centrals and features (BxNxKxD) and (BxNxKxD)
-    //float* edge_feature = LA_Concat2(point_cloud_central,features,4,3,B,N,K,D,B,N,K,D);
     TensorF* edge_feature = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, point_cloud_central,features,3);
-    //DumpMatrix<DType>("tmp4.npy",4,edge_feature,B,N,K,2*D,0);
-
-
-    /*
-    free(point_cloud_central);
-    free(point_cloud_neighbors);
-    free(features);
-     */
 
     return edge_feature;
 }
@@ -284,47 +157,12 @@ TensorF* ModelArchTop01::PairwiseDistance(WorkScheduler scheduler, TensorF *inpu
     TensorF* rsltTmpTn = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,point_cloud_sum_tiled,point_cloud_sum_transpose_tiled); //both input tensors are BxNxN
     TensorF* rsltTn = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,rsltTmpTn,point_cloud_inner2); //both input tensors are BxNxN
 
-    /*
-    float*rslt=new float[B*N*N];
-    {
-        int indxS1,indxS2,indxS3;
-
-        //[b,n1,n2] ,shapes:
-        //point_cloud_sum           =[B,N,1] -->s1
-        //point_cloud_inner2        =[B,N,N] -->s2
-        //point_cloud_sum_transpose =[B,1,N] -->s3
-
-        for(int b=0;b<B;b++){
-            for(int n1=0;n1<N;n1++){
-                indxS1 = b*N+n1;
-                for(int n2=0;n2<N;n2++){
-                    indxS2 = b*N*N+n1*N+n2;
-                    indxS3 = b*N+n2;
-                    rslt[indxS2] =  point_cloud_sum[indxS1]+
-                                    point_cloud_inner2[indxS2]+
-                                    point_cloud_sum_transpose[indxS3];
-                }
-            }
-        }
-    }
-
-
-
-    free(point_cloud_transpose);
-    free(point_cloud_inner);
-    free(point_cloud_inner2);
-    free(point_cloud_inner2p2);
-    free(point_cloud_sum);
-    free(point_cloud_sum_transpose);
-
-    */
     return rsltTn;
 }
 
 TensorF* ModelArchTop01::TransformNet(WorkScheduler scheduler, TensorF* edgeFeatures){
 
     TensorF* net;
-    //----------------------------------------------------------------------------
     {
         TensorF* net1 = platformSelector->Conv2D(
                 platformSelector->defaultPlatform,
@@ -335,20 +173,6 @@ TensorF* ModelArchTop01::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
                 platformSelector->weightsLoader->AccessWeights(
                         platformSelector->defaultPlatform,"transform_net1.tconv1.biases.npy")
                         );
-
-        /*
-        //just for testing weight and bias values
-        TensorF* www_w = platformSelector->weightsLoader->AccessWeights(platformSelector->defaultPlatform,"transform_net1.tconv1.weights.npy");
-        TensorF* www_B = platformSelector->weightsLoader->AccessWeights(platformSelector->defaultPlatform,"transform_net1.tconv1.biases.npy");
-
-        for (int i = 0; i < 64; i++) {
-            cout << (www_w->_buff[i]) << endl;
-        }
-
-        platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"WWW_TST_W.npy",www_w);
-        platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"WWW_TST_B.npy",www_B);
-        */
-
 
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A01_tnet_conv.npy",net1);
 
@@ -414,6 +238,7 @@ TensorF* ModelArchTop01::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A06_tnet_relu.npy",net3);
         net = net3;
     }
+
     //----------------------------------------------------------------------------
     {
         TensorF *net1 = platformSelector->ReduceMax(
@@ -423,8 +248,8 @@ TensorF* ModelArchTop01::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A07_tnet_pool.npy",net1);
         net = net1;
     }
+
     //----------------------------------------------------------------------------
-    ///TODO: CHECK SHAPE, PRBBLY NEEDS DIM EXPANSION!
     {
         TensorF* net1 = platformSelector->Conv2D(
                 platformSelector->defaultPlatform,
@@ -549,6 +374,7 @@ TensorF* ModelArchTop01::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
 
         net = net3;
     }
+
     //----------------------------------------------------------------------------
     {
         TensorF* weights = platformSelector->weightsLoader->AccessWeights(
@@ -567,15 +393,12 @@ TensorF* ModelArchTop01::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
         TensorF* transformTn = platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,net,weights);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A18_transform_batch.npy",transformTn);
 
-        ///TODO: CHECK FOR TILED MULTIPLICATION REQUIREMENT FOR transformTn and biases!
-        //biases->ExpandDimZero();
-        //TensorF* biasesTiled = platformSelector->Tile(platformSelector->defaultPlatform,scheduler,biases,0,B);
-        //biases->SqueezeDims();
         TensorF* transformFinalTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,transformTn,biases);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A19_transform_batch_bias.npy",transformFinalTn);
         return transformFinalTn;
     }
 }
+
 /// Returns per-class score tensor of shape=40 and rank=1
 /// \param scheduler
 /// \return
@@ -619,6 +442,7 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         net = platformSelector->MatMul(platformSelector->defaultPlatform, scheduler, net_BxNx3, transform);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"C01_pcl.npy",net);
     }
+
     //----------------------------------------------------------------------------------------
     // DGCNN Layer #0
     cout<<"STATUS: "<<"DGCCN0 Started"<<endl;
@@ -655,6 +479,7 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         net = net4;
         endpoint_0 = net;
     }
+
     //----------------------------------------------------------------------------------------
     // DGCNN Layer #1
     cout<<"STATUS: "<<"DGCCN1 Started"<<endl;
@@ -689,6 +514,7 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         net = net4;
         endpoint_1 = net;
     }
+
     //----------------------------------------------------------------------------------------
     // DGCNN Layer #2
     cout<<"STATUS: "<<"DGCCN2 Started"<<endl;
@@ -723,6 +549,7 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         net = net4;
         endpoint_2 = net;
     }
+
     //----------------------------------------------------------------------------------------
     // DGCNN Layer #3
     cout<<"STATUS: "<<"DGCCN3 Started"<<endl;
@@ -757,6 +584,7 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         net = net4;
         endpoint_3 = net;
     }
+
     //----------------------------------------------------------------------------------------
     // concat layer
     cout<<"STATUS: "<<"Agg Layer Started"<<endl;
@@ -769,10 +597,9 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         TensorF *concatB = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, concatA, endpoint_2, 3);
         TensorF *concatC = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, concatB, endpoint_3, 3);
 
-        //COMFIRMED
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B09_agg_concat.npy",concatC);
 
-        //ATTENTION>> DIM2(K) of concatenated matrix is ONE, NOT 'K'
+        // DIM2(K) of concatenated matrix is ONE, NOT 'K'
         TensorF* net1 = platformSelector->Conv2D(platformSelector->defaultPlatform,scheduler,
                  concatC,
                  platformSelector->weightsLoader->AccessWeights(
@@ -803,12 +630,13 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
 
         net = net4;
     }
+
     //----------------------------------------------------------------------------------------
     //RESHAPING TO (Bx-1)
-    ///TODO: CHECK IT, IT MIGHT BE REQUIERD TO DO RESHAPE
     {
         net->SqueezeDims();
     }
+
     //----------------------------------------------------------------------------------------
     //FC1
     //net is of shape Bx1x1x1024
@@ -838,6 +666,7 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
         net = net3;
     }
+
     //----------------------------------------------------------------------------------------
     //FC2
     //net is of shape Bx1x1x512
@@ -867,6 +696,7 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
         net = net3;
     }
+
     //----------------------------------------------------------------------------------------
     //FC3
     //net is of shape Bx1x1x256
@@ -881,8 +711,6 @@ TensorF* ModelArchTop01::Execute(WorkScheduler scheduler) {
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B17_fc.npy",net1);
         net = net1;
     }
-    //----------------------------------------------------------------------------------------
-
     return net;
 }
 

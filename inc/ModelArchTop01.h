@@ -60,7 +60,7 @@ private:
     unsigned int N=-1;
     unsigned int K=-1;
     TensorF* input_pcl_BxNxD;
-    TensorI* input_labels_B; ///TODO: CHANGE TYPE
+    TensorI* input_labels_B;
     int DB_OFFSET=-1;
     cnpy::NpyArray _npy_pcl;
     cnpy::NpyArray _npy_labels;
