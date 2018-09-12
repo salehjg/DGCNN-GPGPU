@@ -5,6 +5,14 @@ SET(CUDA_INCLUDE_DIRS /opt/cuda/include)
 SET(CUDA_LIBRARIES cudart cublas)
 SET(CUDA_LIBRARY_DIRS /opt/cuda/lib64)
 
+find_package(CUDA REQUIRED)
+SET(CUDA_HOST_COMPILER /usr/bin/gcc-5)
+set(CUDA_PROPAGATE_HOST_FLAGS False)
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options '-fPIC'")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode arch=compute_61,code=sm_61")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std c++11")
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
+
 include_directories(${PROJECT_SOURCE_DIR}/inc ${PROJECT_SOURCE_DIR}/inc/cpu_imp ${PROJECT_SOURCE_DIR}/inc/cuda_imp ${CUDA_INCLUDE_DIRS})
 
 set(SOURCE_FILES_TensorFTest
@@ -31,11 +39,17 @@ set(SOURCE_FILES_ClassifierMultiplatform
         WeightsLoader.cpp
         ModelArchTop.cpp)
 
+# Find all cuda kernels
+#(https://stackoverflow.com/questions/29308787/cmake-file-for-cpp-cu-files)
+file( GLOB  KERNEL_SOURCES  ${PROJECT_SOURCE_DIR}/kernels/cuda/*.cu)
+message("Found these kernels: ")
+message("${KERNEL_SOURCES}")
+
 link_directories(${PROJECT_SOURCE_DIR}/submodules/cnpy ${CUDA_LIBRARY_DIRS})
 
+
+cuda_add_executable(ClassifierMultiplatform  ${SOURCE_FILES_ClassifierMultiplatform} ${KERNEL_SOURCES})
+target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs})
+
 add_executable(TensorFTest ${SOURCE_FILES_TensorFTest})
-add_executable(ClassifierMultiplatform ${SOURCE_FILES_ClassifierMultiplatform})
-
-
 target_link_libraries(TensorFTest cnpy z pthread ${CUDA_LIBRARIES})
-target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES})

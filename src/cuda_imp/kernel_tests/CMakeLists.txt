@@ -17,15 +17,16 @@ message("Found these kernels: ")
 message("${KERNEL_SOURCES}")
 
 # ----------------------------------------------------------------------------------------------------------------------
+# COMMENTED, BECAUSE THEY ARE ALREADY APPLIED ON MULTIPLATFORM CMAKELIST
 #(https://stackoverflow.com/questions/14306642/adding-multiple-executables-in-cmake)
 # Pass options to NVCC
-SET(CUDA_HOST_COMPILER /usr/bin/gcc-5)
-set(CUDA_PROPAGATE_HOST_FLAGS False)
+#SET(CUDA_HOST_COMPILER /usr/bin/gcc-5)
+#set(CUDA_PROPAGATE_HOST_FLAGS False)
 
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options '-fPIC'")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode arch=compute_61,code=sm_61")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std c++11")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
+#set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options '-fPIC'")
+#set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode arch=compute_61,code=sm_61")
+#set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std c++11")
+#set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
 
 file( GLOB KERNEL_TEST_SOURCES ${PROJECT_SOURCE_DIR}/src/cuda_imp/kernel_tests/*.cpp )
 foreach( testsourcefile ${KERNEL_TEST_SOURCES} )

@@ -27,13 +27,13 @@ void CpuImplementation::PrintInfo(
 
     string finalStr ;
     if(!setting1.empty() && !setting2.empty()){
-        finalStr = "** " + opName + ": " + setting1+ "=" + to_string(val1)+ ", " + setting2+ "=" + to_string(val2);
+        finalStr = "\t\t** " + opName + ": " + setting1+ "=" + to_string(val1)+ ", " + setting2+ "=" + to_string(val2);
     }else if(!setting1.empty() && setting2.empty()){
-        finalStr = "** " + opName + ": " + setting1+ "=" + to_string(val1);
+        finalStr = "\t\t** " + opName + ": " + setting1+ "=" + to_string(val1);
     }else if(setting1.empty() && !setting2.empty()){
-        finalStr = "** " + opName + ": " + setting2+ "=" + to_string(val2);
+        finalStr = "\t\t** " + opName + ": " + setting2+ "=" + to_string(val2);
     }else if(setting1.empty() && setting2.empty()){
-        finalStr = "** " + opName + ": " ;
+        finalStr = "\t\t** " + opName + ": " ;
     }
 
     if(!setting3.empty()){
@@ -56,7 +56,7 @@ void CpuImplementation::PrintInfo(
         finalStr += ", ";
     }
     finalStr+="\n";
-    cout<<finalStr;
+    //cout<<finalStr;
 }
 
 //float* CpuImplementation::Transpose(float* input,int batchsize, int matrix_rank, int matrixH, int matrixW){

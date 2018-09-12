@@ -43,6 +43,7 @@ CudaTensorF::CudaTensorF( std::vector<unsigned int> shape,float *buff){
 void CudaTensorF::Init(std::vector<unsigned int> shape) {
     cudaError_t cuda_stat;
     if(initialized){
+        std::cout<<"--- CudaTensorF: buffer deleted.\n";
         cuda_stat = cudaFree(_buff);
         assert(cuda_stat==cudaSuccess);
     }
@@ -60,6 +61,7 @@ void CudaTensorF::Init(std::vector<unsigned int> shape) {
 void CudaTensorF::Init(std::vector<unsigned int> shape, float* buff){
     cudaError_t cuda_stat;
     if(initialized){
+        std::cout<<"--- CudaTensorF: buffer deleted.\n";
         cuda_stat = cudaFree(_buff);
         assert(cuda_stat==cudaSuccess);
     }
@@ -74,6 +76,7 @@ void CudaTensorF::Init(std::vector<unsigned int> shape, float* buff){
 void CudaTensorF::InitWithHostData(std::vector<unsigned int> shape, float *hostBuff) {
     cudaError_t cuda_stat;
     if(initialized){
+        std::cout<<"--- CudaTensorF: buffer deleted.\n";
         cuda_stat = cudaFree(_buff);
         assert(cuda_stat==cudaSuccess);
     }
@@ -84,7 +87,7 @@ void CudaTensorF::InitWithHostData(std::vector<unsigned int> shape, float *hostB
 
     unsigned long len = getLengthBytes();
 
-    cuda_stat = cudaMalloc((void**)this->_buff, len);
+    cuda_stat = cudaMalloc((void**)&this->_buff, len);
     assert(cuda_stat==cudaSuccess);
     cuda_stat =cudaMemcpy(this->_buff, hostBuff, len, cudaMemcpyHostToDevice);
     assert(cuda_stat==cudaSuccess);
@@ -98,6 +101,7 @@ CudaTensorF::~CudaTensorF() {
      * overrides a base class destructor declared virtual; see 12.4 and 12.5. */
     cudaError_t cuda_stat;
     if(initialized){
+        std::cout<<"--- CudaTensorF: buffer deleted.\n";
         cuda_stat = cudaFree(_buff);
         assert(cuda_stat==cudaSuccess);
     }

@@ -11,7 +11,7 @@
 #include <string>
 
 
-ModelArch01::ModelArch(int dataset_offset, int batchsize, int pointcount, int knn_k) {
+ModelArch01::ModelArch01(int dataset_offset, int batchsize, int pointcount, int knn_k) {
     DB_OFFSET = dataset_offset;
     B = batchsize;
     N = pointcount;
@@ -86,6 +86,16 @@ float* ModelArch01::TransformNet(
                 "transform_net1.tconv1.weights.npy",
                 "transform_net1.tconv1.biases.npy",
                 &ConvOutputLastDim);
+
+        {//JUST FOR DEBUGGING
+                    vector<size_t> w_shape = weightsshape_map["transform_net1.tconv1.weights.npy"];
+                    float* w_ptr000 = weights_map["transform_net1.tconv1.weights.npy"];
+                    vector<size_t> b_shapes = weightsshape_map["transform_net1.tconv1.biases.npy"];
+                    float* b_ptr000 = weights_map["transform_net1.tconv1.biases.npy"];
+                    DumpMatrix<DType>("WWW_TST_W0.npy",4,w_ptr000,1,1,6,64,0);
+                    DumpMatrix<DType>("WWW_TST_B0.npy",1,b_ptr000,64,0,0,0,0);
+        }
+
         DumpMatrix<DType>("A01_tnet_conv.npy",4,net1,B,N,K,ConvOutputLastDim,0);
 
         float *net2 = Batchnorm_Forward(

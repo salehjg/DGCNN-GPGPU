@@ -5,6 +5,7 @@
 #include <cassert>
 #include "../inc/TensorF.h"
 #include <vector>
+#include <iostream>
 
 
 TensorF::TensorF() {
@@ -22,6 +23,7 @@ TensorF::TensorF(std::vector<unsigned int> shape, float *buff) {
 
 void TensorF::Init(std::vector<unsigned int> shape) {
     if(initialized){
+        std::cout<<"--- TensorF: buffer deleted.\n";
         delete(_buff);
     }
     this->shape = shape;
@@ -33,6 +35,7 @@ void TensorF::Init(std::vector<unsigned int> shape) {
 
 void TensorF::Init(std::vector<unsigned int> shape, float* buff){
     if(initialized){
+        std::cout<<"--- TensorF: buffer deleted.\n";
         delete(_buff);
     }
     this->shape = shape;
@@ -122,6 +125,7 @@ unsigned long TensorF::getLengthBytes() {
 // https://stackoverflow.com/questions/9331561/why-does-my-classs-destructor-get-called-when-i-add-instances-to-a-vector
 TensorF::~TensorF() {
     if(initialized){
+        std::cout<<"--- TensorF: destructed.\n";
         delete(_buff);
     }
 }

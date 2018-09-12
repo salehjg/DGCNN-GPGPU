@@ -2,6 +2,8 @@
 // Created by saleh on 8/22/18.
 //
 
+#include <cuda_imp/CudaMemHelper.h>
+#include <cuda_imp/common.h>
 #include "../inc/PlatformSelector.h"
 #include "../inc/cpu_imp/CpuImplementation.h"
 #include "../inc/cuda_imp/CudaImplementation.h"
@@ -19,7 +21,7 @@ PlatformSelector::PlatformSelector(PLATFORMS defaultPlatform, vector<PLATFORMS> 
                 break;
             }
             case PLATFORMS::GPU_CUDA : {
-                //cudaPlatformClass = new CudaImplementation(11);
+                cudaPlatformClass = new CudaImplementation(11);
                 break;
             }
             case PLATFORMS::GPU_OCL : {
@@ -66,7 +68,8 @@ TensorF* PlatformSelector::CrossThePlatform(TensorF *srcTn, PLATFORMS platform) 
             switch(platform){
                 case PLATFORMS::CPU :{
                     CudaTensorF * srcTensor = (CudaTensorF*)srcTn;
-                    return srcTensor->TransferToHost();
+                    TensorF* rsltTn = srcTensor->TransferToHost();
+                    return rsltTn;
                     break;
                 }
                 case PLATFORMS::GPU_CUDA :{
@@ -546,7 +549,9 @@ TensorF* PlatformSelector::Concat2(PLATFORMS platform, WorkScheduler scheduler, 
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            TensorF* rlstTn = cudaPlatformClass->Concat2(scheduler, __inputTn1, __inputTn2, concatDim);
+            cudaCheckErrors("KERNEL_TEST_ERROR");
+            return rlstTn;
             break;
         }
         case PLATFORMS::GPU_OCL :{

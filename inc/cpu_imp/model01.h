@@ -11,7 +11,7 @@ using namespace std;
 
 //#define DUMP_ENABLED
 //#undef DUMP_ENABLED
-#undef DUMP_ENABLED
+#define DUMP_ENABLED
 
 struct ModelInfo{
     string Version="";

@@ -145,6 +145,15 @@ int Test_4d() //Over Axis 3
                         dim3B   = 512,
                         dim3    = dim3A+dim3B;
 
+    /*
+    const unsigned int
+            dim0    = 5 ,
+            dim1    = 1024 ,
+            dim2    = 1,
+            dim3A   = 128,
+            dim3B   = 64,
+            dim3    = dim3A+dim3B;*/
+
     unsigned int size = dim0 * dim1 * dim2 * dim3A;
     printf("\nwith array size %d  \n", size);
 
