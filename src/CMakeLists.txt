@@ -37,7 +37,7 @@ set(SOURCE_FILES_ClassifierMultiplatform
         cuda_imp/CudaTensorI.cpp
         WorkScheduler.cpp
         WeightsLoader.cpp
-        ModelArchTop.cpp)
+        ModelArchTop01.cpp)
 
 # Find all cuda kernels
 #(https://stackoverflow.com/questions/29308787/cmake-file-for-cpp-cu-files)

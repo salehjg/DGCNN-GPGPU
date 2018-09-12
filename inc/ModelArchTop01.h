@@ -2,8 +2,8 @@
 // Created by saleh on 8/28/18.
 //
 
-#ifndef DEEPPOINTV1_MODELARCHTOP_H
-#define DEEPPOINTV1_MODELARCHTOP_H
+#ifndef DEEPPOINTV1_MODELARCHTOP01_H
+#define DEEPPOINTV1_MODELARCHTOP01_H
 
 #include <iostream>
 #include <sys/time.h>
@@ -40,9 +40,9 @@ inline double seconds()
 }
 
 
-class ModelArchTop {
+class ModelArchTop01 {
 public:
-    ModelArchTop(int dataset_offset, int batchsize, int pointcount, int knn_k);
+    ModelArchTop01(int dataset_offset, int batchsize, int pointcount, int knn_k);
     ModelInfo   GetModelInfo();
     void        SetModelInput_data(string npy_pcl);
     void        SetModelInput_labels(string npy_labels);
@@ -68,4 +68,4 @@ private:
 };
 
 
-#endif //DEEPPOINTV1_MODELARCHTOP_H
+#endif //DEEPPOINTV1_MODELARCHTOP01_H
