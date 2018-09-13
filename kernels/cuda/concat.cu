@@ -58,8 +58,8 @@ __global__ void kernel_concat_try01(
         const unsigned long dim123 = dim1*dim2*dim3;
         const unsigned long dim23 = dim2*dim3;
         const unsigned long _limit = dim0*dim123;
-        const unsigned long lenA = dim0*dim1*dim2*dim3A;
-        const unsigned long lenB = dim0*dim1*dim2*dim3B;
+        //const unsigned long lenA = dim0*dim1*dim2*dim3A;
+        //const unsigned long lenB = dim0*dim1*dim2*dim3B;
 
 
         unsigned long tid = blockIdx.x * blockDim.x + threadIdx.x;

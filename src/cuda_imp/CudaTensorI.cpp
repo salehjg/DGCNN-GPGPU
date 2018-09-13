@@ -161,7 +161,7 @@ int** CudaTensorI::ConvertDevice1D_to_Device2D(int* input_batched_1d,std::vector
     for(int i = 1;i<shape.size();i++){
         Len = Len * shape[i];
     }
-    ConvertDevice1D_to_Device2D(input_batched_1d,B,Len);
+    return ConvertDevice1D_to_Device2D(input_batched_1d,B,Len);
 }
 
 int** CudaTensorI::ConvertHost1D_to_Device2D(int* input_batched_1d, int** outDevice1D,std::vector<int> shape){
@@ -171,5 +171,5 @@ int** CudaTensorI::ConvertHost1D_to_Device2D(int* input_batched_1d, int** outDev
     for(int i = 1;i<shape.size();i++){
         Len = Len * shape[i];
     }
-    ConvertHost1D_to_Device2D(input_batched_1d,outDevice1D,B,Len);
+    return ConvertHost1D_to_Device2D(input_batched_1d,outDevice1D,B,Len);
 }
