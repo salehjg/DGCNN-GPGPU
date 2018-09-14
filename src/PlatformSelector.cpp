@@ -255,7 +255,8 @@ TensorF* PlatformSelector::ReduceSum(PLATFORMS platform, WorkScheduler scheduler
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            TensorF* rlstTn = cudaPlatformClass->ReduceSum(scheduler, __inputTn,over_axis0, over_axis1, over_axis2);
+            return rlstTn;
             break;
         }
         case PLATFORMS::GPU_OCL :{
@@ -274,7 +275,8 @@ TensorF* PlatformSelector::ReduceSum4D(PLATFORMS platform, WorkScheduler schedul
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            TensorF* rlstTn = cudaPlatformClass->ReduceSum4D(scheduler, __inputTn,over_axis0, over_axis1, over_axis2, over_axis3);
+            return rlstTn;
             break;
         }
         case PLATFORMS::GPU_OCL :{
@@ -550,7 +552,6 @@ TensorF* PlatformSelector::Concat2(PLATFORMS platform, WorkScheduler scheduler, 
         }
         case PLATFORMS::GPU_CUDA :{
             TensorF* rlstTn = cudaPlatformClass->Concat2(scheduler, __inputTn1, __inputTn2, concatDim);
-            cudaCheckErrors("KERNEL_TEST_ERROR");
             return rlstTn;
             break;
         }
@@ -570,7 +571,8 @@ TensorF* PlatformSelector::ReduceMax(PLATFORMS platform, WorkScheduler scheduler
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            TensorF* rlstTn = cudaPlatformClass->ReduceMax(scheduler, __inputTn,reductionDim);
+            return rlstTn;
             break;
         }
         case PLATFORMS::GPU_OCL :{

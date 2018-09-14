@@ -109,7 +109,29 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
                                       bool over_axis1,
                                       bool over_axis2){
     PrintInfo("ReduceSum","",0,"",0,"",0,inputTn->getShape(),{},{over_axis0,over_axis1,over_axis2});
+    unsigned int _dim0,_dim1,_dim2,_dim3;
+    _dim0 = inputTn->getShape()[0];
+    _dim1 = inputTn->getShape()[1];
+    _dim2 = inputTn->getShape()[2];
 
+    CudaTensorF* rsltTn ;
+    if(inputTn->getRank()==3 &&  !over_axis0 && !over_axis1 && over_axis2)rsltTn= new CudaTensorF({_dim0,_dim1});
+    if(inputTn->getRank()==2 &&  !over_axis0 && over_axis1 )rsltTn= new CudaTensorF({_dim0});
+
+    CHECK(cudaDeviceSynchronize());
+    reduce_sum_3d_try03(
+            inputTn->_buff,
+            rsltTn->_buff,
+            _dim0,
+            _dim1,
+            _dim2,
+            over_axis0,
+            over_axis1,
+            over_axis2);
+    CHECK(cudaDeviceSynchronize());
+
+    cudaCheckErrors("ReduceSum@CudaImplementation: KERNEL_ERROR");
+    return rsltTn;
 }
 
 ///[axis0,axis1,axis2,axis3] //No batch op, uses data as is(as a matrix)
@@ -121,6 +143,32 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
                                         bool over_axis3){
 
     PrintInfo("ReduceSum4D","",0,"",0,"",0,inputTn->getShape(),{},{over_axis0,over_axis1,over_axis2,over_axis3});
+
+    unsigned int _dim0,_dim1,_dim2,_dim3;
+    _dim0 = inputTn->getShape()[0];
+    _dim1 = inputTn->getShape()[1];
+    _dim2 = inputTn->getShape()[2];
+    _dim3 = inputTn->getShape()[3];
+
+    CudaTensorF* rsltTn = new CudaTensorF({_dim0,_dim1,_dim2,_dim3});
+
+    CHECK(cudaDeviceSynchronize());
+    reduce_sum_4d_try04(
+            inputTn->_buff,
+            rsltTn->_buff,
+            _dim0,
+            _dim1,
+            _dim2,
+            _dim3,
+            over_axis0,
+            over_axis1,
+            over_axis2,
+            over_axis3);
+    CHECK(cudaDeviceSynchronize());
+
+    cudaCheckErrors("ReduceSum4D@CudaImplementation: KERNEL_ERROR");
+
+    return rsltTn;
 
 }
 
@@ -242,6 +290,48 @@ TensorF* CudaImplementation::ReduceMax(
         TensorF* inputTn,
         int reductionDim){
     PrintInfo("ReduceMax","reductionDim",reductionDim,"",0,"",0,inputTn->getShape(),{},{});
+
+    unsigned int _dim0,_dim1,_dim2,_dim3;
+    _dim0 = inputTn->getShape()[0];
+    _dim1 = inputTn->getShape()[1];
+    _dim2 = inputTn->getShape()[2];
+    _dim3 = inputTn->getShape()[3];
+
+    CudaTensorF* rsltTn = nullptr;
+    if(inputTn->getRank()==4 &&  reductionDim==1)rsltTn= new CudaTensorF({_dim0,_dim2,_dim3});
+    if(inputTn->getRank()==4 &&  reductionDim==2)rsltTn= new CudaTensorF({_dim0,_dim1,_dim3});
+
+    CHECK(cudaDeviceSynchronize());
+    if(reductionDim==2){
+        reduce_max_4d_try01(
+                inputTn->_buff,
+                rsltTn->_buff,
+                _dim0,
+                _dim1,
+                _dim2,
+                _dim3,
+                reductionDim==0,
+                reductionDim==1,
+                reductionDim==2,
+                reductionDim==3);
+    }
+    if(reductionDim==1){
+        // for all reductionDim=1 : dim2 is always 1(i.e. tensor is 3 dimensional)
+        reduce_max_3d_try01(
+                inputTn->_buff,
+                rsltTn->_buff,
+                _dim0,
+                _dim1,
+                _dim3,
+                reductionDim==0,
+                reductionDim==1,
+                reductionDim==2);
+    }
+    CHECK(cudaDeviceSynchronize());
+
+    cudaCheckErrors("ReduceMax@CudaImplementation: KERNEL_ERROR");
+    return rsltTn;
+
 
 }
 
