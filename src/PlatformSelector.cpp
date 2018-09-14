@@ -672,7 +672,8 @@ TensorF* PlatformSelector::Tile(PLATFORMS platform, WorkScheduler scheduler, Ten
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            TensorF* rlstTn = cudaPlatformClass->Tile(scheduler, __inputTn, tileAxis, tileCount);
+            return rlstTn;
             break;
         }
         case PLATFORMS::GPU_OCL :{

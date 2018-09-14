@@ -367,6 +367,42 @@ TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int
 
     PrintInfo("Tile","tileAxis",tileAxis,"tileCount",tileCount,"",0,inputTn->getShape(),{},{});
 
+    unsigned int _dim0,_dim1,_dim2,_dim3;
+    _dim0 = inputTn->getShape()[0];
+    _dim1 = inputTn->getShape()[1];
+    _dim2 = inputTn->getShape()[2];
+    _dim3 = inputTn->getShape()[3];
+
+    CudaTensorF* rsltTn = nullptr;
+    if(inputTn->getRank()==4 &&  tileAxis==2){
+        rsltTn= new CudaTensorF({_dim0,_dim1,(unsigned int)tileCount,_dim3});
+    }
+    if(inputTn->getRank()==3 &&  tileAxis==1){
+        rsltTn= new CudaTensorF({_dim0,(unsigned int)tileCount,_dim2});
+    }
+    if(inputTn->getRank()==3 &&  tileAxis==2){
+        rsltTn= new CudaTensorF({_dim0,_dim1,(unsigned int)tileCount});
+    }
+
+
+    CHECK(cudaDeviceSynchronize());
+
+    tile_try03(
+            inputTn->_buff,
+            rsltTn->_buff,
+            _dim0,
+            _dim1,
+            _dim2,
+            inputTn->getRank()<4 ? 0:_dim3,
+            inputTn->getRank(),
+            tileAxis,
+            tileCount
+            );
+
+    CHECK(cudaDeviceSynchronize());
+
+    cudaCheckErrors("Tile@CudaImplementation: KERNEL_ERROR");
+    return rsltTn;
 }
 
 void CudaImplementation::DumpMatrix(

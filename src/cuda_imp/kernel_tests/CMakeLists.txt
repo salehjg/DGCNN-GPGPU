@@ -33,7 +33,7 @@ foreach( testsourcefile ${KERNEL_TEST_SOURCES} )
     # I used a simple string replace, to cut off .cpp.
     string( REPLACE ".cpp" "" testname ${testsourcefile} )
     get_filename_component(barename ${testname} NAME)
-    cuda_add_executable(${barename}  ${testsourcefile} ${KERNEL_SOURCES})
+    cuda_add_executable(${barename}  ${testsourcefile} ${KERNEL_SOURCES} ${PROJECT_SOURCE_DIR}/src/TensorF.cpp ${PROJECT_SOURCE_DIR}/src/cuda_imp/CudaTensorF.cpp)
     # Make sure YourLib is linked to each app
     target_link_libraries( ${barename} cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs})
 endforeach( testsourcefile ${KERNEL_TEST_SOURCES})

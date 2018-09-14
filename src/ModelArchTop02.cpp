@@ -129,7 +129,7 @@ TensorF* ModelArchTop02::GetEdgeFeatures(WorkScheduler scheduler, TensorF *input
 
     //tile ing input of shape BxNxD into BxNxKxD..
     input_BxNxD->ExpandDims(2);
-    TensorF* point_cloud_central = platformSelector->Tile(platformSelector->defaultPlatform,scheduler,input_BxNxD,2,K);
+    TensorF* point_cloud_central = platformSelector->Tile(PLATFORMS::GPU_CUDA,scheduler,input_BxNxD,2,K);
     input_BxNxD->SqueezeDims();
 
     TensorF* features = platformSelector->MatSub(platformSelector->defaultPlatform,scheduler, point_cloud_neighbors,point_cloud_central);
@@ -151,8 +151,8 @@ TensorF* ModelArchTop02::PairwiseDistance(WorkScheduler scheduler, TensorF *inpu
     //2D Matrix fed into function with virutal batch size of 1
     TensorF* point_cloud_sum_transpose = platformSelector->Transpose(platformSelector->defaultPlatform,scheduler,point_cloud_sum);  //changed dims
 
-    TensorF* point_cloud_sum_tiled =  platformSelector->Tile(platformSelector->defaultPlatform,scheduler,point_cloud_sum,2,N); //result is BxNxK for k=N
-    TensorF* point_cloud_sum_transpose_tiled =  platformSelector->Tile(platformSelector->defaultPlatform,scheduler,point_cloud_sum_transpose,1,N); //result is BxkxN for k=N
+    TensorF* point_cloud_sum_tiled =  platformSelector->Tile(PLATFORMS::GPU_CUDA,scheduler,point_cloud_sum,2,N); //result is BxNxK for k=N
+    TensorF* point_cloud_sum_transpose_tiled =  platformSelector->Tile(PLATFORMS::GPU_CUDA,scheduler,point_cloud_sum_transpose,1,N); //result is BxkxN for k=N
     TensorF* rsltTmpTn = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,point_cloud_sum_tiled,point_cloud_sum_transpose_tiled); //both input tensors are BxNxN
     TensorF* rsltTn = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,rsltTmpTn,point_cloud_inner2); //both input tensors are BxNxN
 

@@ -67,4 +67,16 @@ void reduce_max_3d_try01(
         bool overaxis1,
         bool overaxis2);
 
+extern
+void tile_try03(
+        float* g_i,
+        float* g_o,
+        unsigned int dim0,
+        unsigned int dim1,
+        unsigned int dim2,
+        unsigned int dim3,
+        int rank,
+        int tileAxis,
+        int tileCount);
+
 #endif //DEEPPOINTV1_KERNELS_H
