@@ -319,7 +319,7 @@ void tile_try03(
     else
         grid = (dim0*dim1*dim2*dim3 + block*EPT -1 )/(block*EPT);
 
-    printf("BLOCKSIZE: %lu, GRID SIZE: %lu, EPT: %lu\n",block,grid,EPT);
+    //printf("BLOCKSIZE: %lu, GRID SIZE: %lu, EPT: %lu\n",block,grid,EPT);
 
     kernel_tile_try03 <<< grid, block >>> (
             g_i, g_o,dim0,dim1,dim2,dim3,rank,tileAxis,tileCount,EPT);

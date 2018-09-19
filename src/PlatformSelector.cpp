@@ -275,8 +275,7 @@ TensorF* PlatformSelector::ReduceSum4D(PLATFORMS platform, WorkScheduler schedul
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            TensorF* rlstTn = cudaPlatformClass->ReduceSum4D(scheduler, __inputTn,over_axis0, over_axis1, over_axis2, over_axis3);
-            return rlstTn;
+            return cudaPlatformClass->ReduceSum4D(scheduler, __inputTn,over_axis0, over_axis1, over_axis2, over_axis3);
             break;
         }
         case PLATFORMS::GPU_OCL :{
@@ -295,7 +294,7 @@ TensorF* PlatformSelector::Mean(PLATFORMS platform, WorkScheduler scheduler, Ten
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->Mean(scheduler, __inputTn, mean_axis0, mean_axis1, mean_axis2, mean_axis3);
             break;
         }
         case PLATFORMS::GPU_OCL :{
@@ -722,4 +721,22 @@ void PlatformSelector::DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, s
     return;
 }
 
-
+bool PlatformSelector::CompareTensors(PLATFORMS platform, WorkScheduler scheduler, TensorF *inputTn1, TensorF *inputTn2) {
+    TensorF* __inputTn1 = CrossThePlatform(inputTn1, platform);
+    TensorF* __inputTn2 = CrossThePlatform(inputTn2, platform);
+    switch(platform){
+        case PLATFORMS::CPU :{
+            return cpuPlatformClass->CompareTensors(scheduler, __inputTn1,__inputTn2);
+            break;
+        }
+        case PLATFORMS::GPU_CUDA :{
+            throw "Not Implement.";
+            break;
+        }
+        case PLATFORMS::GPU_OCL :{
+            throw "Not Implement.";
+            break;
+        }
+    }
+    return false;
+}

@@ -72,9 +72,9 @@ void reduce_max_4d_try01(
     kDim2 = dim3;
     kGrid = (kDim0*kDim2 + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    printf("-------------------------------------------------------\n");
-    printf("KERNEL_GRID  : %d\n", kGrid);
-    printf("KERNEL_BLOCK : %d\n", BLOCK_SIZE);
+    //printf("-------------------------------------------------------\n");
+    //printf("KERNEL_GRID  : %d\n", kGrid);
+    //printf("KERNEL_BLOCK : %d\n", BLOCK_SIZE);
 
     kernel_reduce_max_try01 <<<kGrid, BLOCK_SIZE>>> (
             g_idata, g_odata,
@@ -103,9 +103,9 @@ void reduce_max_3d_try01(
     kDim2 = dim2;
     kGrid = (kDim0*kDim2 + BLOCK_SIZE - 1) / BLOCK_SIZE;
 
-    printf("-------------------------------------------------------\n");
-    printf("KERNEL_GRID  : %d\n", kGrid);
-    printf("KERNEL_BLOCK : %d\n", BLOCK_SIZE);
+    //printf("-------------------------------------------------------\n");
+    //printf("KERNEL_GRID  : %d\n", kGrid);
+    //printf("KERNEL_BLOCK : %d\n", BLOCK_SIZE);
 
     kernel_reduce_max_try01 <<<kGrid, BLOCK_SIZE>>> (
             g_idata, g_odata,

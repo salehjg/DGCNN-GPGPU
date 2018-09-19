@@ -1448,3 +1448,20 @@ void CpuImplementation::DumpMatrix(
         cnpy::npy_save<int>(npy_dir+npy_fname,inputTn->_buff ,shape_size_t,"w");
 #endif
 }
+
+bool CpuImplementation::CompareTensors(WorkScheduler scheduler, TensorF *inputTn1, TensorF *inputTn2) {
+    float totalDiff=0;
+    float currentDiff=0;
+    if(inputTn1->getShape() == inputTn2->getShape()){
+        unsigned long _len = inputTn1->getLength();
+        for(unsigned long i =0 ; i<_len;i++){
+            currentDiff = inputTn1->_buff[i] - inputTn2->_buff[i];
+            totalDiff += (currentDiff>=0)?currentDiff:-1*currentDiff;
+            if(totalDiff > 50.0f) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return false;
+}

@@ -48,8 +48,10 @@ public:
     TensorF* ReLU(WorkScheduler scheduler, TensorF* inputTn);
     TensorF* Tile(WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount);
 
+
     void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir);
     void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir);
+    bool     CompareTensors(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2);
 
 
 private:

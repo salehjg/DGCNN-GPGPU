@@ -255,7 +255,7 @@ float* LA_Mean(
 
 
 
-int Test_4d_FFTF() //FFTF
+int Test_4d_TTTF()
 {
     // set up device
     int dev = 0;
@@ -265,10 +265,10 @@ int Test_4d_FFTF() //FFTF
     CHECK(cudaSetDevice(dev));
 
 
-    const unsigned int  dim0 = 60 ,
-                        dim1 = 1024 ,
-                        dim2 = 20,
-                        dim3 = 128;
+    const unsigned int  dim0 = 1 ,
+                        dim1 = 1 ,
+                        dim2 = 5,
+                        dim3 = 256;
 
     unsigned int size = dim0 * dim1 * dim2 * dim3;
     printf("\nwith array size %d  \n", size);
@@ -287,7 +287,7 @@ int Test_4d_FFTF() //FFTF
                 for(int d2=0;d2<dim2;d2++){
                     for(int d3=0;d3<dim3;d3++){
                         indx = d0*dim1*dim2*dim3 + d1*dim2*dim3 + d2*dim3 + d3;
-                        h_f_idata[indx] = (float)(1.0f);
+                        h_f_idata[indx] = (float)(indx);
                     }
                 }
             }
@@ -319,18 +319,13 @@ int Test_4d_FFTF() //FFTF
     iElaps = seconds() - iStart;
 
 
-    CHECK(cudaMemcpy(h_f_odataTTTF, d_f_odata_TTTF, fbytes_output_TTTF,cudaMemcpyDeviceToHost)); ///TODO: CHANGE BUFF SIZE TO CPY
+    CHECK(cudaMemcpy(h_f_odataTTTF, d_f_odata_TTTF, fbytes_output_TTTF,cudaMemcpyDeviceToHost));
 
 
 
-
-
-
-    ///TODO: CHECK RESULTS WITH CORRECT ONES!
-    bool match0=true, match1=true, match2=true;
+    bool match0=true;
     {
         int indx=0;
-        // FFTF Reduce Max Check:
         for(int d3 = 0 ; d3 < dim3 && match0; d3++){
             indx = d3;
             if(h_f_odataTTTF[indx] != h_f_resultTTTF[indx] ){
@@ -347,7 +342,7 @@ int Test_4d_FFTF() //FFTF
     cout << "Tensor Size: dim0 x dim1 x dim2 x dim3 " << dim0 << "x" << dim1 << "x" << dim2 << "x" << dim3 << " Float32" << endl;
     cout << "-------------------------------------------------------" << endl;
     cout << "Comparison Results:" << endl;
-    cout << "\t-OverAxis FFTF(RANK=4) Matches: " << match0 << endl;
+    cout << "\t-Matches: " << match0 << endl;
     cout << "-------------------------------------------------------" << endl;
 
 
@@ -369,12 +364,12 @@ int Test_4d_FFTF() //FFTF
 
 
 
-int Test_2d_FTF() //FTF
+int Test_2d_TF()
 {
 
 }
 
 int main(){
-    Test_4d_FFTF();
-    //Test_3d_FTF();
+    Test_4d_TTTF();
+    //Test_2d_TF();
 }

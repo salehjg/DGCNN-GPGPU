@@ -50,26 +50,34 @@ TensorF* ModelArchTop02::FullyConnected_Forward(WorkScheduler scheduler, TensorF
 }
 
 TensorF* ModelArchTop02::Batchnorm_Forward(WorkScheduler scheduler, TensorF* input, TensorF* gamma, TensorF* beta, TensorF* ema_ave, TensorF* ema_var){
-    int dim0,dim1,dim2,dim3,rank;
+    int rank;
     float bn_decay = 0.5f;
-    unsigned long indxS1;
-    unsigned long indxS2;
-    unsigned long indxD;
+
 
     TensorF* mu;
     TensorF* var;
 
     rank = input->getRank();
-    dim0 = input->getShape()[0];
-    dim1 = input->getShape()[1];
 
     ///TODO: Rank4 and Rank2 branches could be merged into 1 branch with just mu and var lines conditioned!
     if(rank==4){
-        dim2 = input->getShape()[2];
-        dim3 = input->getShape()[3];
+        /*
+        {// JUST FOR DEBUGGING --- STILL RAISES EXCEPTION ON COMPARE TENSORS FOR REDUCESUM4D
+                platformSelector->DumpMatrix(PLATFORMS::CPU,scheduler,"dbg4d_src.npy",input);
+                TensorF * dbgTnCPU = platformSelector->ReduceSum4D(PLATFORMS::CPU, scheduler, input, true, true, true, false);
+                TensorF * dbgTn = platformSelector->ReduceSum4D(PLATFORMS::GPU_CUDA, scheduler, input, true, true, true, false);
+                assert(platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,dbgTnCPU,dbgTn));
+                platformSelector->DumpMatrix(PLATFORMS::CPU,scheduler,"dbg4d_dst.npy",dbgTn);
+        }*/
 
         //mu and var is of shape (dim3)
-        mu = platformSelector->Mean(platformSelector->defaultPlatform, scheduler, input, true, true, true, false);
+        mu = platformSelector->Mean(PLATFORMS::GPU_CUDA, scheduler, input, true, true, true, false);
+        /*
+        {// JUST FOR DEBUGGING
+            TensorF *mu_cpu = platformSelector->Mean(PLATFORMS::CPU, scheduler, input, true, true, true, false);
+            assert(platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,mu,mu_cpu));
+        }*/
+
         var = platformSelector->Variance(platformSelector->defaultPlatform, scheduler, input, true, true, true, false);
 
         // Exponential Moving Average for mu and var
@@ -95,8 +103,27 @@ TensorF* ModelArchTop02::Batchnorm_Forward(WorkScheduler scheduler, TensorF* inp
     }
 
     if(rank==2){
+        /*
+        {// JUST FOR DEBUGGING
+            platformSelector->DumpMatrix(PLATFORMS::CPU,scheduler,"dbg2d_src.npy",input);
+            input->ExpandDimZero();
+            input->ExpandDimZero();
+            TensorF * dbgTnCPU = platformSelector->ReduceSum4D(PLATFORMS::CPU, scheduler, input, true, true, true, false);
+            TensorF * dbgTn = platformSelector->ReduceSum4D(PLATFORMS::GPU_CUDA, scheduler, input, true, true, true, false);
+            assert(platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,dbgTnCPU,dbgTn));
+            input->SqueezeDimZero();
+            input->SqueezeDimZero();
+            platformSelector->DumpMatrix(PLATFORMS::CPU,scheduler,"dbg2d_dst.npy",dbgTn);
+        }*/
+
         //mu and var is of shape (dim1)
-        mu = platformSelector->Mean(platformSelector->defaultPlatform, scheduler, input, true, false, false, false);
+        mu = platformSelector->Mean(PLATFORMS::GPU_CUDA, scheduler, input, true, false, false, false);
+        /*
+        {// JUST FOR DEBUGGING
+            TensorF *mu_cpu = platformSelector->Mean(PLATFORMS::CPU, scheduler, input, true, false, false, false);
+            assert(platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,mu,mu_cpu));
+        }*/
+
         var = platformSelector->Variance(platformSelector->defaultPlatform, scheduler, input, true, false, false, false);
 
         // Exponential Moving Average for mu and var
@@ -680,6 +707,8 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B15_fc.npy",net1);
 
         //net1 is of shape Bx1x1x512
+        //JUST FOR DEBUGGING
+        cout<<"#########################################\n2D MEAN IS HERE:\n";
         TensorF *net2 = Batchnorm_Forward(scheduler,net1,
                                           platformSelector->weightsLoader->AccessWeights(
                                                   platformSelector->defaultPlatform,"fc2.bn.gamma.npy"),
@@ -690,6 +719,8 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
                                           platformSelector->weightsLoader->AccessWeights(
                                                   platformSelector->defaultPlatform,"fc2.bn.fc2.bn.moments.Squeeze_1.ExponentialMovingAverage.npy")
         );
+        cout<<"#########################################\n";
+
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B16_fc.npy",net2);
 
         TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);

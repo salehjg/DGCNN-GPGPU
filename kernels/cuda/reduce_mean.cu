@@ -63,7 +63,7 @@ extern __global__ void kernel_reduce_sum_4d_try04(
 
 
 // Multiplies constant coef. into whole array element wise.
-__global__ void kernel_multiply_const_try01(
+__global__ void kernel_divide_by_const_try01(
         const float * __restrict__  g_idata,
         float * __restrict__  g_odata,
         const unsigned long dim,
@@ -93,10 +93,12 @@ void reduce_mean_4d_try02(
         bool overaxis0,
         bool overaxis1,
         bool overaxis2,
-        bool overaxis3)
-{
-    cudaStream_t local_stream;
-    cudaStreamCreate(&local_stream);
+        bool overaxis3){
+
+    //cudaStream_t local_stream;
+    //cudaStreamCreate(&local_stream);
+
+
     float* g_tempbuff;
 
     if( !(overaxis0 && overaxis1 && overaxis2 && !overaxis3) ) {
@@ -127,6 +129,7 @@ void reduce_mean_4d_try02(
         TPG = (unsigned long) dim3; //threads per group
 
         printf("-------------------------------------------------------\n");
+        printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
         printf("KERNEL_GRID  : %ld\n", grid);
         printf("KERNEL_BLOCK : %ld\n", block);
         printf("KERNEL_SPT :   %ld\n", SPT);
@@ -136,10 +139,10 @@ void reduce_mean_4d_try02(
 
         float *g_buffer;
         CHECK(cudaMalloc((float **) &g_tempbuff, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
-        CHECK(cudaMalloc((float **) &g_buffer, (TGC * TPG) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
-        CHECK(cudaMemset(g_buffer, 0, (TGC * TPG) * sizeof(float)));
-        kernel_reduce_sum_4d_try04 << < grid, block, TGPB * TPG * sizeof(float), local_stream >> > (
-            g_idata, g_buffer, g_tempbuff,1,
+        //CHECK(cudaMalloc((float **) &g_buffer, (TGC * TPG) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
+        CHECK(cudaMemset(g_tempbuff, 0, (dim3) * sizeof(float) ));
+        kernel_reduce_sum_4d_try04 << < grid, block, TGPB * TPG * sizeof(float)/*, local_stream*/ >> > (
+            g_idata, /*g_buffer*/ nullptr, g_tempbuff,1,
             dim0, dim1, dim2, dim3,
             overaxis0, overaxis1, overaxis2, overaxis3,
             TGC,
@@ -147,8 +150,10 @@ void reduce_mean_4d_try02(
             SPT,
             TGO
         );
-        CHECK(cudaFree(g_buffer));
+        //CHECK(cudaFree(g_buffer));
     }
+
+    CHECK(cudaDeviceSynchronize());
 
     // 2. Multiplying (1/n) to each element of resulted tensor from step 1.
     {
@@ -161,8 +166,8 @@ void reduce_mean_4d_try02(
 
         block = BLOCK_SIZE;
         grid = (len + block -1 )/(block);
-        kernel_multiply_const_try01 << < grid, block, 0, local_stream >> > (
-                g_tempbuff, g_odata, len,coef
+        kernel_divide_by_const_try01 << < grid, block, 0/*, local_stream */>> > (
+                g_tempbuff, g_odata, len, coef
                 );
         CHECK(cudaFree(g_tempbuff));
     }

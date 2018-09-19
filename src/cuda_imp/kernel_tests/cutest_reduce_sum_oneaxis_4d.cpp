@@ -3,6 +3,7 @@
 //
 
 #include "common.h"
+#include "../../../submodules/cnpy/cnpy.h"
 #include <cuda_runtime.h>
 #include <stdio.h>
 #include <cstdlib>
@@ -37,7 +38,41 @@ void reduce_sum_4d_try04(
         bool overaxis2,
         bool overaxis3);
 
-
+template<typename T> int DumpMatrix(
+        string npy_fname,
+        int rank,
+        T* mat,
+        int dim0,
+        int dim1,
+        int dim2,
+        int dim3,
+        int dim4){
+    string npy_dir = "/home/saleh/00_repos/tensorflow_repo/00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/data/matrix_dumps/";
+    if(rank==1){
+        cnpy::npy_save<T>(npy_dir+npy_fname,&mat[0],{(long unsigned int)dim0},"w");
+    }
+    if(rank==2){
+        cnpy::npy_save<T>(npy_dir+npy_fname,&mat[0],{(long unsigned int)dim0,(long unsigned int)dim1},"w");
+    }
+    if(rank==3){
+        cnpy::npy_save<T>(npy_dir+npy_fname,&mat[0],{(long unsigned int)dim0,
+                                          (long unsigned int)dim1,
+                                          (long unsigned int)dim2},"w");
+    }
+    if(rank==4){
+        cnpy::npy_save<T>(npy_dir+npy_fname,&mat[0],{(long unsigned int)dim0,
+                                          (long unsigned int)dim1,
+                                          (long unsigned int)dim2,
+                                          (long unsigned int)dim3},"w");
+    }
+    if(rank==5){
+        cnpy::npy_save<T>(npy_dir+npy_fname,&mat[0],{(long unsigned int)dim0,
+                                                  (long unsigned int)dim1,
+                                                  (long unsigned int)dim2,
+                                                  (long unsigned int)dim3,
+                                                  (long unsigned int)dim4},"w");
+    }
+}
 
 //[axis0,axis1,axis2,axis3] //No batch op, uses data as is(as a matrix)
 float* LA_Sum4D(float* mat1,
@@ -105,10 +140,16 @@ int main(int argc, char **argv)
      *      60,1024,1 ,1024---------> 1.1873 ms
      *
      */
+    /*
     const unsigned int  dim0 = 60 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 17x1024x1024x2 , STH IS WRONG WHIT THAT KERNEL!
                         dim1 = 1024 ,
                         dim2 = 1,
                         dim3 = 1024;
+                        */
+    const unsigned int  dim0 = 1 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 17x1024x1024x2 , STH IS WRONG WHIT THAT KERNEL!
+            dim1 = 1 ,
+            dim2 = 5,
+            dim3 = 256;
 
     unsigned int size = dim0 * dim1 * dim2 * dim3;
     printf("\nwith array size %d  \n", size);
@@ -154,8 +195,24 @@ int main(int argc, char **argv)
 
     //reduce_sum_4d_try02(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
     //reduce_sum_4d_try03(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
 
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
 
 
 
@@ -168,7 +225,9 @@ int main(int argc, char **argv)
 
 
 
-
+    DumpMatrix<float>("reducesum_src.npy",2,h_f_idata,5,256,0,0,0);
+    DumpMatrix<float>("reducesum_cpu.npy",1,h_f_result012,256,0,0,0,0);
+    DumpMatrix<float>("reducesum_gpu.npy",1,h_f_odata012,256,0,0,0,0);
 
     ///TODO: CHECK RESULTS WITH CORRECT ONES!
     bool match0=true, match1=true, match2=true;

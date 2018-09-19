@@ -344,9 +344,9 @@ void reduce_sum_3d_try03(
 
     dim3 grid = overaxis0 ? (grid_overdim0) : (overaxis1 ? grid_overdim1 : grid_overdim2);
 
-    printf("-------------------------------------------------------\n");
-    printf("KERNEL_GRID  : %d\n", grid.x);
-    printf("KERNEL_BLOCK : %d\n", block.x);
+    //printf("-------------------------------------------------------\n");
+    //printf("KERNEL_GRID  : %d\n", grid.x);
+    //printf("KERNEL_BLOCK : %d\n", block.x);
 
     kernel_reduce_sum_3d_try03 <<<grid, block>>> (
             g_idata, g_odata,

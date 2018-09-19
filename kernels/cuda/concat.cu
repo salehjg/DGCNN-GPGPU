@@ -116,8 +116,8 @@ void concat_try01(
         block = BLOCK_SIZE;
         grid = (dim0A*dim1A*dim2A*dim3 + block*EPT -1 )/(block*EPT);
 
-        printf("TensorA: %d,%d,%d,%d   TensorB: %d,%d,%d,%d\n", dim0A,dim1A,dim2A,dim3A,dim0B,dim1B,dim2B,dim3B);
-        printf("BLOCKSIZE: %lu, GRID SIZE: %lu, EPT: %lu\n",block,grid,EPT);
+        //printf("TensorA: %d,%d,%d,%d   TensorB: %d,%d,%d,%d\n", dim0A,dim1A,dim2A,dim3A,dim0B,dim1B,dim2B,dim3B);
+        //printf("BLOCKSIZE: %lu, GRID SIZE: %lu, EPT: %lu\n",block,grid,EPT);
 
         kernel_concat_try01 <<< grid, block >>> (
               g_iA,g_iB, g_o,dim0A,dim1A,dim2A,dim3A,dim3B,3,EPT);

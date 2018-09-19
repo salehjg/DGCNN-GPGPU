@@ -149,13 +149,13 @@ void reduce_sum_4d_try03(
 
     TPG = (unsigned int)dim3; //threads per group
 
-    printf("-------------------------------------------------------\n");
-    printf("KERNEL_GRID  : %d\n", grid);
-    printf("KERNEL_BLOCK : %d\n", block);
-    printf("KERNEL_SPT : %d\n", SPT);
-    printf("KERNEL_TGO : %d\n", TGO);
-    printf("KERNEL_TGC : %d\n", TGC);
-    printf("KERNEL_TGPB : %d\n", TGPB);
+    //printf("-------------------------------------------------------\n");
+    //printf("KERNEL_GRID  : %d\n", grid);
+    //printf("KERNEL_BLOCK : %d\n", block);
+    //printf("KERNEL_SPT : %d\n", SPT);
+    //printf("KERNEL_TGO : %d\n", TGO);
+    //printf("KERNEL_TGC : %d\n", TGC);
+    //printf("KERNEL_TGPB : %d\n", TGPB);
 
     float* g_buffer;
     CHECK(cudaMalloc((float**)&g_buffer, (TGC*TPG)*sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
@@ -215,6 +215,15 @@ __global__ void kernel_reduce_sum_4d_try04(
         unsigned long _limit = dim0*dim1*dim2*dim3;
         unsigned long GroupIndexWithinBlock = (GroupIndex - blockIdx.x *TGPB);
 
+        {
+            // Fill unused shared mem with zeros! - Share memory is NOT initialized to zero
+            // https://stackoverflow.com/questions/22172881/why-cuda-shared-memory-is-initialized-to-zero?noredirect=1&lq=1
+            smem_buff[threadIdx.x] = 0;
+        }
+
+        __syncthreads();
+
+
         // Ignore incomplete groups at the end of each thread block.
         if( GroupIndexWithinBlock < TGPB && GroupIndex < TGC){
             //Thread Index In Thread Group
@@ -244,12 +253,15 @@ __global__ void kernel_reduce_sum_4d_try04(
             //------------------------------------------------------------
             // |---element0s---|-----element1s----|------....|
             smem_buff[TIITG*TGPB + GroupIndexWithinBlock] = thread_sum;
+            //printf("TIITG: %ld, TGPB: %ld, GroupIndexLocal: %ld, smemIndx: %ld\n",
+            //        TIITG,TGPB,GroupIndexWithinBlock,TIITG*TGPB + GroupIndexWithinBlock);
             //if(thread_sum!=10.0)
             //    printf("bid: %06d, tid: %06d, GroupIndex: %06ld, ThreadIndexInGroup: %06ld, thread_sum: %f, smem_buff[%06ld]: %f \n",
             //           blockIdx.x, threadIdx.x, GroupIndex, TIITG, thread_sum, TIITG*TGPB + GroupIndexWithinBlock , smem_buff[TIITG*TGPB + GroupIndexWithinBlock]);
 
 
         }
+
 
         __syncthreads();
 
@@ -349,7 +361,8 @@ void reduce_sum_4d_try04(
 
     TPG = (unsigned long)dim3; //threads per group
 
-    printf("-------------------------------------------------------\n");
+    //printf("-------------------------------------------------------\n");
+    printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
     printf("KERNEL_GRID  : %ld\n", grid);
     printf("KERNEL_BLOCK : %ld\n", block);
     printf("KERNEL_SPT :   %ld\n", SPT);
@@ -360,6 +373,7 @@ void reduce_sum_4d_try04(
     float* g_buffer;
     CHECK(cudaMalloc((float**)&g_buffer, (TGC*TPG)*sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
     CHECK(cudaMemset(g_buffer,0,(TGC*TPG)*sizeof(float)));
+    CHECK(cudaMemset(g_odata,0,(dim3)*sizeof(float)));
     kernel_reduce_sum_4d_try04 <<<grid, block, TGPB*TPG*sizeof(float)>>> (
             g_idata, g_buffer, g_odata, 1,
                     dim0, dim1, dim2, dim3,

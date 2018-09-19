@@ -44,7 +44,7 @@ extern __global__ void kernel_reduce_sum_4d_try04(
         const unsigned long TGO);
 
 extern
-__global__ void kernel_multiply_const_try01(
+__global__ void kernel_divide_by_const_try01(
         const float * __restrict__  g_idata,
         float * __restrict__  g_odata,
         const unsigned long dim,
@@ -169,7 +169,7 @@ void reduce_variance_4d_try01(
 
         block = BLOCK_SIZE;
         grid = (len + block -1 )/(block);
-        kernel_multiply_const_try01 <<< grid, block, 0, local_stream >>> (
+        kernel_divide_by_const_try01 <<< grid, block, 0, local_stream >>> (
                 g_tempbuff, g_median, len,coef
         );
         CHECK(cudaFree(g_tempbuff));

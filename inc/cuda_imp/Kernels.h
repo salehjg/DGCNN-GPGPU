@@ -79,4 +79,17 @@ void tile_try03(
         int tileAxis,
         int tileCount);
 
+extern
+void reduce_mean_4d_try02(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3);
+
 #endif //DEEPPOINTV1_KERNELS_H

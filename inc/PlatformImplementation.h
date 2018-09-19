@@ -43,6 +43,7 @@ public:
 
     virtual void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir)=0;
     virtual void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir)=0;
+    virtual bool     CompareTensors(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2)=0;
 
 private:
 

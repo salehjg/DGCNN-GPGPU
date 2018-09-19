@@ -134,7 +134,7 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
     return rsltTn;
 }
 
-///[axis0,axis1,axis2,axis3] //No batch op, uses data as is(as a matrix)
+///[axis0,axis1,axis2,axis3] //No batch op, uses data as is
 TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
                                         TensorF* inputTn,
                                         bool over_axis0,
@@ -143,6 +143,7 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
                                         bool over_axis3){
 
     PrintInfo("ReduceSum4D","",0,"",0,"",0,inputTn->getShape(),{},{over_axis0,over_axis1,over_axis2,over_axis3});
+    assert(over_axis0&&over_axis1&&over_axis2&&!over_axis3); // TTTF ONLY
 
     unsigned int _dim0,_dim1,_dim2,_dim3;
     _dim0 = inputTn->getShape()[0];
@@ -150,7 +151,7 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
     _dim2 = inputTn->getShape()[2];
     _dim3 = inputTn->getShape()[3];
 
-    CudaTensorF* rsltTn = new CudaTensorF({_dim0,_dim1,_dim2,_dim3});
+    CudaTensorF* rsltTn = new CudaTensorF({_dim3}); // TTTF
 
     CHECK(cudaDeviceSynchronize());
     reduce_sum_4d_try04(
@@ -181,7 +182,49 @@ TensorF* CudaImplementation::Mean(
         bool mean_axis3){
 
     PrintInfo("Mean","",0,"",0,"",0,inputTn->getShape(),{},{mean_axis0,mean_axis1,mean_axis2,mean_axis3});
+    unsigned long _dim0,_dim1,_dim2,_dim3;
+    bool _mean_axis0, _mean_axis1, _mean_axis2, _mean_axis3;
+    assert(inputTn->getRank()==2 || inputTn->getRank()==4);
+    assert(
+            (mean_axis0 && mean_axis1 && mean_axis2 && !mean_axis3 && inputTn->getRank()==4) ||
+            (mean_axis0 && !mean_axis1 && !mean_axis2 && !mean_axis3 && inputTn->getRank()==2)
+    );
+    if(inputTn->getRank()==4){
+        _dim0 = inputTn->getShape()[0];
+        _dim1 = inputTn->getShape()[1];
+        _dim2 = inputTn->getShape()[2];
+        _dim3 = inputTn->getShape()[3];
+        _mean_axis0 = mean_axis0;
+        _mean_axis1 = mean_axis1;
+        _mean_axis2 = mean_axis2;
+        _mean_axis3 = mean_axis3;
+    }else if (inputTn->getRank()==2){
+        _dim0 = 1;
+        _dim1 = 1;
+        _dim2 = inputTn->getShape()[0];
+        _dim3 = inputTn->getShape()[1];
+        _mean_axis0 = true;
+        _mean_axis1 = true;
+        _mean_axis2 = true;
+        _mean_axis3 = false;
+    }
+    CudaTensorF* rsltTn = new CudaTensorF({(unsigned int)_dim3});
+    CHECK(cudaDeviceSynchronize());
+    reduce_mean_4d_try02(
+            inputTn->_buff,
+            rsltTn->_buff,
+            _dim0,
+            _dim1,
+            _dim2,
+            _dim3,
+            _mean_axis0,
+            _mean_axis1,
+            _mean_axis2,
+            _mean_axis3);
+    CHECK(cudaDeviceSynchronize());
 
+    cudaCheckErrors("Mean@CudaImplementation: KERNEL_ERROR");
+    return rsltTn;
 }
 
 TensorF* CudaImplementation::Variance(
@@ -419,4 +462,8 @@ void CudaImplementation::DumpMatrix(
         TensorI* inputTn,
         string npy_dir){
 
+}
+
+bool CudaImplementation::CompareTensors(WorkScheduler scheduler,TensorF *inputTn1, TensorF *inputTn2) {
+    return false;
 }
