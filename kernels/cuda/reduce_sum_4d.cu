@@ -362,13 +362,13 @@ void reduce_sum_4d_try04(
     TPG = (unsigned long)dim3; //threads per group
 
     //printf("-------------------------------------------------------\n");
-    printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
-    printf("KERNEL_GRID  : %ld\n", grid);
-    printf("KERNEL_BLOCK : %ld\n", block);
-    printf("KERNEL_SPT :   %ld\n", SPT);
-    printf("KERNEL_TGO :   %ld\n", TGO);
-    printf("KERNEL_TGC :   %ld\n", TGC);
-    printf("KERNEL_TGPB :  %ld\n", TGPB);
+    //printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
+    //printf("KERNEL_GRID  : %ld\n", grid);
+    //printf("KERNEL_BLOCK : %ld\n", block);
+    //printf("KERNEL_SPT :   %ld\n", SPT);
+    //printf("KERNEL_TGO :   %ld\n", TGO);
+    //printf("KERNEL_TGC :   %ld\n", TGC);
+    //printf("KERNEL_TGPB :  %ld\n", TGPB);
 
     float* g_buffer;
     CHECK(cudaMalloc((float**)&g_buffer, (TGC*TPG)*sizeof(float))); // ThreadGroupCount * ThreadsPerGroup

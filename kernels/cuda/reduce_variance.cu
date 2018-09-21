@@ -126,15 +126,13 @@ void reduce_variance_4d_try01(
         printf("KERNEL_TGC :   %ld\n", TGC);
         printf("KERNEL_TGPB :  %ld\n", TGPB);
 
-        float *g_buffer;
         CHECK(cudaMalloc((float **) &g_tempbuff, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
         CHECK(cudaMalloc((float **) &g_median, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
         CHECK(cudaMalloc((float **) &g_variance_xi2, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
-        CHECK(cudaMalloc((float **) &g_buffer, (TGC * TPG) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
-        CHECK(cudaMemset(g_buffer, 0, (TGC * TPG) * sizeof(float)));
 
+        CHECK(cudaMemset(g_tempbuff, 0, (dim3) * sizeof(float)));
         kernel_reduce_sum_4d_try04 << < grid, block, TGPB * TPG * sizeof(float), local_stream >> > (
-                g_idata, g_buffer, g_tempbuff,1,
+                g_idata, nullptr, g_tempbuff,1,
                         dim0, dim1, dim2, dim3,
                         overaxis0, overaxis1, overaxis2, overaxis3,
                         TGC,
@@ -143,10 +141,9 @@ void reduce_variance_4d_try01(
                         TGO
         );
 
-        CHECK(cudaMemset(g_buffer, 0, (TGC * TPG) * sizeof(float)));
-
+        CHECK(cudaMemset(g_variance_xi2, 0, (dim3) * sizeof(float)));
         kernel_reduce_sum_4d_try04 << < grid, block, TGPB * TPG * sizeof(float), local_stream >> > (
-                g_idata, g_buffer, g_variance_xi2,2,
+                g_idata, nullptr, g_variance_xi2,2,
                         dim0, dim1, dim2, dim3,
                         overaxis0, overaxis1, overaxis2, overaxis3,
                         TGC,
@@ -154,7 +151,6 @@ void reduce_variance_4d_try01(
                         SPT,
                         TGO
         );
-        CHECK(cudaFree(g_buffer));
     }
 
     // 2. Multiplying (1/n) to each element of resulted tensor from step 1. (MEDIAN )

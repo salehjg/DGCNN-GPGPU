@@ -93,10 +93,12 @@ TensorF* CudaImplementation::MatMul(WorkScheduler scheduler,
 
 }
 
+/*
 TensorF* CudaImplementation::MatMul(WorkScheduler scheduler, TensorF* batchedMat, float scalar){
     PrintInfo("MatMul_Scalar","",0,"",0,"scalarVal",scalar,batchedMat->getShape(),{});
 
 }
+*/
 
 TensorF* CudaImplementation::Square(WorkScheduler scheduler, TensorF* batchedMat){
     PrintInfo("Square","",0,"",0,"",0,batchedMat->getShape(),{});
@@ -235,9 +237,52 @@ TensorF* CudaImplementation::Variance(
         bool variance_axis2,
         bool variance_axis3){
     PrintInfo("Variance","",0,"",0,"",0,inputTn->getShape(),{},{variance_axis0,variance_axis1,variance_axis2,variance_axis3});
+    unsigned long _dim0,_dim1,_dim2,_dim3;
+    bool _variance_axis0, _variance_axis1, _variance_axis2, _variance_axis3;
+    assert(inputTn->getRank()==2 || inputTn->getRank()==4);
+    assert(
+            (variance_axis0 && variance_axis1 && variance_axis2 && !variance_axis3 && inputTn->getRank()==4) ||
+            (variance_axis0 && !variance_axis1 && !variance_axis2 && !variance_axis3 && inputTn->getRank()==2)
+    );
+    if(inputTn->getRank()==4){
+        _dim0 = inputTn->getShape()[0];
+        _dim1 = inputTn->getShape()[1];
+        _dim2 = inputTn->getShape()[2];
+        _dim3 = inputTn->getShape()[3];
+        _variance_axis0 = variance_axis0;
+        _variance_axis1 = variance_axis1;
+        _variance_axis2 = variance_axis2;
+        _variance_axis3 = variance_axis3;
+    }else if (inputTn->getRank()==2){
+        _dim0 = 1;
+        _dim1 = 1;
+        _dim2 = inputTn->getShape()[0];
+        _dim3 = inputTn->getShape()[1];
+        _variance_axis0 = true;
+        _variance_axis1 = true;
+        _variance_axis2 = true;
+        _variance_axis3 = false;
+    }
+    CudaTensorF* rsltTn = new CudaTensorF({(unsigned int)_dim3});
+    CHECK(cudaDeviceSynchronize());
+    reduce_variance_4d_try01(
+            inputTn->_buff,
+            rsltTn->_buff,
+            _dim0,
+            _dim1,
+            _dim2,
+            _dim3,
+            _variance_axis0,
+            _variance_axis1,
+            _variance_axis2,
+            _variance_axis3);
+    CHECK(cudaDeviceSynchronize());
 
+    cudaCheckErrors("Mean@CudaImplementation: KERNEL_ERROR");
+    return rsltTn;
 }
 
+/*
 TensorF* CudaImplementation::MatAdd(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     PrintInfo("MatAdd","",0,"",0,"",0,inputTn1->getShape(),inputTn2->getShape(),{});
 
@@ -270,12 +315,126 @@ TensorF* CudaImplementation::MatSubTiled(WorkScheduler scheduler, TensorF* input
     PrintInfo("MatSubTiled","",0,"",0,"scalar",scalar,inputTn1->getShape(),{},{});
 
 }
+*/
+
+TensorF* CudaImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, TensorF *inputTn2, MAT_OPS mode){
+    PrintInfo("MatOps",
+              "mode",(mode==MAT_OPS::ADD ? 0 :
+                      mode==MAT_OPS::SUB ? 1 :
+                      mode==MAT_OPS::MUL_ELEMENTWISE ? 2 :
+                      3),
+              "",0,"",0,inputTn1->getShape(),inputTn2->getShape(),{});
+
+
+    int rankDiff;
+
+    if(!(inputTn1->getRank()<=4 && inputTn1->getRank()>=1 && inputTn2->getRank()<=4 && inputTn2->getRank()>=1 )){
+        cout<<"MatOps: ERROR_BAD_TENSOR_RANK-E1"<<endl;
+        return nullptr;
+    }
+
+    if(inputTn1->getRank() < inputTn2->getRank()){
+        cout<<"MatOps: ERROR_BAD_TENSOR_RANK-E2"<<endl;
+        return nullptr;
+    }
+
+    //forcing inputTn1 to be of rank 4. (always)
+    rankDiff = 4- inputTn1->getRank();
+    while(inputTn1->getRank()<4){
+        inputTn1->ExpandDimZero();
+    }
+
+    unsigned long indxS1;
+    unsigned long indxS2;
+    unsigned int dim0, dim1, dim2, dim3;
+    unsigned int dim0B, dim1B, dim2B, dim3B;
+    int dim0B_IsNotZero, dim1B_IsNotZero, dim2B_IsNotZero, dim3B_IsNotZero;
+
+    TensorF* rsltTn = new CudaTensorF( inputTn1->getShape() );
+
+    dim0 = inputTn1->getShape()[0];
+    dim1 = inputTn1->getShape()[1];
+    dim2 = inputTn1->getShape()[2];
+    dim3 = inputTn1->getShape()[3];
+
+    if(inputTn2->getRank()==4){
+        dim0B=inputTn2->getShape()[0];
+        dim1B=inputTn2->getShape()[1];
+        dim2B=inputTn2->getShape()[2];
+        dim3B=inputTn2->getShape()[3];
+    }
+    if(inputTn2->getRank()==3){
+        dim0B=0                     ;
+        dim1B=inputTn2->getShape()[0];
+        dim2B=inputTn2->getShape()[1];
+        dim3B=inputTn2->getShape()[2];
+    }
+    if(inputTn2->getRank()==2){
+        dim0B=0;
+        dim1B=0;
+        dim2B=inputTn2->getShape()[0];
+        dim3B=inputTn2->getShape()[1];
+    }
+    if(inputTn2->getRank()==1 && inputTn2->getShape()[0]!=1){
+        dim0B=0;
+        dim1B=0;
+        dim2B=0;
+        dim3B=inputTn2->getShape()[0];
+    }
+    if(inputTn2->getShape()[0]==1){
+        dim0B=0;
+        dim1B=0;
+        dim2B=0;
+        dim3B=1; //and rank should be 1 which already is
+    }
+
+
+    mat_ops_try01(
+            inputTn1->_buff,
+            inputTn2->_buff,
+            rsltTn->_buff,
+            inputTn1->getRank(),
+            dim0,
+            dim1,
+            dim2,
+            dim3,
+            inputTn2->getRank(),
+            dim0B,
+            dim1B,
+            dim2B,
+            dim3B,
+            mode==MAT_OPS::ADD ? 0 :
+            mode==MAT_OPS::SUB ? 1 :
+            mode==MAT_OPS::MUL_ELEMENTWISE ? 2 :
+            3);
+
+    for(int i =0;i<rankDiff;i++){
+        inputTn1->SqueezeDimZero();
+        rsltTn->SqueezeDimZero();
+    }
+
+    return rsltTn;
+}
+
+TensorF* CudaImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, float scalar, MAT_OPS mode){
+    PrintInfo("MatOps",
+              "mode",(mode==MAT_OPS::ADD ? 0 :
+                      mode==MAT_OPS::SUB ? 1 :
+                      mode==MAT_OPS::MUL_ELEMENTWISE ? 2 :
+                      3),
+              "",0,"",0,inputTn1->getShape(),{},{});
+    float* val = new float[1]; val[0] = scalar;
+    CudaTensorF* tmpTn = new CudaTensorF();
+    tmpTn->InitWithHostData({1},val);
+    MatOps(scheduler,inputTn1,tmpTn,mode);
+}
 
 TensorF* CudaImplementation::Sqrt(WorkScheduler scheduler, TensorF* inputTn){
     PrintInfo("MatSubTiled","",0,"",0,"",0,inputTn->getShape(),{},{});
 
 }
 
+/*
 TensorF* CudaImplementation::Multiply(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2){
     PrintInfo("Multiply","",0,"",0,"",0,inputTn1->getShape(),inputTn2->getShape(),{});
 
@@ -295,6 +454,7 @@ TensorF* CudaImplementation::DivideTiled(WorkScheduler scheduler, TensorF* input
     PrintInfo("DivideTiled","",0,"",0,"",0,inputTn1->getShape(),inputTn2->getShape(),{});
 
 }
+*/
 
 ///concat 2 matrices
 /// [matA, matB]

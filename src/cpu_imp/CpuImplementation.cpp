@@ -816,6 +816,132 @@ TensorF* CpuImplementation::MatSubTiled(WorkScheduler scheduler, TensorF* inputT
     return rsltTn;
 }
 
+TensorF* CpuImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, TensorF *inputTn2, MAT_OPS mode) {
+    PrintInfo("MatOps",
+            "mode",(mode==MAT_OPS::ADD ? 0 :
+                    mode==MAT_OPS::SUB ? 1 :
+                    mode==MAT_OPS::MUL_ELEMENTWISE ? 2 :
+                    3),
+            "",0,"",0,inputTn1->getShape(),inputTn2->getShape(),{});
+    int rankDiff;
+
+    if(!(inputTn1->getRank()<=4 && inputTn1->getRank()>=1 && inputTn2->getRank()<=4 && inputTn2->getRank()>=1 )){
+        cout<<"MatOps: ERROR_BAD_TENSOR_RANK-E1"<<endl;
+        return nullptr;
+    }
+
+    if(inputTn1->getRank() < inputTn2->getRank()){
+        cout<<"MatOps: ERROR_BAD_TENSOR_RANK-E2"<<endl;
+    return nullptr;
+    }
+
+    //forcing inputTn1 to be of rank 4. (always)
+    rankDiff = 4- inputTn1->getRank();
+    while(inputTn1->getRank()<4){
+        inputTn1->ExpandDimZero();
+    }
+
+    unsigned long indxS1;
+    unsigned long indxS2;
+    unsigned int dim0, dim1, dim2, dim3;
+    unsigned int dim0B, dim1B, dim2B, dim3B;
+    int dim0B_IsNotZero, dim1B_IsNotZero, dim2B_IsNotZero, dim3B_IsNotZero;
+
+    TensorF* rsltTn = new TensorF( inputTn1->getShape() );
+
+    dim0 = inputTn1->getShape()[0];
+    dim1 = inputTn1->getShape()[1];
+    dim2 = inputTn1->getShape()[2];
+    dim3 = inputTn1->getShape()[3];
+
+    if(inputTn2->getRank()==4){
+        dim0B=inputTn2->getShape()[0];
+        dim1B=inputTn2->getShape()[1];
+        dim2B=inputTn2->getShape()[2];
+        dim3B=inputTn2->getShape()[3];
+    }
+    if(inputTn2->getRank()==3){
+        dim0B=0                     ;
+        dim1B=inputTn2->getShape()[0];
+        dim2B=inputTn2->getShape()[1];
+        dim3B=inputTn2->getShape()[2];
+    }
+    if(inputTn2->getRank()==2){
+        dim0B=0;
+        dim1B=0;
+        dim2B=inputTn2->getShape()[0];
+        dim3B=inputTn2->getShape()[1];
+    }
+    if(inputTn2->getRank()==1 && inputTn2->getShape()[0]!=1){
+        dim0B=0;
+        dim1B=0;
+        dim2B=0;
+        dim3B=inputTn2->getShape()[0];
+    }
+    if(inputTn2->getShape()[0]==1){
+        dim0B=0;
+        dim1B=0;
+        dim2B=0;
+        dim3B=1; //and rank should be 1 which already is
+    }
+
+
+    int tmp =15>>(4-inputTn2->getRank());
+    dim0B_IsNotZero = (tmp >> 3) & 1;
+    dim1B_IsNotZero = (tmp >> 2) & 1;
+    dim2B_IsNotZero = (tmp >> 1) & 1;
+    dim3B_IsNotZero = (tmp >> 0) & 1;
+
+    if(inputTn2->getRank()==1 && dim0B==0&&dim1B==0&&dim2B==0&&dim3B==1){//scalar value
+        dim3B_IsNotZero=0; //force it to be zero, so in the kernel, indxS2 would be zero;
+    }
+
+    for(int d0=0;d0<dim0;d0++){
+        for(int d1=0;d1<dim1;d1++) {
+            for(int d2=0;d2<dim2;d2++) {
+                for(int d3=0;d3<dim3;d3++) {
+                    indxS1 = d0*dim1*dim2*dim3+
+                             d1*dim2*dim3+
+                             d2*dim3+
+                             d3;
+                    indxS2 = d0 * dim1B * dim2B * dim3B * dim0B_IsNotZero +
+                             d1 * dim2B * dim3B * dim1B_IsNotZero +
+                             d2 * dim3B * dim2B_IsNotZero +
+                             d3 * dim3B_IsNotZero;
+
+                    if(mode==MAT_OPS::ADD)                      //Add
+                        rsltTn->_buff[indxS1] = inputTn1->_buff[indxS1] + inputTn2->_buff[indxS2];
+                    else if(mode==MAT_OPS::SUB)                 //Sub
+                        rsltTn->_buff[indxS1] = inputTn1->_buff[indxS1] - inputTn2->_buff[indxS2];
+                    else if(mode==MAT_OPS::MUL_ELEMENTWISE)     //Mul (element wise)
+                        rsltTn->_buff[indxS1] = inputTn1->_buff[indxS1] * inputTn2->_buff[indxS2];
+                    else if(mode==MAT_OPS::DIV_ELEMENTWISE)     //Div (element wise)
+                        rsltTn->_buff[indxS1] = inputTn1->_buff[indxS1] / inputTn2->_buff[indxS2];
+                }
+            }
+        }
+    }
+
+    for(int i =0;i<rankDiff;i++){
+        inputTn1->SqueezeDimZero();
+        rsltTn->SqueezeDimZero();
+    }
+
+    return rsltTn;
+}
+
+TensorF* CpuImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, float scalar, MAT_OPS mode) {
+    PrintInfo("MatOps-Scalar",
+            "mode",(mode==MAT_OPS::ADD ? 0 :
+                    mode==MAT_OPS::SUB ? 1 :
+                    mode==MAT_OPS::MUL_ELEMENTWISE ? 2 :
+                    3),
+            "",0,"",0,inputTn1->getShape(),{},{});
+    float* val = new float[1]; val[0] = scalar;
+    TensorF* tmpTn = new TensorF({1},val);
+    return MatOps(scheduler,inputTn1,tmpTn,mode);
+}
+
 TensorF* CpuImplementation::Sqrt(WorkScheduler scheduler, TensorF* inputTn){
     PrintInfo("MatSubTiled","",0,"",0,"",0,inputTn->getShape(),{},{});
     TensorF* rsltTn = new TensorF(inputTn->getShape());
@@ -1456,10 +1582,12 @@ bool CpuImplementation::CompareTensors(WorkScheduler scheduler, TensorF *inputTn
         unsigned long _len = inputTn1->getLength();
         for(unsigned long i =0 ; i<_len;i++){
             currentDiff = inputTn1->_buff[i] - inputTn2->_buff[i];
-            totalDiff += (currentDiff>=0)?currentDiff:-1*currentDiff;
-            if(totalDiff > 50.0f) {
-                return false;
-            }
+            //totalDiff += (currentDiff>=0)?currentDiff:-1*currentDiff;
+            totalDiff += currentDiff;
+        }
+        cout<< "totalDiff: "<<totalDiff<<endl;
+        if((totalDiff> 0 &&totalDiff > 50.0f) || (totalDiff<= 0 &&totalDiff < -50.0f) ) {
+            return false;
         }
         return true;
     }

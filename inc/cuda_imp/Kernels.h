@@ -92,4 +92,34 @@ void reduce_mean_4d_try02(
         bool overaxis2,
         bool overaxis3);
 
+extern
+void reduce_variance_4d_try01(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3);
+
+extern
+void mat_ops_try01(
+        float* g_iA,
+        float* g_iB,
+        float* g_o,
+        unsigned int rankA,
+        unsigned int dim0A,
+        unsigned int dim1A,
+        unsigned int dim2A,
+        unsigned int dim3A,
+        unsigned int rankB,
+        unsigned int dim0B,
+        unsigned int dim1B,
+        unsigned int dim2B,
+        unsigned int dim3B,
+        int operationMode);
+
 #endif //DEEPPOINTV1_KERNELS_H

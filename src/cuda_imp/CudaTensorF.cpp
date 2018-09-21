@@ -21,7 +21,7 @@
                 fprintf(stderr, "Fatal error: %s (%s at %s:%d)\n", \
                     msg, cudaGetErrorString(__err), \
                     __FILE__, __LINE__); \
-                fprintf(stderr, "*** FAILED - ABORfloatING\n"); \
+                fprintf(stderr, "*** FAILED - ABORTING\n"); \
             } \
         } while (0)
 #endif

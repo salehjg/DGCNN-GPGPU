@@ -11,8 +11,7 @@ set(CUDA_PROPAGATE_HOST_FLAGS False)
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options '-fPIC'")
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode arch=compute_61,code=sm_61")
 set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std c++11")
-set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O0")
-set(CUDA_NVCC_FLAGS_DEBUG ${CUDA_NVCC_FLAGS_DEBUG} -G)
+set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -O3")
 
 include_directories(${PROJECT_SOURCE_DIR}/inc ${PROJECT_SOURCE_DIR}/inc/cpu_imp ${PROJECT_SOURCE_DIR}/inc/cuda_imp ${CUDA_INCLUDE_DIRS})
 

@@ -86,7 +86,7 @@ __global__ void kernel_concat_try01(
                 g_o[idx] = g_iB[indxS];
             }
 
-            d3++;
+            d3++; ///TODO: CHECK: What happens if d3 becomes greater than dim3?
             idx++;
         }
     }

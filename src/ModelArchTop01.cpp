@@ -46,7 +46,7 @@ void ModelArchTop01::SetModelInput_labels(string npy_labels) {
 TensorF* ModelArchTop01::FullyConnected_Forward(WorkScheduler scheduler, TensorF* input_BxD, TensorF* weights, TensorF* biases){
     int ch_out = (int)weights->getShape().back();
     TensorF* tmp = platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,input_BxD,weights);
-    TensorF* rsltTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,tmp,biases);
+    TensorF* rsltTn = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,tmp,biases,MAT_OPS::ADD);
     return rsltTn;
 }
 
@@ -77,20 +77,20 @@ TensorF* ModelArchTop01::Batchnorm_Forward(WorkScheduler scheduler, TensorF* inp
         TensorF *update_delta_ave, *update_delta_var;
         TensorF *update_delta_ave2, *update_delta_var2;
 
-        update_delta_ave = platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_ave, mu);
-        update_delta_ave2 = platformSelector->MatMul(platformSelector->defaultPlatform, scheduler, update_delta_ave, bn_decay);
-        update_delta_var = platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, var);
-        update_delta_var2 = platformSelector->MatMul(platformSelector->defaultPlatform, scheduler, update_delta_var, bn_decay);
+        update_delta_ave = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_ave, mu, MAT_OPS::SUB);
+        update_delta_ave2 = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, update_delta_ave, bn_decay, MAT_OPS::MUL_ELEMENTWISE);
+        update_delta_var = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_var, var, MAT_OPS::SUB);
+        update_delta_var2 = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, update_delta_var, bn_decay, MAT_OPS::MUL_ELEMENTWISE);
 
-        TensorF *final_ave =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_ave, update_delta_ave2);
-        TensorF *final_var =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, update_delta_var2);
+        TensorF *final_ave =  platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_ave, update_delta_ave2, MAT_OPS::SUB);
+        TensorF *final_var =  platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_var, update_delta_var2, MAT_OPS::SUB);
 
-        TensorF* xNormTmp1 = platformSelector->MatSubTiled(platformSelector->defaultPlatform,scheduler,input,final_ave);
-        TensorF* xNormTmp2 = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,final_var,1e-8);
+        TensorF* xNormTmp1 = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,input,final_ave, MAT_OPS::SUB);
+        TensorF* xNormTmp2 = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,final_var,1e-8,MAT_OPS::ADD);
         TensorF* xNormTmp3 = platformSelector->Sqrt(platformSelector->defaultPlatform,scheduler,xNormTmp2);
-        TensorF* xNorm = platformSelector->DivideTiled(platformSelector->defaultPlatform,scheduler,xNormTmp1,xNormTmp3);
-        TensorF* rsltTmp1 = platformSelector->MultiplyTiled(platformSelector->defaultPlatform,scheduler,xNorm,gamma);
-        TensorF* rsltTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,rsltTmp1,beta);
+        TensorF* xNorm = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,xNormTmp1,xNormTmp3,MAT_OPS::DIV_ELEMENTWISE);
+        TensorF* rsltTmp1 = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,xNorm,gamma,MAT_OPS::MUL_ELEMENTWISE);
+        TensorF* rsltTn = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,rsltTmp1,beta, MAT_OPS::ADD);
 
         return rsltTn;
     }
@@ -104,20 +104,20 @@ TensorF* ModelArchTop01::Batchnorm_Forward(WorkScheduler scheduler, TensorF* inp
         TensorF *update_delta_ave, *update_delta_var;
         TensorF *update_delta_ave2, *update_delta_var2;
 
-        update_delta_ave = platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_ave, mu);
-        update_delta_ave2 = platformSelector->MatMul(platformSelector->defaultPlatform, scheduler, update_delta_ave, bn_decay);
-        update_delta_var = platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, var);
-        update_delta_var2 = platformSelector->MatMul(platformSelector->defaultPlatform, scheduler, update_delta_var, bn_decay);
+        update_delta_ave = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_ave, mu, MAT_OPS::SUB);
+        update_delta_ave2 = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, update_delta_ave, bn_decay, MAT_OPS::MUL_ELEMENTWISE);
+        update_delta_var = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_var, var, MAT_OPS::SUB);
+        update_delta_var2 = platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, update_delta_var, bn_decay, MAT_OPS::MUL_ELEMENTWISE);
 
-        TensorF *final_ave =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_ave, update_delta_ave2);
-        TensorF *final_var =  platformSelector->MatSub(platformSelector->defaultPlatform, scheduler, ema_var, update_delta_var2);
+        TensorF *final_ave =  platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_ave, update_delta_ave2, MAT_OPS::SUB);
+        TensorF *final_var =  platformSelector->MatOps(platformSelector->defaultPlatform, scheduler, ema_var, update_delta_var2, MAT_OPS::SUB);
 
-        TensorF* xNormTmp1 = platformSelector->MatSubTiled(platformSelector->defaultPlatform,scheduler,input,final_ave);
-        TensorF* xNormTmp2 = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,final_var,1e-8);
+        TensorF* xNormTmp1 = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,input,final_ave, MAT_OPS::SUB);
+        TensorF* xNormTmp2 = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,final_var,1e-8, MAT_OPS::ADD);
         TensorF* xNormTmp3 = platformSelector->Sqrt(platformSelector->defaultPlatform,scheduler,xNormTmp2);
-        TensorF* xNorm = platformSelector->DivideTiled(platformSelector->defaultPlatform,scheduler,xNormTmp1,xNormTmp3);
-        TensorF* rsltTmp1 = platformSelector->MultiplyTiled(platformSelector->defaultPlatform,scheduler,xNorm,gamma);
-        TensorF* rsltTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,rsltTmp1,beta);
+        TensorF* xNorm = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,xNormTmp1,xNormTmp3,MAT_OPS::DIV_ELEMENTWISE);
+        TensorF* rsltTmp1 = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,xNorm,gamma,MAT_OPS::MUL_ELEMENTWISE);
+        TensorF* rsltTn = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,rsltTmp1,beta, MAT_OPS::ADD);
 
         return rsltTn;
     }
@@ -133,7 +133,7 @@ TensorF* ModelArchTop01::GetEdgeFeatures(WorkScheduler scheduler, TensorF *input
     TensorF* point_cloud_central = platformSelector->Tile(platformSelector->defaultPlatform,scheduler,input_BxNxD,2,K);
     input_BxNxD->SqueezeDims();
 
-    TensorF* features = platformSelector->MatSub(platformSelector->defaultPlatform,scheduler, point_cloud_neighbors,point_cloud_central);
+    TensorF* features = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler, point_cloud_neighbors,point_cloud_central, MAT_OPS::SUB);
 
     //concatenate centrals and features (BxNxKxD) and (BxNxKxD)
     TensorF* edge_feature = platformSelector->Concat2(platformSelector->defaultPlatform,scheduler, point_cloud_central,features,3);
@@ -145,7 +145,7 @@ TensorF* ModelArchTop01::PairwiseDistance(WorkScheduler scheduler, TensorF *inpu
 
     TensorF* point_cloud_transpose = platformSelector->Transpose(platformSelector->defaultPlatform,scheduler,input_BxNxD);
     TensorF* point_cloud_inner =  platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,input_BxNxD,point_cloud_transpose);
-    TensorF* point_cloud_inner2 = platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,point_cloud_inner,-2.0f);
+    TensorF* point_cloud_inner2 = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,point_cloud_inner,-2.0f, MAT_OPS::MUL_ELEMENTWISE);
     TensorF* point_cloud_inner2p2 = platformSelector->Square(platformSelector->defaultPlatform,scheduler,input_BxNxD);
     TensorF* point_cloud_sum = platformSelector->ReduceSum(platformSelector->defaultPlatform,scheduler,point_cloud_inner2p2,false,false,true);
     point_cloud_sum->ExpandDims(-1);
@@ -154,8 +154,9 @@ TensorF* ModelArchTop01::PairwiseDistance(WorkScheduler scheduler, TensorF *inpu
 
     TensorF* point_cloud_sum_tiled =  platformSelector->Tile(platformSelector->defaultPlatform,scheduler,point_cloud_sum,2,N); //result is BxNxK for k=N
     TensorF* point_cloud_sum_transpose_tiled =  platformSelector->Tile(platformSelector->defaultPlatform,scheduler,point_cloud_sum_transpose,1,N); //result is BxkxN for k=N
-    TensorF* rsltTmpTn = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,point_cloud_sum_tiled,point_cloud_sum_transpose_tiled); //both input tensors are BxNxN
-    TensorF* rsltTn = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,rsltTmpTn,point_cloud_inner2); //both input tensors are BxNxN
+
+    TensorF* rsltTmpTn = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,point_cloud_sum_tiled,point_cloud_sum_transpose_tiled,MAT_OPS::ADD); //both input tensors are BxNxN
+    TensorF* rsltTn = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,rsltTmpTn,point_cloud_inner2,MAT_OPS::ADD); //both input tensors are BxNxN
 
     return rsltTn;
 }
@@ -387,13 +388,13 @@ TensorF* ModelArchTop01::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
                            0,0,1};
         TensorF* eye = new TensorF({9},eyeData);
 
-        TensorF* biases = platformSelector->MatAdd(platformSelector->defaultPlatform,scheduler,_biases,eye);
+        TensorF* biases = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,_biases,eye,MAT_OPS::ADD);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A17_biass_added.npy",biases);
 
         TensorF* transformTn = platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,net,weights);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A18_transform_batch.npy",transformTn);
 
-        TensorF* transformFinalTn = platformSelector->MatAddTiled(platformSelector->defaultPlatform,scheduler,transformTn,biases);
+        TensorF* transformFinalTn = platformSelector->MatOps(platformSelector->defaultPlatform,scheduler,transformTn,biases, MAT_OPS::ADD);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A19_transform_batch_bias.npy",transformFinalTn);
         return transformFinalTn;
     }

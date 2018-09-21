@@ -15,7 +15,6 @@ using namespace std;
 
 #undef DUMP_ENABLED
 
-
 class CpuImplementation: public PlatformImplementation {
 public:
     CpuImplementation();///TODO: Constructor should handle platform initialization procedure!
@@ -34,6 +33,10 @@ public:
     TensorF* MatSubTiled(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputSmallTn2);
     TensorF* MatAddTiled(WorkScheduler scheduler, TensorF* inputTn1, float scalar);
     TensorF* MatSubTiled(WorkScheduler scheduler, TensorF* inputTn1, float scalar);
+
+    TensorF* MatOps(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2, MAT_OPS mode);
+    TensorF* MatOps(WorkScheduler scheduler, TensorF* inputTn1, float scalar, MAT_OPS mode);
+
     TensorF* Sqrt(WorkScheduler scheduler, TensorF* inputTn);
     TensorF* Multiply(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2);
     TensorF* Divide(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2);
