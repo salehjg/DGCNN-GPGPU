@@ -51,7 +51,7 @@ link_directories(${PROJECT_SOURCE_DIR}/submodules/cnpy ${CUDA_LIBRARY_DIRS})
 
 
 cuda_add_executable(ClassifierMultiplatform  ${SOURCE_FILES_ClassifierMultiplatform} ${KERNEL_SOURCES})
-target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs})
+target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} cudnn ${KERNEL_OBJs})
 
 add_executable(TensorFTest ${SOURCE_FILES_TensorFTest})
 target_link_libraries(TensorFTest cnpy z pthread ${CUDA_LIBRARIES})

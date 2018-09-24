@@ -42,10 +42,11 @@ foreach( testsourcefile ${KERNEL_TEST_SOURCES} )
             ${PROJECT_SOURCE_DIR}/src/cuda_imp/CudaTensorI.cpp
             ${PROJECT_SOURCE_DIR}/src/cpu_imp/CpuImplementation.cpp
             ${PROJECT_SOURCE_DIR}/src/WorkScheduler.cpp
+            ${PROJECT_SOURCE_DIR}/src/WeightsLoader.cpp
             )
 
     # Make sure YourLib is linked to each app
-    target_link_libraries( ${barename} cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs})
+    target_link_libraries( ${barename} cnpy z pthread ${CUDA_LIBRARIES} cudnn ${KERNEL_OBJs})
 endforeach( testsourcefile ${KERNEL_TEST_SOURCES})
 
 # ----------------------------------------------------------------------------------------------------------------------
