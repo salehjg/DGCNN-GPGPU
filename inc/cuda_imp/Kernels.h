@@ -122,4 +122,15 @@ void mat_ops_try01(
         unsigned int dim3B,
         int operationMode);
 
+extern
+void conv2d_mlp_try01(
+        float* gInput_i,
+        float* gWeight_i,
+        float* gOutput_o,
+        unsigned int B,
+        unsigned int N,
+        unsigned int K,
+        unsigned int D,
+        unsigned int chOut);
+
 #endif //DEEPPOINTV1_KERNELS_H

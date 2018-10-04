@@ -14,6 +14,7 @@
 #include <cuda_runtime.h>
 #include <vector>
 #include <cassert>
+#include <cudnn.h>
 #include "cpu_imp/CpuImplementation.h"
 #include "WorkScheduler.h"
 #include "WeightsLoader.h"
@@ -30,6 +31,27 @@ void conv2d_cudnn_try01(
         unsigned int K,
         unsigned int D,
         unsigned int ChOut);
+extern
+void conv2d_cudnn_try02(
+        cudnnHandle_t *cudnn,
+        float* ginput_i,
+        float* gweight_i,
+        float* goutput_o,
+        unsigned int B,
+        unsigned int N,
+        unsigned int K,
+        unsigned int D,
+        unsigned int ChOut);
+
+#define CUDNN_CALL(f) { \
+  cudnnStatus_t err = (f); \
+  if (err != CUDNN_STATUS_SUCCESS) { \
+    std::cout \
+        << "    Error occurred: " << err << std::endl; \
+    std::exit(1); \
+  } \
+}
+
 
 float float_rand( float min, float max )
 {
@@ -48,7 +70,7 @@ TensorF* getTestTensor(int rank){
     return testTn;
 }
 
-void Test_01()
+void Test_try01()
 {
     WeightsLoader* weightsLoader = new WeightsLoader({PLATFORMS::CPU,PLATFORMS::GPU_CUDA});
 
@@ -121,7 +143,84 @@ void Test_01()
     // reset device
     CHECK(cudaDeviceReset());
 }
-  
+
+
+void Test_try02()
+{
+    WeightsLoader* weightsLoader = new WeightsLoader({PLATFORMS::CPU,PLATFORMS::GPU_CUDA});
+
+    // set up device
+    int dev = 0;
+    double iStart, iElaps;
+    CpuImplementation cpuImplementation;
+    WorkScheduler workScheduler;
+    cout << "-------------------------------------------------------" << endl;
+    cudaDeviceProp deviceProp;
+    CHECK(cudaGetDeviceProperties(&deviceProp, dev));
+    CHECK(cudaSetDevice(dev));
+
+    weightsLoader->LoadFromDisk("/home/saleh/00_repos/tensorflow_repo/00_Projects/"
+                                "deeppoint_repo/DeepPoint-V1-GPGPU/data/weights/",
+
+                                "/home/saleh/00_repos/tensorflow_repo/00_Projects/"
+                                "deeppoint_repo/DeepPoint-V1-GPGPU/data/weights/filelist.txt");
+
+
+    TensorF* inputTn_CPU    = getTestTensor(4);
+    TensorF* weightTn_CPU   = weightsLoader->AccessWeights(PLATFORMS::CPU,"dgcnn1.weights.npy");
+    TensorF* biasTn_CPU   = weightsLoader->AccessWeights(PLATFORMS::CPU,"empty_64bias.npy");
+    TensorF* ouputTn_CPU;
+
+    CudaTensorF* inputTn_GPU  =
+            new CudaTensorF(); inputTn_GPU->InitWithHostData(inputTn_CPU->getShape(),inputTn_CPU->_buff);
+    TensorF* weightTn_GPU = weightsLoader->AccessWeights(PLATFORMS::GPU_CUDA,"dgcnn1.weights.npy");
+    CudaTensorF* ouputTn_GPU = new CudaTensorF({inputTn_CPU->getShape()[0],
+                                                inputTn_CPU->getShape()[1],
+                                                inputTn_CPU->getShape()[2],
+                                                weightTn_CPU->getShape()[3] });
+
+
+    ouputTn_CPU = cpuImplementation.Conv2D(workScheduler,inputTn_CPU,weightTn_CPU,biasTn_CPU);
+
+
+    cudnnHandle_t cudnn;
+    CUDNN_CALL(cudnnCreate(&cudnn));
+    CHECK(cudaDeviceSynchronize());
+    {
+                    iStart = seconds();
+                    ///TODO: ADD KERNEL LAUNCH HERE
+                    conv2d_cudnn_try02(
+                            &cudnn,
+                            inputTn_GPU->_buff,
+                            weightTn_GPU->_buff,
+                            ouputTn_GPU->_buff,
+                            inputTn_GPU->getShape()[0],
+                            inputTn_GPU->getShape()[1],
+                            inputTn_GPU->getShape()[2],
+                            inputTn_GPU->getShape()[3],
+                            weightTn_GPU->getShape()[3]);
+
+                    iElaps = seconds() - iStart;
+    }
+    CHECK(cudaDeviceSynchronize());
+    CUDNN_CALL(cudnnDestroy(cudnn));
+
+
+
+    cout << "Kernel Execution Time: " << iElaps*1000000 << " uS" << endl;
+    cout    << "Matches: "
+            << cpuImplementation.CompareTensors(
+                    workScheduler,
+                    ouputTn_CPU,
+                    ((CudaTensorF*)ouputTn_GPU)->TransferToHost()
+            )
+            << endl;
+
+    // reset device
+    CHECK(cudaDeviceReset());
+}
+
 int main(){
-    Test_01();
+    //Test_try01();
+    Test_try02();
 }

@@ -25,7 +25,7 @@ DivideTiled    |Yes    |Yes   |**Yes**|    No|4D,2D     |1D     |-              
 Matmul_Scalar  |Yes    |Yes   |**Yes**|    No|1D,3D     |-      |-                              |               |-      |           |-      |Replaced by MatOps
 MatOps         |Yes    |Yes   |**Yes**|    No|4D,3D,2D,1D|4D,3D,2D,1D,0D|-                              |               |-      |           |-      |ADD,SUB,MUL_ELEMENT,DIV_ELEMENT, shapes could be different
 Transpose      |Yes    |Yes   |  50%  |    No|3D        |-      |-                              |               |-      |           |-      |--
-Conv2d         |Yes    |Yes   |     No|    No|4D        |-      |-                              |overrideDim2   |-1     |           |-      |--
+Conv2d         |Yes    |Yes   |**Yes**|    No|4D        |-      |-                              |overrideDim2   |-1     |           |-      |3x Less performance compared to the tensorflow
 ReLU           |Yes    |Yes   |     No|    No|2D,4D     |-      |-                              |               |-      |           |-      |--
 Matmul         |Yes    |Yes   |     No|    No|2D,3D     |2D,3D  |-                              |               |-      |           |-      |--
 Square         |Yes    |Yes   |     No|    No|3D        |-      |-                              |               |-      |           |-      |--

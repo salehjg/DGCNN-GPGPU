@@ -550,7 +550,26 @@ TensorF* CudaImplementation::Gather(WorkScheduler scheduler, TensorF* inputTn, T
 
 TensorF* CudaImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2){
     PrintInfo("Conv2D","overrideDim2",overrideDim2,"",0,"",0,inputTn->getShape(),weights->getShape(),{});
+    CudaTensorF* buffTn = new CudaTensorF({
+                inputTn->getShape()[0],
+                inputTn->getShape()[1],
+                inputTn->getShape()[2],
+                weights->getShape()[3]});
+    TensorF* rsltTn ;
 
+    conv2d_mlp_try01(
+            inputTn->_buff,
+            weights->_buff,
+            buffTn->_buff,
+            inputTn->getShape()[0],
+            inputTn->getShape()[1],
+            inputTn->getShape()[2],
+            inputTn->getShape()[3],
+            weights->getShape()[3]);
+
+    rsltTn = MatOps(scheduler,buffTn,biases,MAT_OPS::ADD);
+    //delete(buffTn);
+    return rsltTn;
 }
 
 TensorF* CudaImplementation::ReLU(WorkScheduler scheduler, TensorF* inputTn){

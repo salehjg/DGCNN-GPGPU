@@ -680,7 +680,7 @@ TensorF* PlatformSelector::Conv2D(PLATFORMS platform, WorkScheduler scheduler, T
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->Conv2D(scheduler, __inputTn, __weights, __biases, overrideDim2);;
             break;
         }
         case PLATFORMS::GPU_OCL :{
