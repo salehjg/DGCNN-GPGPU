@@ -1,161 +1,147 @@
+//
+// Created by saleh on 7/23/18.
+//
+
 #include "common.h"
 #include <cuda_runtime.h>
-#include <cstdio>
+#include <stdio.h>
 #include <cstdlib>
+#include <cstring>
+#include <iostream>
+#include <limits>
+#include <CudaTensorF.h>
+#include <TensorF.h>
+#include <cuda_runtime.h>
+#include <vector>
+#include <cassert>
+#include "cpu_imp/CpuImplementation.h"
+#include "WorkScheduler.h"
+#include "WeightsLoader.h"
 
-/*
- * Various memory access pattern optimizations applied to a matrix transpose
- * kernel.
- */
+using namespace std;
+
+extern
+void transpose(
+        const float* g_i,
+        float* g_o,
+        unsigned int dim0,
+        unsigned int dim1,
+        unsigned int dim2);
 
 
-extern void transpose(dim3 grid, dim3 block, float *, float *, int, int);
 
-
-void initialData(float *in,  const int size)
+float float_rand( float min, float max )
 {
-    for (int i = 0; i < size; i++)
-    {
-        in[i] = (float)( rand() & 0xFF ) / 10.0f; //100.0f;
-    }
-
-    return;
+    float scale = rand() / (float) RAND_MAX; /* [0, 1.0] */
+    return min + scale * ( max - min );      /* [min, max] */
 }
 
-void printData(float *in,  const int size)
-{
-    for (int i = 0; i < size; i++)
-    {
-        printf("%dth element: %f\n", i, in[i]);
-    }
-
-    return;
-}
-
-void checkResult(float *hostRef, float *gpuRef, const int size, int showme)
-{
-    double epsilon = 1.0E-8;
-    bool match = 1;
-
-    for (int i = 0; i < size; i++)
-    {
-        if (abs(hostRef[i] - gpuRef[i]) > epsilon)
-        {
-            match = 0;
-            printf("different on %dth element: host %f gpu %f\n", i, hostRef[i],
-                   gpuRef[i]);
-            break;
+TensorF* getTestTensor(int mode){
+    if(mode==0){
+        vector<unsigned int> shape = {5,32,32};
+        TensorF *testTn = new TensorF(shape);
+        unsigned long _len = testTn->getLength();
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = 1.0f + float_rand(0,0.50f);
         }
-
-        if (showme && i > size / 2 && i < size / 2 + 5)
-        {
-            // printf("%dth element: host %f gpu %f\n",i,hostRef[i],gpuRef[i]);
-        }
-    }
-
-    if (!match)  printf("Arrays do not match.\n\n");
-}
-
-void transposeHost(float *out, float *in, const int nx, const int ny)
-{
-    for( int iy = 0; iy < ny; ++iy)
-    {
-        for( int ix = 0; ix < nx; ++ix)
-        {
-            out[ix * ny + iy] = in[iy * nx + ix];
-        }
+        return testTn;
     }
 }
 
-int main(int argc, char **argv)
+void printTensorContent(TensorF * tn){
+    unsigned int dim0,dim1,dim2,dim3;
+    unsigned int _dim0,_dim1,_dim2,_dim3;
+    dim0 = tn->getShape()[0];
+    dim1 = tn->getShape()[1];
+    dim2 = tn->getShape()[2];
+    _dim0 = tn->getShape()[0];
+    _dim1 = tn->getShape()[1];
+    _dim2 = tn->getShape()[2];
+
+    if(tn->getLength() > 1000){
+        _dim0 = 1;
+        _dim1 = 1;
+    }
+
+    float val;
+    unsigned long indx;
+    for(int d0=0;d0<_dim0;d0++){
+        for(int d1=0;d1<_dim1;d1++){
+            for(int d2=0;d2<_dim2;d2++){
+
+                indx = d0*dim1*dim2+
+                       d1*dim2+
+                       d2;
+                val = tn->_buff[indx];
+                std::cout<<"("<<d0<<", "<<d1<<", "<<d2<<")" << ": "<< val<<endl;
+            }}}
+}
+
+void Test_try01()
 {
-    double iStart,iElaps;
+    WeightsLoader* weightsLoader = new WeightsLoader({PLATFORMS::CPU,PLATFORMS::GPU_CUDA});
+
     // set up device
     int dev = 0;
+    double iStart, iElaps;
+    CpuImplementation cpuImplementation;
+    WorkScheduler workScheduler;
+    cout << "-------------------------------------------------------" << endl;
     cudaDeviceProp deviceProp;
     CHECK(cudaGetDeviceProperties(&deviceProp, dev));
-    printf("starting transpose at ");
-    printf("device %d: %s ", dev, deviceProp.name);
     CHECK(cudaSetDevice(dev));
 
-    // set up array size 4096x4096
-    int nx = 1 << 12;
-    int ny = 1 << 12;
-
-    // select a kernel and block size
-    int iKernel = 0;
-    int blockx = 16;
-    int blocky = 16;
-
-    printf(" with matrix nx %d ny %d with kernel %d\n", nx, ny, iKernel);
-    size_t nBytes = nx * ny * sizeof(float);
-
-    // execution configuration
-    dim3 block (blockx, blocky);
-    dim3 grid  ((nx + block.x - 1) / block.x, (ny + block.y - 1) / block.y);
-
-    // allocate host memory
-    float *h_A = (float *)malloc(nBytes);
-    float *hostRef = (float *)malloc(nBytes);
-    float *gpuRef  = (float *)malloc(nBytes);
-
-    // initialize host array
-    initialData(h_A, nx * ny);
-
-    // transpose at host side
-    transposeHost(hostRef, h_A, nx, ny);
-
-    // allocate device memory
-    float *d_A, *d_C;
-    CHECK(cudaMalloc((float**)&d_A, nBytes));
-    CHECK(cudaMalloc((float**)&d_C, nBytes));
-
-    // copy data from host to device
-    CHECK(cudaMemcpy(d_A, h_A, nBytes, cudaMemcpyHostToDevice));
-
-    // warmup to avoide startup overhead
-    //double iStart = seconds();
-    //warmup<<<grid, block>>>(d_C, d_A, nx, ny);
-    //CHECK(cudaDeviceSynchronize());
-    //double iElaps = seconds() - iStart;
-    //printf("warmup         elapsed %f sec\n", iElaps);
-    //CHECK(cudaGetLastError());
-
-    // kernel pointer and descriptor
-    char *kernelName;
-
-    kernelName = const_cast<char *>("Unroll4Row    ");
-    grid.x = (nx + block.x * 4 - 1) / (block.x * 4);
 
 
-    // run kernel
-    iStart = seconds();
-    transpose(grid, block, d_C, d_A, nx, ny);
+    TensorF* inputTn_CPU    = getTestTensor(0);
+    TensorF* ouputTn_CPU;
+
+    CudaTensorF* inputTn_GPU  = new CudaTensorF(); inputTn_GPU->InitWithHostData(inputTn_CPU->getShape(),inputTn_CPU->_buff);
+    CudaTensorF* ouputTn_GPU = new CudaTensorF({inputTn_CPU->getShape()[0],
+                                                inputTn_CPU->getShape()[2],
+                                                inputTn_CPU->getShape()[1] });
+
+
+    ouputTn_CPU = cpuImplementation.Transpose(workScheduler,inputTn_CPU);
+
+
+
+
+
     CHECK(cudaDeviceSynchronize());
+    iStart = seconds();
+
+    ///TODO: ADD KERNEL LAUNCH HERE
+    transpose(
+            inputTn_GPU->_buff,
+            ouputTn_GPU->_buff,
+            inputTn_GPU->getShape()[0],
+            inputTn_GPU->getShape()[1],
+            inputTn_GPU->getShape()[2]);
+
     iElaps = seconds() - iStart;
 
-    // calculate effective_bandwidth
-    float ibnd = 2 * nx * ny * sizeof(float) / 1e9 / iElaps;
-    printf("%s elapsed %f sec <<< grid (%d,%d) block (%d,%d)>>> effective "
-           "bandwidth %f GB\n", kernelName, iElaps, grid.x, grid.y, block.x,
-           block.y, ibnd);
-    CHECK(cudaGetLastError());
+    CHECK(cudaDeviceSynchronize());
 
-    // check kernel results
-    if (iKernel > 1)
-    {
-        CHECK(cudaMemcpy(gpuRef, d_C, nBytes, cudaMemcpyDeviceToHost));
-        checkResult(hostRef, gpuRef, nx * ny, 1);
-    }
 
-    // free host and device memory
-    CHECK(cudaFree(d_A));
-    CHECK(cudaFree(d_C));
-    free(h_A);
-    free(hostRef);
-    free(gpuRef);
 
+    TensorF* outputTn_GPU = ((CudaTensorF*)ouputTn_GPU)->TransferToHost();
+
+    cout << "Kernel Execution Time: " << iElaps*1000000 << " uS" << endl;
+    cout    << "Matches: "
+            << cpuImplementation.CompareTensors(
+                    workScheduler,
+                    ouputTn_CPU,
+                    outputTn_GPU)
+            << endl;
+    cout << "\n\n\n\nContent of CPU result: "<< endl;
+    printTensorContent(ouputTn_CPU);
+    cout << "\n\n\n\nContent of GPU result: "<< endl;
+    printTensorContent(outputTn_GPU);
     // reset device
     CHECK(cudaDeviceReset());
-    return EXIT_SUCCESS;
+}
+
+int main(){
+    Test_try01();
 }

@@ -24,11 +24,11 @@ MultiplyTiled  |Yes    |Yes   |**Yes**|    No|2D,4D     |1D     |-              
 DivideTiled    |Yes    |Yes   |**Yes**|    No|4D,2D     |1D     |-                              |               |-      |           |-      |Replaced by MatOps
 Matmul_Scalar  |Yes    |Yes   |**Yes**|    No|1D,3D     |-      |-                              |               |-      |           |-      |Replaced by MatOps
 MatOps         |Yes    |Yes   |**Yes**|    No|4D,3D,2D,1D|4D,3D,2D,1D,0D|-                              |               |-      |           |-      |ADD,SUB,MUL_ELEMENT,DIV_ELEMENT, shapes could be different
-Transpose      |Yes    |Yes   |  50%  |    No|3D        |-      |-                              |               |-      |           |-      |--
+Transpose      |Yes    |Yes   |**Yes**|    No|3D        |-      |-                              |               |-      |           |-      |--
 Conv2d         |Yes    |Yes   |**Yes**|    No|4D        |-      |-                              |overrideDim2   |-1     |           |-      |3x Less performance compared to the tensorflow
-ReLU           |Yes    |Yes   |     No|    No|2D,4D     |-      |-                              |               |-      |           |-      |--
+ReLU           |Yes    |Yes   |**Yes**|    No|2D,4D     |-      |-                              |               |-      |           |-      |--
 Matmul         |Yes    |Yes   |     No|    No|2D,3D     |2D,3D  |-                              |               |-      |           |-      |--
-Square         |Yes    |Yes   |     No|    No|3D        |-      |-                              |               |-      |           |-      |--
+Square         |Yes    |Yes   |**Yes**|    No|3D        |-      |-                              |               |-      |           |-      |--
 TopK           |Yes    |Yes   |     No|    No|3D        |-      |-                              |axis           |2      |k          |20     |--
 Gather         |Yes    |Yes   |     No|    No|3D        |3D     |-                              |indices_axis   |1      |           |-      |--
 

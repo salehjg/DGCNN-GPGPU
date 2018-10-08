@@ -133,4 +133,24 @@ void conv2d_mlp_try01(
         unsigned int D,
         unsigned int chOut);
 
+extern
+void transpose(
+        const float* g_i,
+        float* g_o,
+        unsigned int dim0,
+        unsigned int dim1,
+        unsigned int dim2);
+
+extern
+void activation_relu(
+        const float *g_idata,
+        float *g_odata,
+        unsigned long len);
+
+extern
+void square(
+        const float *g_idata,
+        float *g_odata,
+        unsigned long len);
+
 #endif //DEEPPOINTV1_KERNELS_H

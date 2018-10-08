@@ -84,7 +84,31 @@ void CudaImplementation::PrintInfo(
 
 TensorF* CudaImplementation::Transpose(WorkScheduler scheduler, TensorF *batchedMat){
     PrintInfo("Transpose","",0,"",0,"",0,batchedMat->getShape(),{});
+    assert(batchedMat->getRank()==2 || batchedMat->getRank()==3);
+    int rankDiff = 3 - batchedMat->getRank();
+    if(rankDiff) batchedMat->ExpandDimZero();
 
+    unsigned int dim0,dim1,dim2;
+    dim0 = batchedMat->getShape()[0];
+    dim1 = batchedMat->getShape()[1];
+    dim2 = batchedMat->getShape()[2];
+
+    CudaTensorF *rsltTn = new CudaTensorF({dim0,dim2,dim1});
+
+    CHECK(cudaDeviceSynchronize());
+
+    transpose(
+            batchedMat->_buff,
+            rsltTn->_buff,
+            dim0,
+            dim1,
+            dim2);
+
+    CHECK(cudaDeviceSynchronize());
+
+    if(rankDiff) batchedMat->SqueezeDimZero();
+
+    return rsltTn;
 }
 
 TensorF* CudaImplementation::MatMul(WorkScheduler scheduler,
@@ -102,7 +126,14 @@ TensorF* CudaImplementation::MatMul(WorkScheduler scheduler, TensorF* batchedMat
 
 TensorF* CudaImplementation::Square(WorkScheduler scheduler, TensorF* batchedMat){
     PrintInfo("Square","",0,"",0,"",0,batchedMat->getShape(),{});
+    assert(batchedMat->getLength()!=0);
+    CudaTensorF* rsltTn = new CudaTensorF(batchedMat->getShape());
 
+    CHECK(cudaDeviceSynchronize());
+    square(batchedMat->_buff,rsltTn->_buff,batchedMat->getLength());
+    CHECK(cudaDeviceSynchronize());
+
+    return rsltTn;
 }
 
 TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
@@ -574,7 +605,11 @@ TensorF* CudaImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, T
 
 TensorF* CudaImplementation::ReLU(WorkScheduler scheduler, TensorF* inputTn){
     PrintInfo("ReLU","",0,"",0,"",0,inputTn->getShape(),{},{});
+    assert(inputTn->getLength()!=0);
+    CudaTensorF *rsltTn = new CudaTensorF(inputTn->getShape());
+    activation_relu(inputTn->_buff, rsltTn->_buff, inputTn->getLength());
 
+    return rsltTn;
 }
 
 TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount) {

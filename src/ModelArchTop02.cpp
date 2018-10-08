@@ -169,14 +169,14 @@ TensorF* ModelArchTop02::GetEdgeFeatures(WorkScheduler scheduler, TensorF *input
 
 TensorF* ModelArchTop02::PairwiseDistance(WorkScheduler scheduler, TensorF *input_BxNxD) {
 
-    TensorF* point_cloud_transpose = platformSelector->Transpose(platformSelector->defaultPlatform,scheduler,input_BxNxD);
+    TensorF* point_cloud_transpose = platformSelector->Transpose(PLATFORMS::GPU_CUDA,scheduler,input_BxNxD);
     TensorF* point_cloud_inner =  platformSelector->MatMul(platformSelector->defaultPlatform,scheduler,input_BxNxD,point_cloud_transpose);
     TensorF* point_cloud_inner2 = platformSelector->MatOps(PLATFORMS::GPU_CUDA,scheduler,point_cloud_inner,-2.0f,MAT_OPS::MUL_ELEMENTWISE);
-    TensorF* point_cloud_inner2p2 = platformSelector->Square(platformSelector->defaultPlatform,scheduler,input_BxNxD);
+    TensorF* point_cloud_inner2p2 = platformSelector->Square(PLATFORMS::GPU_CUDA,scheduler,input_BxNxD);
     TensorF* point_cloud_sum = platformSelector->ReduceSum(PLATFORMS::GPU_CUDA,scheduler,point_cloud_inner2p2,false,false,true);
     point_cloud_sum->ExpandDims(-1);
     //2D Matrix fed into function with virutal batch size of 1
-    TensorF* point_cloud_sum_transpose = platformSelector->Transpose(platformSelector->defaultPlatform,scheduler,point_cloud_sum);  //changed dims
+    TensorF* point_cloud_sum_transpose = platformSelector->Transpose(PLATFORMS::GPU_CUDA,scheduler,point_cloud_sum);  //changed dims
 
     TensorF* point_cloud_sum_tiled =  platformSelector->Tile(PLATFORMS::GPU_CUDA,scheduler,point_cloud_sum,2,N); //result is BxNxK for k=N
     TensorF* point_cloud_sum_transpose_tiled =  platformSelector->Tile(PLATFORMS::GPU_CUDA,scheduler,point_cloud_sum_transpose,1,N); //result is BxkxN for k=N
@@ -218,7 +218,7 @@ TensorF* ModelArchTop02::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
 
 
         TensorF *net3 = platformSelector->ReLU(
-                platformSelector->defaultPlatform,
+                PLATFORMS::GPU_CUDA,
                 scheduler,
                 net2);
 
@@ -257,7 +257,7 @@ TensorF* ModelArchTop02::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
 
 
         TensorF *net3 = platformSelector->ReLU(
-                platformSelector->defaultPlatform,
+                PLATFORMS::GPU_CUDA,
                 scheduler,
                 net2);
 
@@ -305,7 +305,7 @@ TensorF* ModelArchTop02::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
 
 
         TensorF *net3 = platformSelector->ReLU(
-                platformSelector->defaultPlatform,
+                PLATFORMS::GPU_CUDA,
                 scheduler,
                 net2);
 
@@ -353,7 +353,7 @@ TensorF* ModelArchTop02::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A13_tnet_bn.npy",net2);
 
         TensorF *net3 = platformSelector->ReLU(
-                platformSelector->defaultPlatform,
+                PLATFORMS::GPU_CUDA,
                 scheduler,
                 net2);
 
@@ -392,7 +392,7 @@ TensorF* ModelArchTop02::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A15_tnet_bn.npy",net2);
 
         TensorF *net3 = platformSelector->ReLU(
-                platformSelector->defaultPlatform,
+                PLATFORMS::GPU_CUDA,
                 scheduler,
                 net2);
 
@@ -497,7 +497,7 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
         );
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"C03_dg1_bn.npy",net2);
 
-        TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
+        TensorF* net3 = platformSelector->ReLU(PLATFORMS::GPU_CUDA,scheduler,net2);
 
         TensorF* net4 = platformSelector->ReduceMax(PLATFORMS::GPU_CUDA,scheduler,net3,2);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B05_dg1_pool.npy",net4);
@@ -532,7 +532,7 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
                                                   platformSelector->defaultPlatform,"dgcnn2.bn.dgcnn2.bn.moments.Squeeze_1.ExponentialMovingAverage.npy")
         );
 
-        TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
+        TensorF* net3 = platformSelector->ReLU(PLATFORMS::GPU_CUDA,scheduler,net2);
 
         TensorF* net4 = platformSelector->ReduceMax(PLATFORMS::GPU_CUDA,scheduler,net3,2);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B06_dg2_pool.npy",net4);
@@ -567,7 +567,7 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
                                                   platformSelector->defaultPlatform,"dgcnn3.bn.dgcnn3.bn.moments.Squeeze_1.ExponentialMovingAverage.npy")
         );
 
-        TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
+        TensorF* net3 = platformSelector->ReLU(PLATFORMS::GPU_CUDA,scheduler,net2);
 
         TensorF* net4 = platformSelector->ReduceMax(PLATFORMS::GPU_CUDA,scheduler,net3,2);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B07_dg3_pool.npy",net4);
@@ -602,7 +602,7 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
                                                   platformSelector->defaultPlatform,"dgcnn4.bn.dgcnn4.bn.moments.Squeeze_1.ExponentialMovingAverage.npy")
         );
 
-        TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
+        TensorF* net3 = platformSelector->ReLU(PLATFORMS::GPU_CUDA,scheduler,net2);
 
         TensorF* net4 = platformSelector->ReduceMax(PLATFORMS::GPU_CUDA,scheduler,net3,2);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B08_dg4_pool.npy",net4);
@@ -649,7 +649,7 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
 
 
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B11_agg_bn.npy",net2);
-        TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
+        TensorF* net3 = platformSelector->ReLU(PLATFORMS::GPU_CUDA,scheduler,net2);
 
         TensorF* net4 = platformSelector->ReduceMax(PLATFORMS::GPU_CUDA,scheduler,net3,1);
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B12_agg_pool.npy",net4);
@@ -689,7 +689,7 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
         );
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B14_fc.npy",net2);
 
-        TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
+        TensorF* net3 = platformSelector->ReLU(PLATFORMS::GPU_CUDA,scheduler,net2);
         net = net3;
     }
 
@@ -720,7 +720,7 @@ TensorF* ModelArchTop02::Execute(WorkScheduler scheduler) {
 
         platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B16_fc.npy",net2);
 
-        TensorF* net3 = platformSelector->ReLU(platformSelector->defaultPlatform,scheduler,net2);
+        TensorF* net3 = platformSelector->ReLU(PLATFORMS::GPU_CUDA,scheduler,net2);
         net = net3;
     }
 

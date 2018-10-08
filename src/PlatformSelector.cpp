@@ -178,7 +178,7 @@ TensorF* PlatformSelector::Transpose(PLATFORMS platform, WorkScheduler scheduler
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->Transpose(scheduler,__batchedMat);
             break;
         }
         case PLATFORMS::GPU_OCL :{
@@ -237,7 +237,7 @@ TensorF* PlatformSelector::Square(PLATFORMS platform, WorkScheduler scheduler, T
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->Square(scheduler, __batchedMat);
             break;
         }
         case PLATFORMS::GPU_OCL :{
@@ -699,7 +699,7 @@ TensorF* PlatformSelector::ReLU(PLATFORMS platform, WorkScheduler scheduler, Ten
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->ReLU(scheduler, __inputTn);
             break;
         }
         case PLATFORMS::GPU_OCL :{
