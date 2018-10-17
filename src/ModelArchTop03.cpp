@@ -16,14 +16,14 @@ ModelArchTop03::ModelArchTop03(int dataset_offset, int batchsize, int pointcount
 ModelInfo ModelArchTop03::GetModelInfo() {
     ModelInfo tmplt;
     tmplt.ModelType="Classifier";
-    tmplt.Version="2.0";
+    tmplt.Version="3.0";
     tmplt.DesignNotes=
-            "1) Most of the Ops are on CPU, some are on GPU_CUDA"
+            "1) ALL of the Ops are on GPU(CUDA)"
             ;
     tmplt.ExperimentNotes="";
     tmplt.ToDo=""
                "";
-    tmplt.Date="97.6.20";
+    tmplt.Date="97.7.26";
     return tmplt;
 }
 
