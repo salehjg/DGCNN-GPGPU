@@ -39,6 +39,7 @@ set(SOURCE_FILES_ClassifierMultiplatform
         WeightsLoader.cpp
         ModelArchTop01.cpp
         ModelArchTop02.cpp
+        ModelArchTop03.cpp
         )
 
 # Find all cuda kernels

@@ -494,7 +494,7 @@ TensorF* PlatformSelector::Sqrt(PLATFORMS platform, WorkScheduler scheduler, Ten
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->Sqrt(scheduler, __inputTn);
             break;
         }
         case PLATFORMS::GPU_OCL :{

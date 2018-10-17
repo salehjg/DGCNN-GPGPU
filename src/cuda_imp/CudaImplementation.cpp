@@ -509,6 +509,13 @@ TensorF* CudaImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, 
 TensorF* CudaImplementation::Sqrt(WorkScheduler scheduler, TensorF* inputTn){
     PrintInfo("MatSubTiled","",0,"",0,"",0,inputTn->getShape(),{},{});
 
+    CudaTensorF *rsltTn = new CudaTensorF(inputTn->getShape());
+
+    CHECK(cudaDeviceSynchronize());
+    sqrt_float(inputTn->_buff,rsltTn->_buff,inputTn->getLength());
+    CHECK(cudaDeviceSynchronize());
+
+    return rsltTn;
 }
 
 /*

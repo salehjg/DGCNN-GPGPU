@@ -182,4 +182,10 @@ void gather(
         int m,
         int nsample);
 
+extern
+void sqrt_float(
+        const float *g_idata,
+        float *g_odata,
+        unsigned long len);
+
 #endif //DEEPPOINTV1_KERNELS_H
