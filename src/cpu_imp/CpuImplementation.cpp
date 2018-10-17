@@ -1593,3 +1593,22 @@ bool CpuImplementation::CompareTensors(WorkScheduler scheduler, TensorF *inputTn
     }
     return false;
 }
+
+bool CpuImplementation::CompareTensors(WorkScheduler scheduler, TensorI *inputTn1, TensorI *inputTn2) {
+    float totalDiff=0;
+    int currentDiff=0;
+    if(inputTn1->getShape() == inputTn2->getShape()){
+        unsigned long _len = inputTn1->getLength();
+        for(unsigned long i =0 ; i<_len;i++){
+            currentDiff = inputTn1->_buff[i] - inputTn2->_buff[i];
+            //totalDiff += (currentDiff>=0)?currentDiff:-1*currentDiff;
+            totalDiff += currentDiff;
+        }
+        cout<< "totalDiff: "<<totalDiff<<endl;
+        if((totalDiff!=0) ) {
+            return false;
+        }
+        return true;
+    }
+    return false;
+}

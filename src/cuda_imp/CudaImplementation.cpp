@@ -617,12 +617,48 @@ TensorF* CudaImplementation::ReduceMax(
 
 TensorI* CudaImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, int axis, int k){
     PrintInfo("TopK","axis",axis,"k",k,"",0,batchedMat->getShape(),{},{});
+    assert(batchedMat->getRank()==3);
+    unsigned int b,m,n;
+    b = batchedMat->getShape()[0];
+    m = batchedMat->getShape()[1];
+    n = batchedMat->getShape()[2];
 
+    CudaTensorI *rsltIndicesTn = new CudaTensorI({
+                                                        b,
+                                                        m,
+                                                        (unsigned int)k
+                                                });
+    CudaTensorF *rsltValTn = new CudaTensorF({
+                                                         b,
+                                                         m,
+                                                         (unsigned int)k
+                                                 });
+
+    top_k(batchedMat->_buff,rsltIndicesTn->_buff,rsltValTn->_buff,b,n,m,k);
+
+    return rsltIndicesTn;
 }
 
 TensorF* CudaImplementation::Gather(WorkScheduler scheduler, TensorF* inputTn, TensorI* indices, int indices_axis){
     PrintInfo("Gather","indices_axis",indices_axis,"",0,"",0,inputTn->getShape(),indices->getShape(),{});
+    assert(inputTn->getRank()==3);
+    assert(indices->getRank()==3);
+    assert(inputTn->getShape()[0]==indices->getShape()[0]);
 
+    unsigned int b,n,m,c,nsample;
+    b = inputTn->getShape()[0];
+    n = inputTn->getShape()[1];
+    c = inputTn->getShape()[2];
+    m = indices->getShape()[1];
+    nsample = indices->getShape()[2];
+
+    CudaTensorF* rsltTn = new CudaTensorF({b,m,nsample,c});
+
+    CHECK(cudaDeviceSynchronize());
+    gather(inputTn->_buff,indices->_buff,rsltTn->_buff,b,n,c,m,nsample);
+    CHECK(cudaDeviceSynchronize());
+
+    return rsltTn;
 }
 
 TensorF* CudaImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2){

@@ -638,7 +638,7 @@ TensorI* PlatformSelector::TopK(PLATFORMS platform, WorkScheduler scheduler, Ten
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->TopK(scheduler, __batchedMat, axis, k);
             break;
         }
         case PLATFORMS::GPU_OCL :{
@@ -658,7 +658,7 @@ TensorF* PlatformSelector::Gather(PLATFORMS platform, WorkScheduler scheduler, T
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->Gather(scheduler, __inputTn, __indices, indices_axis);
             break;
         }
         case PLATFORMS::GPU_OCL :{

@@ -161,4 +161,25 @@ void batch_matmul(
         int dim0A, int dim1A, int dim2A,
         int dim0B, int dim1B, int dim2B);
 
+extern
+void top_k(
+        const float* distance_matrix,   // (b,m,n)
+        int *output_indices,            // (b,m,k)
+        float* output_values,           // (b,m,k)
+        int b,
+        int n,
+        int m,
+        int k);
+
+extern
+void gather(
+        const float* points,   // (b,n,c)
+        const int *indices,    // (b,m,nsample)
+        float* output,  // (b,m,nsample,c)
+        int b,
+        int n,
+        int c,
+        int m,
+        int nsample);
+
 #endif //DEEPPOINTV1_KERNELS_H
