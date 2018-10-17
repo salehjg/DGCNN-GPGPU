@@ -153,4 +153,12 @@ void square(
         float *g_odata,
         unsigned long len);
 
+extern
+void batch_matmul(
+        const float * matA, //row-major device ptr (batch, hA, wA) == (dim0A,  dim1A  , *dim2A* )
+        const float * matB, //row-major device ptr (batch, hB, wB) == (dim0B, *dim1B* ,  dim2B  )
+        float * matC,		//row-major device ptr (batch, hB, wB) == (dim0B,  dim1A  ,  dim2B  )
+        int dim0A, int dim1A, int dim2A,
+        int dim0B, int dim1B, int dim2B);
+
 #endif //DEEPPOINTV1_KERNELS_H

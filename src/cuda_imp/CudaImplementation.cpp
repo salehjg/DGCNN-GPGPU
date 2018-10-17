@@ -114,6 +114,52 @@ TensorF* CudaImplementation::Transpose(WorkScheduler scheduler, TensorF *batched
 TensorF* CudaImplementation::MatMul(WorkScheduler scheduler,
                                    TensorF* batchedMat1, TensorF* batchedMat2){
     PrintInfo("MatMul","",0,"",0,"",0,batchedMat1->getShape(),batchedMat2->getShape());
+    assert(batchedMat1->getRank()==3 || batchedMat1->getRank()==2);
+    assert(batchedMat2->getRank()==3 || batchedMat2->getRank()==2);
+    assert(batchedMat2->getRank()==batchedMat2->getRank());
+
+    unsigned int dim0A,dim1A,dim2A,dim0B,dim1B,dim2B;
+    int rankDiff;
+
+    rankDiff = 3 - batchedMat1->getRank();
+    for(int i=0;i<rankDiff;i++){
+        batchedMat1->ExpandDimZero();
+        batchedMat2->ExpandDimZero();
+    }
+
+    dim0A = batchedMat1->getShape()[0]; // batch size
+    dim1A = batchedMat1->getShape()[1]; // height of matrix
+    dim2A = batchedMat1->getShape()[2]; // width of matrix
+
+    dim0B = batchedMat2->getShape()[0]; // batch size
+    dim1B = batchedMat2->getShape()[1]; // height of matrix
+    dim2B = batchedMat2->getShape()[2]; // width of matrix
+
+    //Width of A should be equal to the Height of B. (dim2A = dim1B)
+    assert(dim0A == dim0B);
+    assert(dim2A == dim1B);
+
+    CudaTensorF*rsltTn = new CudaTensorF({dim0A,dim1A, dim2B});
+    CHECK(cudaDeviceSynchronize());
+    batch_matmul(
+             batchedMat1->_buff,
+             batchedMat2->_buff,
+             rsltTn->_buff,
+             batchedMat1->getShape()[0],
+             batchedMat1->getShape()[1],
+             batchedMat1->getShape()[2],
+             batchedMat2->getShape()[0],
+             batchedMat2->getShape()[1],
+             batchedMat2->getShape()[2]);
+    CHECK(cudaDeviceSynchronize());
+
+    for(int i=0;i<rankDiff;i++){
+        batchedMat1->SqueezeDimZero();
+        batchedMat2->SqueezeDimZero();
+        rsltTn->SqueezeDimZero();
+    }
+
+    return rsltTn;
 
 }
 

@@ -128,14 +128,14 @@ void reduce_mean_4d_try02(
 
         TPG = (unsigned long) dim3; //threads per group
 
-        printf("-------------------------------------------------------\n");
-        printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
-        printf("KERNEL_GRID  : %ld\n", grid);
-        printf("KERNEL_BLOCK : %ld\n", block);
-        printf("KERNEL_SPT :   %ld\n", SPT);
-        printf("KERNEL_TGO :   %ld\n", TGO);
-        printf("KERNEL_TGC :   %ld\n", TGC);
-        printf("KERNEL_TGPB :  %ld\n", TGPB);
+        //printf("-------------------------------------------------------\n");
+        //printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
+        //printf("KERNEL_GRID  : %ld\n", grid);
+        //printf("KERNEL_BLOCK : %ld\n", block);
+        //printf("KERNEL_SPT :   %ld\n", SPT);
+        //printf("KERNEL_TGO :   %ld\n", TGO);
+        //printf("KERNEL_TGC :   %ld\n", TGC);
+        //printf("KERNEL_TGPB :  %ld\n", TGPB);
 
         float *g_buffer;
         CHECK(cudaMalloc((float **) &g_tempbuff, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
@@ -161,7 +161,7 @@ void reduce_mean_4d_try02(
         unsigned long block,grid;
 
         float coef = (dim0*dim1*dim2);
-        printf("WRAPPER: COEF: %f\n",coef);
+        //printf("WRAPPER: COEF: %f\n",coef);
 
 
         block = BLOCK_SIZE;

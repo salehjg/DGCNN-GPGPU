@@ -198,7 +198,7 @@ TensorF* PlatformSelector::MatMul(PLATFORMS platform, WorkScheduler scheduler, T
             break;
         }
         case PLATFORMS::GPU_CUDA :{
-            throw "Not Implement.";
+            return cudaPlatformClass->MatMul(scheduler, __batchedMat1, __batchedMat2);
             break;
         }
         case PLATFORMS::GPU_OCL :{

@@ -51,13 +51,13 @@ void conv2d_mlp_try01(
     unsigned long blockSize = D;
     unsigned long gridSize = B*N*K;
 
-    printf("BlockSize: \t%lu\n",blockSize);
-    printf("GridSize: \t%lu\n",gridSize);
-    printf("B: %u\n",B);
-    printf("N: %u\n",N);
-    printf("K: %u\n",K);
-    printf("D: %u\n",D);
-    printf("C: %u\n",chOut);
+    //printf("BlockSize: \t%lu\n",blockSize);
+    //printf("GridSize: \t%lu\n",gridSize);
+    //printf("B: %u\n",B);
+    //printf("N: %u\n",N);
+    //printf("K: %u\n",K);
+    //printf("D: %u\n",D);
+    //printf("C: %u\n",chOut);
 
     kernel_conv2d_mlp_try01 <<<gridSize, blockSize>>>(
             gInput_i, gWeight_i, gOutput_o, B, N, K, D, chOut);
