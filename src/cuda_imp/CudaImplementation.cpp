@@ -95,7 +95,7 @@ TensorF* CudaImplementation::Transpose(WorkScheduler scheduler, TensorF *batched
 
     CudaTensorF *rsltTn = new CudaTensorF({dim0,dim2,dim1});
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     transpose(
             batchedMat->_buff,
@@ -104,7 +104,7 @@ TensorF* CudaImplementation::Transpose(WorkScheduler scheduler, TensorF *batched
             dim1,
             dim2);
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     if(rankDiff) batchedMat->SqueezeDimZero();
 
@@ -140,7 +140,7 @@ TensorF* CudaImplementation::MatMul(WorkScheduler scheduler,
     assert(dim2A == dim1B);
 
     CudaTensorF*rsltTn = new CudaTensorF({dim0A,dim1A, dim2B});
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     batch_matmul(
              batchedMat1->_buff,
              batchedMat2->_buff,
@@ -151,7 +151,7 @@ TensorF* CudaImplementation::MatMul(WorkScheduler scheduler,
              batchedMat2->getShape()[0],
              batchedMat2->getShape()[1],
              batchedMat2->getShape()[2]);
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     for(int i=0;i<rankDiff;i++){
         batchedMat1->SqueezeDimZero();
@@ -175,9 +175,9 @@ TensorF* CudaImplementation::Square(WorkScheduler scheduler, TensorF* batchedMat
     assert(batchedMat->getLength()!=0);
     CudaTensorF* rsltTn = new CudaTensorF(batchedMat->getShape());
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     square(batchedMat->_buff,rsltTn->_buff,batchedMat->getLength());
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     return rsltTn;
 }
@@ -197,7 +197,7 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
     if(inputTn->getRank()==3 &&  !over_axis0 && !over_axis1 && over_axis2)rsltTn= new CudaTensorF({_dim0,_dim1});
     if(inputTn->getRank()==2 &&  !over_axis0 && over_axis1 )rsltTn= new CudaTensorF({_dim0});
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     reduce_sum_3d_try03(
             inputTn->_buff,
             rsltTn->_buff,
@@ -207,7 +207,7 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
             over_axis0,
             over_axis1,
             over_axis2);
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("ReduceSum@CudaImplementation: KERNEL_ERROR");
     return rsltTn;
@@ -232,7 +232,7 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
 
     CudaTensorF* rsltTn = new CudaTensorF({_dim3}); // TTTF
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     reduce_sum_4d_try04(
             inputTn->_buff,
             rsltTn->_buff,
@@ -244,7 +244,7 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
             over_axis1,
             over_axis2,
             over_axis3);
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("ReduceSum4D@CudaImplementation: KERNEL_ERROR");
 
@@ -288,7 +288,7 @@ TensorF* CudaImplementation::Mean(
         _mean_axis3 = false;
     }
     CudaTensorF* rsltTn = new CudaTensorF({(unsigned int)_dim3});
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     reduce_mean_4d_try02(
             inputTn->_buff,
             rsltTn->_buff,
@@ -300,7 +300,7 @@ TensorF* CudaImplementation::Mean(
             _mean_axis1,
             _mean_axis2,
             _mean_axis3);
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Mean@CudaImplementation: KERNEL_ERROR");
     return rsltTn;
@@ -341,7 +341,7 @@ TensorF* CudaImplementation::Variance(
         _variance_axis3 = false;
     }
     CudaTensorF* rsltTn = new CudaTensorF({(unsigned int)_dim3});
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     reduce_variance_4d_try01(
             inputTn->_buff,
             rsltTn->_buff,
@@ -353,7 +353,7 @@ TensorF* CudaImplementation::Variance(
             _variance_axis1,
             _variance_axis2,
             _variance_axis3);
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Mean@CudaImplementation: KERNEL_ERROR");
     return rsltTn;
@@ -511,9 +511,9 @@ TensorF* CudaImplementation::Sqrt(WorkScheduler scheduler, TensorF* inputTn){
 
     CudaTensorF *rsltTn = new CudaTensorF(inputTn->getShape());
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     sqrt_float(inputTn->_buff,rsltTn->_buff,inputTn->getLength());
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     return rsltTn;
 }
@@ -556,7 +556,7 @@ TensorF* CudaImplementation::Concat2(
     dimA3 = inputTn1->getShape()[3]; dimB3 = inputTn2->getShape()[3];
     CudaTensorF* rsltTn = new CudaTensorF({dimA0,dimA1,dimA2,dimA3+dimB3});
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     concat_try01(
             inputTn1->_buff,
@@ -566,7 +566,7 @@ TensorF* CudaImplementation::Concat2(
             dimB0,dimB1,dimB2,dimB3,
             (unsigned int)concatDim);
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Concat2@CudaImplementation: KERNEL_ERROR");
     return rsltTn;
@@ -588,7 +588,7 @@ TensorF* CudaImplementation::ReduceMax(
     if(inputTn->getRank()==4 &&  reductionDim==1)rsltTn= new CudaTensorF({_dim0,_dim2,_dim3});
     if(inputTn->getRank()==4 &&  reductionDim==2)rsltTn= new CudaTensorF({_dim0,_dim1,_dim3});
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     if(reductionDim==2){
         reduce_max_4d_try01(
                 inputTn->_buff,
@@ -614,7 +614,7 @@ TensorF* CudaImplementation::ReduceMax(
                 reductionDim==1,
                 reductionDim==2);
     }
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("ReduceMax@CudaImplementation: KERNEL_ERROR");
     return rsltTn;
@@ -661,9 +661,9 @@ TensorF* CudaImplementation::Gather(WorkScheduler scheduler, TensorF* inputTn, T
 
     CudaTensorF* rsltTn = new CudaTensorF({b,m,nsample,c});
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
     gather(inputTn->_buff,indices->_buff,rsltTn->_buff,b,n,c,m,nsample);
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     return rsltTn;
 }
@@ -731,7 +731,7 @@ TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int
     }
 
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     tile_try03(
             inputTn->_buff,
@@ -745,7 +745,7 @@ TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int
             tileCount
             );
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Tile@CudaImplementation: KERNEL_ERROR");
     return rsltTn;

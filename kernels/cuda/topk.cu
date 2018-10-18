@@ -84,13 +84,13 @@ void top_k(
 
 
 
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 
     kernel_selection_sort_gpu<<<b,blockSize>>>(b,n,m,k,distance_matrix,tmpIndices,tmpVal);
     split_3d_overdim2_float(tmpVal, output_values,b,m,n,k);     //split BxMxN into BxMxK (float)
     split_3d_overdim2_integer(tmpIndices, output_indices,b,m,n,k);  //split BxMxN into BxMxK (integer)
 
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 
 
 

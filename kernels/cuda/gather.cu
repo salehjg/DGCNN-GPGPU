@@ -37,7 +37,7 @@ void gather(
         int nsample){
     unsigned int blockSize = 256;
 
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     kernel_group_point_gpu<<<b,blockSize>>>(b,n,c,m,nsample,points,indices,output);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 }

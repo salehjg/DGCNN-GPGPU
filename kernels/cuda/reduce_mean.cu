@@ -153,7 +153,7 @@ void reduce_mean_4d_try02(
         //CHECK(cudaFree(g_buffer));
     }
 
-    CHECK(cudaDeviceSynchronize());
+    //CHECK(cudaDeviceSynchronize());
 
     // 2. Multiplying (1/n) to each element of resulted tensor from step 1.
     {
