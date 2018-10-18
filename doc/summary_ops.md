@@ -4,6 +4,7 @@
 - [ ] Improve Conv2D @CUDA
 - [ ] Improve MatMul @CUDA
 - [ ] Try to hide latencies @CUDA
+- [ ] CudaTensorX disposal revision(device memory leak) @CUDA
 
 
 ## Ops

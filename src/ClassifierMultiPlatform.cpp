@@ -1,7 +1,7 @@
 //
 // Created by saleh on 9/3/18.
 //
-#include "ModelArchTop03.h"
+#include "ModelArchTop04.h"
 #include <iostream>
 using namespace std;
 
@@ -60,18 +60,18 @@ void CalculateAccuracy(TensorF* scores, TensorI* labels, int B, int classCount){
 
 int main(){
     WorkScheduler scheduler;
-    int batchsize=5;
-    ModelArchTop03 modelArchTop(0,batchsize,1024,20);
+    int batchsize=50;
+    ModelArchTop04 modelArchTop(0,batchsize,1024,20);
 
     modelArchTop.SetModelInput_data("/home/saleh/00_repos/tensorflow_repo/"
                                     "00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/"
                                     "data/dataset/"
-                                    "dataset_B5_pcl.npy");
+                                    "dataset_B2048_pcl.npy");
 
     modelArchTop.SetModelInput_labels("/home/saleh/00_repos/tensorflow_repo/"
                                       "00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/"
                                       "data/dataset/"
-                                      "dataset_B5_labels_int32.npy");
+                                      "dataset_B2048_labels_int32.npy");
 
 
     double timerStart = seconds();
