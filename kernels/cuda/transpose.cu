@@ -8,7 +8,7 @@
 
 
 
-__global__ void transposeBatch_try01 (const float *in, float *out, const int dim0, const int dim1, const int dim2)
+__global__ void transposeBatch_try01 (const float * __restrict__ in, float * __restrict__ out, const int dim0, const int dim1, const int dim2)
 {
     // dynamic shared memory
     extern __shared__ float tile[];

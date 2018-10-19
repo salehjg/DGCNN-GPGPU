@@ -8,9 +8,9 @@
 #include "common.h"
 
 __global__ void kernel_conv2d_mlp_try01(
-        const float* gInput_i,
-        const float* gWeight_i,
-        float* gOutput_o,
+        const float*  __restrict__ gInput_i,
+        const float*  __restrict__ gWeight_i,
+        float*  __restrict__ gOutput_o,
         const unsigned int dim0,
         const unsigned int dim1,
         const unsigned int dim2,
@@ -38,8 +38,8 @@ __global__ void kernel_conv2d_mlp_try01(
 }
 
 void conv2d_mlp_try01(
-        float* gInput_i,
-        float* gWeight_i,
+        const float* gInput_i,
+        const float* gWeight_i,
         float* gOutput_o,
         unsigned int B,
         unsigned int N,

@@ -4,8 +4,8 @@
 
 template <typename T>
 __global__ void kernel_split_3d_overdim2(
-        const T* g_i,
-        T* g_o,
+        const T* __restrict__  g_i,
+        T* __restrict__  g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,
@@ -23,8 +23,8 @@ __global__ void kernel_split_3d_overdim2(
 }
 
 void split_3d_overdim2_float(
-        const float* g_i,
-        float* g_o,
+        const float* __restrict__  g_i,
+        float* __restrict__  g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,
@@ -38,8 +38,8 @@ void split_3d_overdim2_float(
 }
 
 void split_3d_overdim2_integer(
-        const int* g_i,
-        int* g_o,
+        const int* __restrict__  g_i,
+        int* __restrict__  g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,

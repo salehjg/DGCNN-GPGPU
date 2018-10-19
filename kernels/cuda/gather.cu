@@ -7,7 +7,7 @@
 // COPYRIGHT TO CHARLESQ34 @ GitHub : PointNet++
 // input: points (b,n,c), idx (b,m,nsample)
 // output: out (b,m,nsample,c)
-__global__ void kernel_group_point_gpu(int b, int n, int c, int m, int nsample, const float *points, const int *idx, float *out) {
+__global__ void kernel_group_point_gpu(int b, int n, int c, int m, int nsample, const float *  __restrict__ points, const int * __restrict__ idx, float * __restrict__ out) {
     int batch_index = blockIdx.x;
     points += n*c*batch_index;
     idx += m*nsample*batch_index;
