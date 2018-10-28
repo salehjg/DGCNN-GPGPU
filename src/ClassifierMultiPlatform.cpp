@@ -60,7 +60,7 @@ void CalculateAccuracy(TensorF* scores, TensorI* labels, int B, int classCount){
 
 int main(){
     WorkScheduler scheduler;
-    int batchsize=50;
+    int batchsize=80;
     ModelArchTop04 modelArchTop(0,batchsize,1024,20);
 
     modelArchTop.SetModelInput_data("/home/saleh/00_repos/tensorflow_repo/"
