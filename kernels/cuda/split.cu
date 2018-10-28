@@ -4,8 +4,8 @@
 
 template <typename T>
 __global__ void kernel_split_3d_overdim2(
-        const T* g_i,
-        T* g_o,
+        const T* __restrict__  g_i,
+        T* __restrict__  g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,
@@ -23,8 +23,8 @@ __global__ void kernel_split_3d_overdim2(
 }
 
 void split_3d_overdim2_float(
-        const float* g_i,
-        float* g_o,
+        const float* __restrict__  g_i,
+        float* __restrict__  g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,
@@ -32,14 +32,14 @@ void split_3d_overdim2_float(
     unsigned int blockSize, gridSize;
     blockSize = 256;
     gridSize = ((dim0*dim1*new_dim2)+blockSize-1)/blockSize;
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     kernel_split_3d_overdim2<float><<<gridSize,blockSize>>>(g_i,g_o,dim0,dim1,dim2,new_dim2);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 }
 
 void split_3d_overdim2_integer(
-        const int* g_i,
-        int* g_o,
+        const int* __restrict__  g_i,
+        int* __restrict__  g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,
@@ -47,7 +47,7 @@ void split_3d_overdim2_integer(
     unsigned int blockSize, gridSize;
     blockSize = 256;
     gridSize = ((dim0*dim1*new_dim2)+blockSize-1)/blockSize;
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
     kernel_split_3d_overdim2<int><<<gridSize,blockSize>>>(g_i,g_o,dim0,dim1,dim2,new_dim2);
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 }

@@ -124,8 +124,8 @@ void mat_ops_try01(
 
 extern
 void conv2d_mlp_try01(
-        float* gInput_i,
-        float* gWeight_i,
+        const float* __restrict__ gInput_i,
+        const float* __restrict__ gWeight_i,
         float* gOutput_o,
         unsigned int B,
         unsigned int N,

@@ -101,7 +101,7 @@ CudaTensorF::~CudaTensorF() {
      * overrides a base class destructor declared virtual; see 12.4 and 12.5. */
     cudaError_t cuda_stat;
     if(initialized){
-        std::cout<<"--- CudaTensorF: buffer deleted.\n";
+        //std::cout<<"--- CudaTensorF: buffer deleted.\n";
         cuda_stat = cudaFree(_buff);
         assert(cuda_stat==cudaSuccess);
     }

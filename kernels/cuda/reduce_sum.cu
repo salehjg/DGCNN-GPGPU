@@ -5,8 +5,9 @@
 #define DIM     128
 #define SMEMDIM 4     // 128/32 = 8
 
+/*
 // COPYRIGHT "PROFESSIONAL CUDA C PROGRAMMING - CHAPTER 5 - reduceSmemUnrollShfl"
-__global__ void kernel_reduce_sum_allaxes(float *g_idata, float *g_odata, unsigned int n)
+__global__ void kernel_reduce_sum_allaxes(const float * __restrict__ g_idata, float * __restrict__ g_odata, unsigned int n)
 {
     // static shared memory
     __shared__ float smem[DIM];
@@ -59,7 +60,7 @@ __global__ void kernel_reduce_sum_allaxes(float *g_idata, float *g_odata, unsign
     if (tid == 0) g_odata[blockIdx.x] = localSum;
 }
 
-__global__ void reduceSmem (float *g_idata, float *g_odata, unsigned int n)
+__global__ void reduceSmem (const float * __restrict__ g_idata, float * __restrict__ g_odata, unsigned int n)
 {
     __shared__ float smem[DIM];
 
@@ -72,7 +73,7 @@ __global__ void reduceSmem (float *g_idata, float *g_odata, unsigned int n)
     if (idx >= n) return;
 
     // convert global data pointer to the local pointer of this block
-    float *idata = g_idata + blockIdx.x * blockDim.x;
+    const float *idata = g_idata + blockIdx.x * blockDim.x;
 
     // set to smem by each threads
     smem[tid] = idata[tid];
@@ -105,14 +106,14 @@ __global__ void reduceSmem (float *g_idata, float *g_odata, unsigned int n)
 }
 
 // Interleaved Pair Implementation with less divergence
-__global__ void reduceInterleaved (int *g_idata, int *g_odata, unsigned int n)
+__global__ void reduceInterleaved (const int * __restrict__ g_idata, int * __restrict__ g_odata, unsigned int n)
 {
     // set thread ID
     unsigned int tid = threadIdx.x;
     unsigned int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
     // convert global data pointer to the local pointer of this block
-    int *idata = g_idata + blockIdx.x * blockDim.x;
+    const int *idata = g_idata + blockIdx.x * blockDim.x;
 
     // boundary check
     if(idx >= n) return;
@@ -133,7 +134,7 @@ __global__ void reduceInterleaved (int *g_idata, int *g_odata, unsigned int n)
 }
 
 // Interleaved Pair Implementation with less divergence
-__global__ void reduceInterleavedFloat (float *g_idata, float *g_odata,
+__global__ void reduceInterleavedFloat (const float * __restrict__ g_idata, float * __restrict__ g_odata,
                                         unsigned int n)
 {
     // set thread ID
@@ -161,7 +162,7 @@ __global__ void reduceInterleavedFloat (float *g_idata, float *g_odata,
     if (tid == 0) g_odata[blockIdx.x] = idata[0];
 }
 
-__global__ void reduceCompleteUnrollWarps8 (int *g_idata, int *g_odata,
+__global__ void reduceCompleteUnrollWarps8 (const int * __restrict__ g_idata, int * __restrict__ g_odata,
                                             unsigned int n)
 {
     // set thread ID
@@ -220,7 +221,7 @@ __global__ void reduceCompleteUnrollWarps8 (int *g_idata, int *g_odata,
     if (tid == 0) g_odata[blockIdx.x] = idata[0];
 }
 
-__global__ void reduceCompleteUnrollWarps8Float (float *g_idata, float *g_odata,
+__global__ void reduceCompleteUnrollWarps8Float (const float * __restrict__ g_idata, float * __restrict__ g_odata,
                                                  unsigned int n)
 {
     // set thread ID
@@ -278,9 +279,10 @@ __global__ void reduceCompleteUnrollWarps8Float (float *g_idata, float *g_odata,
     // write result for this block to global mem
     if (tid == 0) g_odata[blockIdx.x] = idata[0];
 }
+*/
 
 // CHAPTER 05 - reduceInteger.cu PROFESSIONAL CUDA C PROGRAMMING
-__global__ void kernel_reduceSmemUnroll(float *g_idata, float *g_odata, unsigned int n)
+__global__ void kernel_reduceSmemUnroll(const float * __restrict__ g_idata, float * __restrict__ g_odata, unsigned int n)
 {
     // static shared memory
     __shared__ float smem[DIM];

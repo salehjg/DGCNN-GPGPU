@@ -5,16 +5,16 @@
 
 extern
 void split_3d_overdim2_float(
-        const float* g_i,
-        float* g_o,
+        const float*  __restrict__ g_i,
+        float*  __restrict__ g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,
         unsigned int new_dim2);
 extern
 void split_3d_overdim2_integer(
-        const int* g_i,
-        int* g_o,
+        const int*  __restrict__ g_i,
+        int*  __restrict__ g_o,
         unsigned int dim0,
         unsigned int dim1,
         unsigned int dim2,
@@ -25,7 +25,7 @@ void split_3d_overdim2_integer(
 // input: k (1), distance matrix dist (b,m,n)
 // output: idx (b,m,n), dist_out (b,m,n)
 // only the top k results within n are useful
-__global__ void kernel_selection_sort_gpu(int b, int n, int m, int k, const float *dist, int *outi, float *out) {
+__global__ void kernel_selection_sort_gpu(int b, int n, int m, int k, const float * __restrict__ dist, int * __restrict__ outi, float * __restrict__ out) {
     int batch_index = blockIdx.x;
     dist+=m*n*batch_index;
     outi+=m*n*batch_index;
@@ -68,8 +68,8 @@ __global__ void kernel_selection_sort_gpu(int b, int n, int m, int k, const floa
 }
 
 void top_k(
-        const float* distance_matrix,   // (b,m,n)
-        int *output_indices,            // (b,m,k)
+        const float* __restrict__  distance_matrix,   // (b,m,n)
+        int * __restrict__ output_indices,            // (b,m,k)
         float* output_values,           // (b,m,k)
         int b,
         int n,
@@ -84,13 +84,13 @@ void top_k(
 
 
 
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 
     kernel_selection_sort_gpu<<<b,blockSize>>>(b,n,m,k,distance_matrix,tmpIndices,tmpVal);
     split_3d_overdim2_float(tmpVal, output_values,b,m,n,k);     //split BxMxN into BxMxK (float)
     split_3d_overdim2_integer(tmpIndices, output_indices,b,m,n,k);  //split BxMxN into BxMxK (integer)
 
-    cudaDeviceSynchronize();
+    //cudaDeviceSynchronize();
 
 
 

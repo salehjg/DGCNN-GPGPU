@@ -59,9 +59,9 @@ inline void __cudaCheckError( const char *file, const int line )
 // C = AB
 template <int BLOCK_SIZE_X, int BLOCK_SIZE_Y>
 __global__ void kernel_batch_matmul(
-        const float * matA,
-        const float * matB,
-        float * matC,
+        const float *  __restrict__ matA,
+        const float *  __restrict__ matB,
+        float *  __restrict__ matC,
         int dim0,
         int dim1A, int dim2A,
         int dim1B, int dim2B,

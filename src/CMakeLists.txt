@@ -40,6 +40,7 @@ set(SOURCE_FILES_ClassifierMultiplatform
         ModelArchTop01.cpp
         ModelArchTop02.cpp
         ModelArchTop03.cpp
+        ModelArchTop04.cpp
         )
 
 # Find all cuda kernels

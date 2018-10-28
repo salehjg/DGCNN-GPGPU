@@ -6,7 +6,21 @@
 #include "../inc/TensorF.h"
 #include <vector>
 #include <iostream>
+#include <cuda_runtime.h>
+#include <cublas_v2.h>
 
+#ifndef cudaCheckErrors
+#define cudaCheckErrors(msg) \
+        do { \
+            cudaError_t __err = cudaGetLastError(); \
+            if (__err != cudaSuccess) { \
+                fprintf(stderr, "Fatal error: %s (%s at %s:%d)\n", \
+                    msg, cudaGetErrorString(__err), \
+                    __FILE__, __LINE__); \
+                fprintf(stderr, "*** FAILED - ABORTING\n"); \
+            } \
+        } while (0)
+#endif
 
 TensorF::TensorF() {
     initialized = false;
@@ -124,8 +138,19 @@ unsigned long TensorF::getLengthBytes() {
 
 // https://stackoverflow.com/questions/9331561/why-does-my-classs-destructor-get-called-when-i-add-instances-to-a-vector
 TensorF::~TensorF() {
-    if(initialized){
-        std::cout<<"--- TensorF: destructed.\n";
-        delete(_buff);
+    if(platform == PLATFORMS::CPU){
+        if(initialized){
+            //std::cout<<"--- TensorF: destructed.\n";
+            delete(_buff);
+        }
+    }else if(platform == PLATFORMS::GPU_CUDA){
+        cudaError_t cuda_stat;
+        if(initialized){
+            //std::cout<<"--- CudaTensorF: buffer deleted.\n";
+            cuda_stat = cudaFree(_buff);
+            assert(cuda_stat==cudaSuccess);
+        }
+        cudaCheckErrors("~TensorF-CUDA@TensorF: ERR04");
     }
+
 }

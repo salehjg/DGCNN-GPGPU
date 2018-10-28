@@ -8,8 +8,8 @@
 #define BLOCK_SIZE 256
 
 // reduce sum over specific axis
-__global__ void kernel_reduce_sum_3d_try01(float *g_idata,
-                                           float *g_odata,
+__global__ void kernel_reduce_sum_3d_try01(const float * __restrict__ g_idata,
+                                           float * __restrict__ g_odata,
                                            int dim0, int dim1, int dim2,
                                            int overaxis0, int overaxis1,int overaxis2) {
     // dim0, dim1, dim2 : TTT, TFF, FTF, FFT
@@ -65,8 +65,8 @@ __global__ void kernel_reduce_sum_3d_try01(float *g_idata,
 }
 
 void reduce_sum_3d_try01(
-        float* g_idata,
-        float* g_odata,
+        float*  g_idata,
+        float*  g_odata,
         int dim0,
         int dim1,
         int dim2,
@@ -92,8 +92,8 @@ void reduce_sum_3d_try01(
 
 
 __global__ void kernel_reduce_sum_3d_try02(
-        float* g_idata,
-        float* g_odata,
+        const float*  __restrict__ g_idata,
+        float*  __restrict__ g_odata,
         int dim0,
         int dim1,
         int dim2,
