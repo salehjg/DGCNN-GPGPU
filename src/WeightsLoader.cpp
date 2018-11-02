@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include "../inc/WeightsLoader.h"
+#include <CL/cl.h>
 
 WeightsLoader::WeightsLoader(vector<PLATFORMS> neededPlatforms) {
     for(std::vector<PLATFORMS>::iterator it = neededPlatforms.begin(); it != neededPlatforms.end(); ++it) {
@@ -25,7 +26,7 @@ WeightsLoader::WeightsLoader(vector<PLATFORMS> neededPlatforms) {
     }
 }
 
-void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList) {
+void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList, cl_context oclContex, cl_command_queue oclQueue) {
     string line; int idx=-1;
 
     std::ifstream inFile(pathToTxtFnameList);
@@ -62,7 +63,10 @@ void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameLis
         }
 
         if(_isUsedOCL){
-            throw "Not Implemented.";
+            if(__shape.size()==1 && __shape[0]==0) continue;
+            weightsOCL[idx] = new OclTensorF();
+            ((OclTensorF*)weightsOCL[idx])->InitWithHostData(oclContex,oclQueue,__shape,_cnpyBuff.back().data<float>());
+
         }
     }
 

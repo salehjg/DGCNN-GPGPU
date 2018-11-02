@@ -4,12 +4,18 @@
 
 #include <cuda_imp/CudaMemHelper.h>
 #include <cuda_imp/common.h>
+#include <CL/cl.h>
 #include "../inc/PlatformSelector.h"
 #include "../inc/cpu_imp/CpuImplementation.h"
 #include "../inc/cuda_imp/CudaImplementation.h"
+#include "../inc/ocl_imp/OclImplementation.h"
 #include "../inc/TensorF.h"
+#include "../inc/TensorI.h"
 #include "../inc/cuda_imp/CudaTensorF.h"
 #include "../inc/cuda_imp/CudaTensorI.h"
+#include "../inc/ocl_imp/OclTensorF.h"
+#include "../inc/ocl_imp/OclTensorI.h"
+
 
 PlatformSelector::PlatformSelector(PLATFORMS defaultPlatform, vector<PLATFORMS> neededPlatforms) {
     this->defaultPlatform = defaultPlatform;
@@ -25,8 +31,7 @@ PlatformSelector::PlatformSelector(PLATFORMS defaultPlatform, vector<PLATFORMS> 
                 break;
             }
             case PLATFORMS::GPU_OCL : {
-                ///TODO: Implement it for OpenCL
-                throw "Not Implemented.";
+                openclPlatformClass = new OclImplementation(11);
                 break;
             }
         }
@@ -37,7 +42,10 @@ PlatformSelector::PlatformSelector(PLATFORMS defaultPlatform, vector<PLATFORMS> 
                                 "deeppoint_repo/DeepPoint-V1-GPGPU/data/weights/",
 
                                 "/home/saleh/00_repos/tensorflow_repo/00_Projects/"
-                                "deeppoint_repo/DeepPoint-V1-GPGPU/data/weights/filelist.txt");
+                                "deeppoint_repo/DeepPoint-V1-GPGPU/data/weights/filelist.txt",
+
+                                openclPlatformClass->getContext(),
+                                openclPlatformClass->getQueue());
 }
 
 TensorF* PlatformSelector::CrossThePlatform(TensorF *srcTn, PLATFORMS platform) {
@@ -56,7 +64,9 @@ TensorF* PlatformSelector::CrossThePlatform(TensorF *srcTn, PLATFORMS platform) 
                     break;
                 }
                 case PLATFORMS::GPU_OCL :{
-                    throw "Not Implemented.";
+                    OclTensorF *rsltTn = new OclTensorF();
+                    rsltTn->InitWithHostData(openclPlatformClass->getContext(), openclPlatformClass->getQueue(), srcTn->getShape(),srcTn->_buff);
+                    return rsltTn;
                     break;
                 }
             }
@@ -88,7 +98,9 @@ TensorF* PlatformSelector::CrossThePlatform(TensorF *srcTn, PLATFORMS platform) 
             //--------------------------------------------------------------
             switch(platform){
                 case PLATFORMS::CPU :{
-                    throw "Not Implemented.";
+                    OclTensorF* srcTensor = (OclTensorF*)srcTn;
+                    TensorF* rsltTn = srcTensor->TransferToHost(openclPlatformClass->getQueue());
+                    return rsltTn;
                     break;
                 }
                 case PLATFORMS::GPU_CUDA :{
@@ -122,8 +134,9 @@ TensorI* PlatformSelector::CrossThePlatform(TensorI *srcTn, PLATFORMS platform) 
                     break;
                 }
                 case PLATFORMS::GPU_OCL :{
-                    throw "Not Implemented.";
-                    break;
+                    OclTensorI *rsltTn = new OclTensorI();
+                    rsltTn->InitWithHostData(openclPlatformClass->getContext(), openclPlatformClass->getQueue(), srcTn->getShape(),srcTn->_buff);
+                    return rsltTn;
                 }
             }
             break;
@@ -153,7 +166,9 @@ TensorI* PlatformSelector::CrossThePlatform(TensorI *srcTn, PLATFORMS platform) 
             //--------------------------------------------------------------
             switch(platform){
                 case PLATFORMS::CPU :{
-                    throw "Not Implemented.";
+                    OclTensorI* srcTensor = (OclTensorI*)srcTn;
+                    TensorI* rsltTn = srcTensor->TransferToHost(openclPlatformClass->getQueue());
+                    return rsltTn;
                     break;
                 }
                 case PLATFORMS::GPU_CUDA :{

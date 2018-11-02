@@ -7,6 +7,7 @@
 
 #include "../inc/TensorF.h"
 #include "../inc/cuda_imp/CudaTensorF.h"
+#include "../inc/ocl_imp/OclTensorF.h"
 #include "../../submodules/cnpy/cnpy.h"
 #include <vector>
 using namespace std;
@@ -14,7 +15,7 @@ using namespace std;
 class WeightsLoader {
 public:
     WeightsLoader(vector<PLATFORMS> neededPlatforms);
-    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList);
+    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList, cl_context oclContex, cl_command_queue oclQueue);
     TensorF* AccessWeights(PLATFORMS platform, string name);
 
 private:
