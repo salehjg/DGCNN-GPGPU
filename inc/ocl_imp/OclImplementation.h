@@ -18,12 +18,15 @@ struct OclKernelObject{
     const char* kernelName;
     cl_kernel kernel;
 
-    OclKernelObject(string dir, string fname, const string &kernelName){
+    OclKernelObject(string dir, string fname, string kernelName){
         string *fPath = new string();
         fPath->append(dir);
         fPath->append(fname);
         this->fileName = fPath->c_str();
-        this->kernelName = kernelName.c_str();
+
+        string *_kernelName = new string();
+        _kernelName->append(kernelName);
+        this->kernelName = _kernelName->c_str();
     }
 };
 
@@ -52,10 +55,12 @@ public:
     void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir);
     void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir);
     bool     CompareTensors(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2);
+    const char * getErrorString(cl_int error);
 
     cl_context          getContext();
     cl_command_queue    getQueue();
     void                ReadKernelSource(OclKernelObject *object);
+    void                GetPaddedWorkSize(int dims, size_t * inBlockSize, size_t * inWorkSize, size_t * outPaddedWorkSize);
 
     std::vector<OclKernelObject*> oclKernels;
 

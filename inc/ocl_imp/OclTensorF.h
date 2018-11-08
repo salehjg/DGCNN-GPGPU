@@ -20,8 +20,9 @@ public:
     TensorF* TransferToHost(cl_command_queue queue);
     ~OclTensorF();
 
-private:
     cl_mem ocl_buff;
+private:
+
 
 };
 

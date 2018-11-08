@@ -197,7 +197,7 @@ TensorF* PlatformSelector::Transpose(PLATFORMS platform, WorkScheduler scheduler
             break;
         }
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Transpose(scheduler,__batchedMat);
             break;
         }
     }
@@ -217,7 +217,7 @@ TensorF* PlatformSelector::MatMul(PLATFORMS platform, WorkScheduler scheduler, T
             break;
         }
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->MatMul(scheduler, __batchedMat1, __batchedMat2);
             break;
         }
     }
