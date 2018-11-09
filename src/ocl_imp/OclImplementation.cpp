@@ -21,8 +21,8 @@ OclImplementation::OclImplementation(int aa) {
     assert(err == CL_SUCCESS);
 
     oclKernels = {
-        new OclKernelObject(KERNEL_DIR , "transpose.cl.cc", "transposeBatch_try01" ),
-        new OclKernelObject(KERNEL_DIR , "mamul.cl.cc", "kernel_batch_matmul" ),
+        new OclKernelObject(KERNEL_DIR , "/kernels/ocl/transpose.cl.cc", "transposeBatch_try01" ),
+        new OclKernelObject(KERNEL_DIR , "/kernels/ocl/mamul.cl.cc", "kernel_batch_matmul" ),
     };
 
     for(OclKernelObject *kernel : oclKernels){

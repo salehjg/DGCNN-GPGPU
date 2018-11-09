@@ -16,15 +16,15 @@ ModelArchTop05::ModelArchTop05(int dataset_offset, int batchsize, int pointcount
 ModelInfo ModelArchTop05::GetModelInfo() {
     ModelInfo tmplt;
     tmplt.ModelType="Classifier";
-    tmplt.Version="4.0";
+    tmplt.Version="5.0";
     tmplt.DesignNotes=
-            "1) ALL of the Ops are on GPU(CUDA)"
+            "1) Most of the Ops are on CPU, others are on OCL "
             "2) Tensor deletion is now considered in the model"
             ;
     tmplt.ExperimentNotes="";
     tmplt.ToDo=""
                "";
-    tmplt.Date="97.7.27";
+    tmplt.Date="97.8.15";
     return tmplt;
 }
 
@@ -45,7 +45,7 @@ void ModelArchTop05::SetModelInput_labels(string npy_labels) {
 
 TensorF* ModelArchTop05::FullyConnected_Forward(WorkScheduler scheduler, TensorF* input_BxD, TensorF* weights, TensorF* biases){
     int ch_out = (int)weights->getShape().back();
-    TensorF* tmp = platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,input_BxD,weights);
+    TensorF* tmp = platformSelector->MatMul(PLATFORMS::CPU,scheduler,input_BxD,weights);
     TensorF* rsltTn = platformSelector->MatOps(PLATFORMS::CPU,scheduler,tmp,biases,MAT_OPS::ADD);
     delete(tmp);
     return rsltTn;
@@ -204,7 +204,7 @@ TensorF* ModelArchTop05::GetEdgeFeatures(WorkScheduler scheduler, TensorF *input
 TensorF* ModelArchTop05::PairwiseDistance(WorkScheduler scheduler, TensorF *input_BxNxD) {
 
     TensorF* point_cloud_transpose = platformSelector->Transpose(PLATFORMS::GPU_OCL,scheduler,input_BxNxD);
-    TensorF* point_cloud_inner =  platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,input_BxNxD,point_cloud_transpose);
+    TensorF* point_cloud_inner =  platformSelector->MatMul(PLATFORMS::CPU,scheduler,input_BxNxD,point_cloud_transpose);
     TensorF* point_cloud_inner2 = platformSelector->MatOps(PLATFORMS::CPU,scheduler,point_cloud_inner,-2.0f,MAT_OPS::MUL_ELEMENTWISE);
     TensorF* point_cloud_inner2p2 = platformSelector->Square(PLATFORMS::CPU,scheduler,input_BxNxD);
     TensorF* point_cloud_sum = platformSelector->ReduceSum(PLATFORMS::CPU,scheduler,point_cloud_inner2p2,false,false,true);
@@ -479,7 +479,7 @@ TensorF* ModelArchTop05::TransformNet(WorkScheduler scheduler, TensorF* edgeFeat
         TensorF* biases = platformSelector->MatOps(PLATFORMS::CPU,scheduler,_biases,eye, MAT_OPS::ADD);
         //platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A17_biass_added.npy",biases);
 
-        TensorF* transformTn = platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,net,weights);
+        TensorF* transformTn = platformSelector->MatMul(PLATFORMS::CPU,scheduler,net,weights);
         //platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"A18_transform_batch.npy",transformTn);
 
         TensorF* transformFinalTn = platformSelector->MatOps(PLATFORMS::CPU,scheduler,transformTn,biases, MAT_OPS::ADD);
@@ -532,7 +532,7 @@ TensorF* ModelArchTop05::Execute(WorkScheduler scheduler) {
         transform->Reshape({B,3,3});
         //platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"B04_tnet_3x3.npy",transform);
 
-        net = platformSelector->MatMul(PLATFORMS::GPU_OCL, scheduler, net_BxNx3, transform);
+        net = platformSelector->MatMul(PLATFORMS::CPU, scheduler, net_BxNx3, transform);
         //platformSelector->DumpMatrix(platformSelector->defaultPlatform,scheduler,"C01_pcl.npy",net);
 
         delete(adj_matrix);
@@ -862,8 +862,12 @@ TensorF* ModelArchTop05::Execute(WorkScheduler scheduler) {
     //----------------------------------------------------------------------------------------
     //force output tensor platform to be CPU
     {
+#ifdef USE_CUDA
         if(net->getPlatform()==PLATFORMS::GPU_CUDA) return ((CudaTensorF*)net)->TransferToHost();
+#endif
+#ifdef USE_OCL
         if(net->getPlatform()==PLATFORMS::GPU_OCL) throw "NOT IMPLEMENTED";
+#endif
     }
 
     return net;

@@ -5,8 +5,8 @@
 #include <cassert>
 #include "../inc/TensorI.h"
 #include <iostream>
+#ifdef USE_CUDA
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 
 #ifndef cudaCheckErrors
 #define cudaCheckErrors(msg) \
@@ -19,6 +19,7 @@
                 fprintf(stderr, "*** FAILED - ABORTING\n"); \
             } \
         } while (0)
+#endif
 #endif
 
 TensorI::TensorI() {
@@ -138,6 +139,7 @@ TensorI::~TensorI() {
             delete(_buff);
         }
     }else if(platform == PLATFORMS::GPU_CUDA){
+#ifdef USE_CUDA
         cudaError_t cuda_stat;
         if(initialized){
             //std::cout<<"--- CudaTensorI: buffer deleted.\n";
@@ -145,5 +147,6 @@ TensorI::~TensorI() {
             assert(cuda_stat==cudaSuccess);
         }
         cudaCheckErrors("~CudaTensorI@CudaTensorI: ERR04");
+#endif
     }
 }

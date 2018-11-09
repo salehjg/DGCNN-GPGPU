@@ -10,8 +10,11 @@
 #include "../inc/TensorI.h"
 #include "../inc/WeightsLoader.h"
 #include "../inc/PlatformImplementation.h"
+#include <build_config.h>
+#ifdef USE_OCL
 #include "../inc/ocl_imp/OclImplementation.h"
 #include <CL/cl.h>
+#endif
 using namespace std;
 
 
@@ -59,7 +62,9 @@ public:
 private:
     PlatformImplementation *cpuPlatformClass;
     PlatformImplementation *cudaPlatformClass;
+#ifdef USE_OCL
     OclImplementation *openclPlatformClass;
+#endif
 
 
 

@@ -69,7 +69,7 @@ private:
     void PrintInfo(string opName, const string &setting1, int val1, const string &setting2, int val2,
                    const string &setting3, float val3, vector<unsigned int> shape1, vector<unsigned int> shape2, vector<bool> comb={});
 
-    const std::string KERNEL_DIR = "/home/saleh/00_repos/tensorflow_repo/00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/kernels/ocl/";
+    const std::string KERNEL_DIR = REPO_DIR;
     cl_platform_id cpPlatform;        // OpenCL platform
     cl_device_id device_id;           // device ID
     cl_context context;               // context

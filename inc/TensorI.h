@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "../inc/TensorF.h"
+#include <build_config.h>
 
 class TensorI {
 public:
