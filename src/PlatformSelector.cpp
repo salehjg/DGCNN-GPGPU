@@ -287,7 +287,7 @@ TensorF* PlatformSelector::Square(PLATFORMS platform, WorkScheduler scheduler, T
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Square(scheduler, __batchedMat);
             break;
         }
 #endif
@@ -526,7 +526,7 @@ TensorF* PlatformSelector::MatOps(PLATFORMS platform, WorkScheduler scheduler, T
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->MatOps(scheduler,__inputTn1,__inputTn2,mode);
             break;
         }
 #endif
@@ -549,7 +549,7 @@ TensorF* PlatformSelector::MatOps(PLATFORMS platform, WorkScheduler scheduler, T
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->MatOps(scheduler,__inputTn1,scalar,mode);
             break;
         }
 #endif
@@ -572,7 +572,7 @@ TensorF* PlatformSelector::Sqrt(PLATFORMS platform, WorkScheduler scheduler, Ten
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Sqrt(scheduler, __inputTn);
             break;
         }
 #endif
@@ -680,7 +680,7 @@ TensorF* PlatformSelector::Concat2(PLATFORMS platform, WorkScheduler scheduler, 
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Concat2(scheduler, __inputTn1, __inputTn2, concatDim);
             break;
         }
 #endif
@@ -801,7 +801,7 @@ TensorF* PlatformSelector::ReLU(PLATFORMS platform, WorkScheduler scheduler, Ten
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->ReLU(scheduler, __inputTn);
             break;
         }
 #endif
@@ -825,7 +825,7 @@ TensorF* PlatformSelector::Tile(PLATFORMS platform, WorkScheduler scheduler, Ten
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Tile(scheduler, __inputTn, tileAxis, tileCount);
             break;
         }
 #endif

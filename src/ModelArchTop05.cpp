@@ -206,7 +206,7 @@ TensorF* ModelArchTop05::PairwiseDistance(WorkScheduler scheduler, TensorF *inpu
     TensorF* point_cloud_transpose = platformSelector->Transpose(PLATFORMS::GPU_OCL,scheduler,input_BxNxD);
     TensorF* point_cloud_inner =  platformSelector->MatMul(PLATFORMS::CPU,scheduler,input_BxNxD,point_cloud_transpose);
     TensorF* point_cloud_inner2 = platformSelector->MatOps(PLATFORMS::CPU,scheduler,point_cloud_inner,-2.0f,MAT_OPS::MUL_ELEMENTWISE);
-    TensorF* point_cloud_inner2p2 = platformSelector->Square(PLATFORMS::CPU,scheduler,input_BxNxD);
+    TensorF* point_cloud_inner2p2 = platformSelector->Square(PLATFORMS::GPU_OCL,scheduler,input_BxNxD);
     TensorF* point_cloud_sum = platformSelector->ReduceSum(PLATFORMS::CPU,scheduler,point_cloud_inner2p2,false,false,true);
     point_cloud_sum->ExpandDims(-1);
     //2D Matrix fed into function with virutal batch size of 1

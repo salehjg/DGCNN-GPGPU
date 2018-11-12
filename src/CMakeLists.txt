@@ -46,7 +46,6 @@ if(USE_OCL)
 endif (USE_OCL)
 
 set(SOURCE_FILES_CPU
-        ClassifierMultiPlatform.cpp
         PlatformImplementation.cpp
         cpu_imp/CpuImplementation.cpp
         PlatformSelector.cpp
@@ -77,21 +76,42 @@ link_directories(
         ${OpenCL_LIBRARY})
 
 if(USE_CUDA AND USE_OCL)
-    cuda_add_executable(ClassifierMultiplatform  ${SOURCE_FILES_ALL} ${KERNEL_SOURCES})
+    cuda_add_executable(ClassifierMultiplatform
+            ClassifierMultiPlatform.cpp
+            ${SOURCE_FILES_ALL}
+            ${KERNEL_SOURCES})
     target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OpenCL_LIBRARY})
 endif(USE_CUDA AND USE_OCL)
 
 if(USE_CUDA AND NOT(USE_OCL))
-    cuda_add_executable(ClassifierMultiplatform  ${SOURCE_FILES_ALL} ${KERNEL_SOURCES})
+    cuda_add_executable(ClassifierMultiplatform
+            ClassifierMultiPlatform.cpp
+            ${SOURCE_FILES_ALL}
+            ${KERNEL_SOURCES})
     target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} )
 endif()
 
 if(NOT(USE_CUDA) AND USE_OCL)
-    add_executable(ClassifierMultiplatform  ${SOURCE_FILES_ALL} )
+    add_executable(ClassifierMultiplatform
+            ClassifierMultiPlatform.cpp
+            ${SOURCE_FILES_ALL} )
     target_link_libraries(ClassifierMultiplatform cnpy z pthread ${OpenCL_LIBRARY})
 endif()
 
 if(NOT(USE_CUDA) AND NOT(USE_OCL))
-    add_executable(ClassifierMultiplatform  ${SOURCE_FILES_ALL} )
+    add_executable(ClassifierMultiplatform
+            ClassifierMultiPlatform.cpp
+            ${SOURCE_FILES_ALL} )
     target_link_libraries(ClassifierMultiplatform cnpy z pthread )
+endif()
+
+if(USE_OCL)
+    find_package(UnitTest++ REQUIRED)
+    add_executable(oclTestAll
+            ocl_imp/oclTestAll.cpp
+            ${SOURCE_FILES_CPU}
+            ${SOURCE_FILES_OCL}
+            )
+    target_link_libraries(oclTestAll cnpy z pthread ${OpenCL_LIBRARY} UnitTest++)
+
 endif()

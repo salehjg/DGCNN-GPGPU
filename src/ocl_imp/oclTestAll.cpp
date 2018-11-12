@@ -1,0 +1,394 @@
+//
+// Created by saleh on 8/28/18.
+//
+
+#include "../../inc/ocl_imp/oclTestAll.h"
+#include "UnitTest++/UnitTest++.h"
+
+OclTestAll *oclTestAll;
+WorkScheduler scheduler;
+
+int main(){
+    oclTestAll = new OclTestAll(0,5,1024,20);
+    oclTestAll->SetModelInput_data(REPO_DIR "/data/dataset/dataset_B2048_pcl.npy");
+    oclTestAll->SetModelInput_labels(REPO_DIR"/data/dataset/dataset_B2048_labels_int32.npy");
+
+    UnitTest::RunAllTests();
+}
+
+SUITE(SingleOperandKernels){
+    /*
+    TEST(Kernel_Matmul){
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{10,20,60});
+        TensorF* tensorCpu = oclTestAll->platformSelector->MatMul(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2);
+        TensorF* tensorGpu = oclTestAll->platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+    */
+
+    TEST(Kernel_Transpose){
+        TensorF* tensorCpu = oclTestAll->platformSelector->Transpose(PLATFORMS::CPU,scheduler,oclTestAll->input_pcl_BxNxD);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Transpose(PLATFORMS::GPU_OCL,scheduler,oclTestAll->input_pcl_BxNxD);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Kernel_Square){
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Square(PLATFORMS::CPU,scheduler,tensorSrc1);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Square(PLATFORMS::GPU_OCL,scheduler,tensorSrc1);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Kernel_Sqrt){
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Sqrt(PLATFORMS::CPU,scheduler,tensorSrc1);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Sqrt(PLATFORMS::GPU_OCL,scheduler,tensorSrc1);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Kernel_Relu){
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->ReLU(PLATFORMS::CPU,scheduler,tensorSrc1);
+        TensorF* tensorGpu = oclTestAll->platformSelector->ReLU(PLATFORMS::GPU_OCL,scheduler,tensorSrc1);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+}
+
+SUITE(Kernel_MatOps){
+    TEST(Rank_4_4){
+        //Ranks: 4,4
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(4,{11,12,13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{11,12,13,14});
+
+        for(MAT_OPS op : ops){
+            TensorF* tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2,op);
+            TensorF* tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2,op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_4_3){
+        //Ranks: 4,3
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{11,12,13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(5,{12,13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_4_2){
+        //Ranks: 4,2
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{11,12,13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_4_1){
+        //Ranks: 4,1
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{11,12,13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_4_0){
+        //Ranks: 4,0
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{11,12,13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_3_3){
+        //Ranks: 3,3
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{12,13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(5,{12,13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_3_2){
+        //Ranks: 3,2
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{12, 13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_3_1){
+        //Ranks: 3,1
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{12,13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_3_0){
+        //Ranks: 3,0
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{12,13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_2_2){
+        //Ranks: 2,2
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_2_1){
+        //Ranks: 2,1
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{13,14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_2_0){
+        //Ranks: 2,0
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{13,14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_1_1){
+        //Ranks: 1,1
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{14});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, tensorSrc2,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1,
+                                                                      tensorSrc2, op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+
+    TEST(Rank_1_0){
+        //Ranks: 1,0
+        vector<MAT_OPS> ops = {MAT_OPS::ADD, MAT_OPS::SUB, MAT_OPS::MUL_ELEMENTWISE, MAT_OPS::DIV_ELEMENTWISE};
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{14});
+        for(MAT_OPS op : ops) {
+            TensorF *tensorCpu = oclTestAll->platformSelector->MatOps(PLATFORMS::CPU, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            TensorF *tensorGpu = oclTestAll->platformSelector->MatOps(PLATFORMS::GPU_OCL, scheduler, tensorSrc1, 1.5f,
+                                                                      op);
+            bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU, scheduler, tensorCpu,
+                                                                                 tensorGpu);
+                    CHECK_EQUAL(comparisonResult, true);
+        }
+    }
+}
+
+SUITE(Kernel_Concat) {
+    TEST (test_1) {
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{5,2,50,20});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{5,2,50,30});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Concat2(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2,3);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Concat2(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2,3);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
+SUITE(Kernel_Tile){
+    TEST(Rank4_Axis2){
+        int tileCount = 8;
+        int tileAxis  = 2;
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{5,2,1,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Tile(PLATFORMS::CPU,scheduler,tensorSrc1,tileAxis,tileCount);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Tile(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tileAxis,tileCount);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Rank3_Axis2){
+        int tileCount = 8;
+        int tileAxis  = 2;
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{5,20,1});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Tile(PLATFORMS::CPU,scheduler,tensorSrc1,tileAxis,tileCount);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Tile(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tileAxis,tileCount);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Rank3_Axis1){
+        int tileCount = 8;
+        int tileAxis  = 1;
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{5,1,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Tile(PLATFORMS::CPU,scheduler,tensorSrc1,tileAxis,tileCount);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Tile(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tileAxis,tileCount);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
+OclTestAll::OclTestAll(int dataset_offset, int batchsize, int pointcount, int knn_k) {
+    platformSelector = new PlatformSelector(PLATFORMS::CPU,{PLATFORMS::CPU,PLATFORMS::GPU_OCL});
+    DB_OFFSET = dataset_offset;
+    B = (unsigned int)batchsize;
+    N = (unsigned int)pointcount;
+    K = (unsigned int)knn_k;
+}
+
+void OclTestAll::SetModelInput_data(string npy_pcl) {
+    _npy_pcl = cnpy::npy_load(npy_pcl);
+    input_pcl_BxNxD = new TensorF({B,N,3}, _npy_pcl.data<float>());
+    input_pcl_BxNxD += DB_OFFSET*N*3;
+    assert( N == (int)(_npy_pcl.shape[1]) );
+}
+
+void OclTestAll::SetModelInput_labels(string npy_labels) {
+    // dataType of npy file should be int32, NOT uchar8!
+    // use dataset_B5_labels_int32.npy
+    _npy_labels = cnpy::npy_load(npy_labels);
+    input_labels_B = new TensorI({B},_npy_labels.data<int>());
+    input_labels_B->_buff += DB_OFFSET;
+}
+
+TensorI* OclTestAll::GetLabels(){
+    return input_labels_B;
+}
+
+TensorF* OclTestAll::GenerateTensor(int pattern, vector<unsigned int> shape){
+    TensorF *testTn = new TensorF(shape);
+    unsigned long _len = testTn->getLength();
+    if(pattern==0){
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = float_rand(0,2.50f);
+        }
+    }
+    if(pattern==1){
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = i %5 ;//+ float_rand(0,2.50f);
+        }
+    }
+    if(pattern==2){
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = i %10 + float_rand(0,2.50f);
+        }
+    }
+    if(pattern==3){
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = pattern;
+        }
+    }
+    if(pattern==4){
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = pattern;
+        }
+    }
+    if(pattern==5){
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = pattern;
+        }
+    }
+    return testTn;
+}
+
+float OclTestAll::float_rand( float min, float max )
+{
+    float scale = rand() / (float) RAND_MAX; /* [0, 1.0] */
+    return min + scale * ( max - min );      /* [min, max] */
+}

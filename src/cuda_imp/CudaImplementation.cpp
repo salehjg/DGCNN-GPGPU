@@ -703,13 +703,12 @@ TensorF* CudaImplementation::ReLU(WorkScheduler scheduler, TensorF* inputTn){
 
 TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount) {
     //Makes new tensor with same rank as inputTn's with tileAxis, tileCount times multiplied
-    //tileAxis is in respect to the input tensor's axes.
+    //tileAxis is with respect to the input tensor's axes.
     //----------------------------------------------------------------------------------------
     // inputTn       rsltTn         tileAxis        inputTn's Rank
     // BxNx1xD ----> BxNxKxD        2               4
     // BxNx1   ----> BxNxK          2               3
     // Bx1xN   ----> BxKxN          1               3
-    // 1xD     ----> KxD            0               2
 
     PrintInfo("Tile","tileAxis",tileAxis,"tileCount",tileCount,"",0,inputTn->getShape(),{},{});
 
