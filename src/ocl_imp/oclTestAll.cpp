@@ -324,6 +324,26 @@ SUITE(Kernel_Tile){
     }
 }
 
+SUITE(Kernel_Reduce_Max){
+    /*
+    TEST (Rank4_OverAxis2){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(0,{5,2,50,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->ReduceMax(PLATFORMS::CPU,scheduler,tensorSrc,2);
+        TensorF* tensorGpu = oclTestAll->platformSelector->ReduceMax(PLATFORMS::GPU_OCL,scheduler,tensorSrc,2);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }*/
+
+    TEST (Rank4_OverAxis1){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(0,{5,5,1,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->ReduceMax(PLATFORMS::CPU,scheduler,tensorSrc,1);
+        TensorF* tensorGpu = oclTestAll->platformSelector->ReduceMax(PLATFORMS::GPU_OCL,scheduler,tensorSrc,1);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
+
 OclTestAll::OclTestAll(int dataset_offset, int batchsize, int pointcount, int knn_k) {
     platformSelector = new PlatformSelector(PLATFORMS::CPU,{PLATFORMS::CPU,PLATFORMS::GPU_OCL});
     DB_OFFSET = dataset_offset;

@@ -11,7 +11,7 @@
 Op Name        | Batch | CPU  | CUDA  | OCL  |Shape1    | Shape2| Comb                          | Sett1         |Val1   |Sett2      |Val2   | Notes|
 ---            | ---   | ---  | ---   | ---  | ---      | ---   | ---                           | ---           | ---   | ---       | ---   |  --- |
 Concat2        |     No|Yes   |**Yes**|**Yes**|4D        |4D     |-                              |Concat2        |3      |           |-      |--
-ReduceMax      |     No|Yes   |**Yes**|    No|4D        |-      |-                              |reductionDim   |1,2    |           |-      |--
+ReduceMax      |     No|Yes   |**Yes**|**Yes**|4D        |-      |-                              |reductionDim   |1,2    |           |-      |--
 ReduceSum4D    |     No|Yes   |**Yes**|    No|4D        |-      |{1-1-1-0}                      |               |-      |           |-      |--
 ReduceSum      |     No|Yes   |**Yes**|    No|2D,3D     |-      |{3D: 0-0-1}, {2D: 0-1-0}       |               |-      |           |-      |--
 Mean           |     No|Yes   |**Yes**|    No|2D,4D     |-      |{1-0-0-0}, {1-1-1-0}           |               |-      |           |-      |--

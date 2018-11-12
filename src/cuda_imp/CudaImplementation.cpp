@@ -577,6 +577,7 @@ TensorF* CudaImplementation::ReduceMax(
         TensorF* inputTn,
         int reductionDim){
     PrintInfo("ReduceMax","reductionDim",reductionDim,"",0,"",0,inputTn->getShape(),{},{});
+    assert(inputTn->getRank()==3 || inputTn->getRank()==4);
 
     unsigned int _dim0,_dim1,_dim2,_dim3;
     _dim0 = inputTn->getShape()[0];
@@ -618,8 +619,6 @@ TensorF* CudaImplementation::ReduceMax(
 
     cudaCheckErrors("ReduceMax@CudaImplementation: KERNEL_ERROR");
     return rsltTn;
-
-
 }
 
 TensorI* CudaImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, int axis, int k){

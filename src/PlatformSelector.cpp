@@ -704,7 +704,7 @@ TensorF* PlatformSelector::ReduceMax(PLATFORMS platform, WorkScheduler scheduler
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->ReduceMax(scheduler, __inputTn, reductionDim);
             break;
         }
 #endif
