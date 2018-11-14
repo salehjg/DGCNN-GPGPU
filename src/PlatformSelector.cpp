@@ -311,7 +311,7 @@ TensorF* PlatformSelector::ReduceSum(PLATFORMS platform, WorkScheduler scheduler
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->ReduceSum(scheduler, __inputTn, over_axis0, over_axis1, over_axis2);
             break;
         }
 #endif
@@ -334,7 +334,7 @@ TensorF* PlatformSelector::ReduceSum4D(PLATFORMS platform, WorkScheduler schedul
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->ReduceSum4D(scheduler, __inputTn, over_axis0, over_axis1, over_axis2, over_axis3);
             break;
         }
 #endif

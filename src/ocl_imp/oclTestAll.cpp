@@ -325,14 +325,14 @@ SUITE(Kernel_Tile){
 }
 
 SUITE(Kernel_Reduce_Max){
-    /*
+
     TEST (Rank4_OverAxis2){
         TensorF* tensorSrc = oclTestAll->GenerateTensor(0,{5,2,50,20});
         TensorF* tensorCpu = oclTestAll->platformSelector->ReduceMax(PLATFORMS::CPU,scheduler,tensorSrc,2);
         TensorF* tensorGpu = oclTestAll->platformSelector->ReduceMax(PLATFORMS::GPU_OCL,scheduler,tensorSrc,2);
         bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
                 CHECK_EQUAL(comparisonResult, true);
-    }*/
+    }
 
     TEST (Rank4_OverAxis1){
         TensorF* tensorSrc = oclTestAll->GenerateTensor(0,{5,5,1,20});
@@ -343,6 +343,43 @@ SUITE(Kernel_Reduce_Max){
     }
 }
 
+SUITE(Kernel_ReduceSum_3D){
+
+    TEST(Rank3_OverAxis0){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{50,25,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->ReduceSum(PLATFORMS::CPU,scheduler,tensorSrc,true,false,false);
+        TensorF* tensorGpu = oclTestAll->platformSelector->ReduceSum(PLATFORMS::GPU_OCL,scheduler,tensorSrc,true,false,false);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Rank3_OverAxis1){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{50,25,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->ReduceSum(PLATFORMS::CPU,scheduler,tensorSrc,false,true,false);
+        TensorF* tensorGpu = oclTestAll->platformSelector->ReduceSum(PLATFORMS::GPU_OCL,scheduler,tensorSrc,false,true,false);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Rank3_OverAxis2){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{50,25,50});
+        TensorF* tensorCpu = oclTestAll->platformSelector->ReduceSum(PLATFORMS::CPU,scheduler,tensorSrc,false,false,true);
+        TensorF* tensorGpu = oclTestAll->platformSelector->ReduceSum(PLATFORMS::GPU_OCL,scheduler,tensorSrc,false,false,true);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
+SUITE(Kernel_ReduceSum_4D){
+
+    TEST(Rank4_TTTF){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{5,1024,20,512});
+        TensorF* tensorCpu = oclTestAll->platformSelector->ReduceSum4D(PLATFORMS::CPU,scheduler,tensorSrc,true,true,true,false);
+        TensorF* tensorGpu = oclTestAll->platformSelector->ReduceSum4D(PLATFORMS::GPU_OCL,scheduler,tensorSrc,true,true,true,false);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
 
 OclTestAll::OclTestAll(int dataset_offset, int batchsize, int pointcount, int knn_k) {
     platformSelector = new PlatformSelector(PLATFORMS::CPU,{PLATFORMS::CPU,PLATFORMS::GPU_OCL});
