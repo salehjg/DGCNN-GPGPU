@@ -381,6 +381,41 @@ SUITE(Kernel_ReduceSum_4D){
     }
 }
 
+SUITE(Kernel_Mean){
+
+    TEST(Rank4_TTTF){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{5,1024,20,512});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Mean(PLATFORMS::CPU,scheduler,tensorSrc,true,true,true,false);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Mean(PLATFORMS::GPU_OCL,scheduler,tensorSrc,true,true,true,false);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
+SUITE(Kernel_Variance){
+
+    TEST(Rank4_TTTF){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{5,1024,20,512});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Variance(PLATFORMS::CPU,scheduler,tensorSrc,true,true,true,false);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Variance(PLATFORMS::GPU_OCL,scheduler,tensorSrc,true,true,true,false);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
+SUITE(Kernel_Conv2D_Mlp){
+
+    TEST(Test_1){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(3,{5,3,3,6});
+        TensorF* tensorWeight = oclTestAll->GenerateTensor(3,{1,1,6,7});
+        TensorF* tensorBiases = oclTestAll->GenerateTensor(1,{1,1,1,7});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Conv2D(PLATFORMS::CPU,scheduler,tensorSrc,tensorWeight,tensorBiases);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Conv2D(PLATFORMS::GPU_OCL,scheduler,tensorSrc,tensorWeight,tensorBiases);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
 OclTestAll::OclTestAll(int dataset_offset, int batchsize, int pointcount, int knn_k) {
     platformSelector = new PlatformSelector(PLATFORMS::CPU,{PLATFORMS::CPU,PLATFORMS::GPU_OCL});
     DB_OFFSET = dataset_offset;
@@ -411,6 +446,11 @@ TensorI* OclTestAll::GetLabels(){
 TensorF* OclTestAll::GenerateTensor(int pattern, vector<unsigned int> shape){
     TensorF *testTn = new TensorF(shape);
     unsigned long _len = testTn->getLength();
+    if(pattern==-1){
+        for (unsigned long i = 0; i < _len; i++) {
+            testTn->_buff[i] = 0;
+        }
+    }
     if(pattern==0){
         for (unsigned long i = 0; i < _len; i++) {
             testTn->_buff[i] = float_rand(0,2.50f);

@@ -357,7 +357,7 @@ TensorF* PlatformSelector::Mean(PLATFORMS platform, WorkScheduler scheduler, Ten
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Mean(scheduler, __inputTn, mean_axis0, mean_axis1, mean_axis2, mean_axis3);
             break;
         }
 #endif
@@ -380,7 +380,7 @@ TensorF* PlatformSelector::Variance(PLATFORMS platform, WorkScheduler scheduler,
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Variance(scheduler, __inputTn, variance_axis0, variance_axis1, variance_axis2, variance_axis3);
             break;
         }
 #endif
@@ -778,7 +778,7 @@ TensorF* PlatformSelector::Conv2D(PLATFORMS platform, WorkScheduler scheduler, T
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Conv2D(scheduler, __inputTn, __weights, __biases, overrideDim2);
             break;
         }
 #endif
