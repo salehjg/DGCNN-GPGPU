@@ -30,7 +30,7 @@ MatOps         |Yes    |Yes   |**Yes**|**Yes**|4D,3D,2D,1D|4D,3D,2D,1D,0D|-     
 Transpose      |Yes    |Yes   |**Yes**|**Yes**|3D        |-      |-                              |               |-      |           |-      |--
 Conv2d         |Yes    |Yes   |**Yes**|**Yes**|4D        |-      |-                              |overrideDim2   |-1     |           |-      |3x Less performance compared to the tensorflow
 ReLU           |Yes    |Yes   |**Yes**|**Yes**|2D,4D     |-      |-                              |               |-      |           |-      |--
-Matmul         |Yes    |Yes   |**Yes**|    No|2D,3D     |2D,3D  |-                              |               |-      |           |-      |20x Less performance compared to the tensorflow
+Matmul         |Yes    |Yes   |**Yes**|**Yes**|2D,3D     |2D,3D  |-                              |               |-      |           |-      |20x Less performance compared to the tensorflow
 Square         |Yes    |Yes   |**Yes**|**Yes**|3D        |-      |-                              |               |-      |           |-      |--
 Sqrt           |Yes    |Yes   |**Yes**|**Yes**|3D        |-      |-                              |               |-      |           |-      |--
 TopK           |Yes    |Yes   |**Yes**|    No|3D        |-      |-                              |axis           |2      |k          |20     |From PointNet++

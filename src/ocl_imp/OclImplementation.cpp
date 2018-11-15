@@ -22,7 +22,7 @@ OclImplementation::OclImplementation(int aa) {
 
     oclKernels = {
         /*00*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/transpose.cl.cc",                     "transposeBatch_try01"          ),
-        /*01*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/mamul.cl.cc",                         "kernel_batch_matmul"           ),
+        /*01*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/matmul.cl.cc",                        "kernel_batch_matmul"           ),
         /*02*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/square.cl.cc",                        "kernel_square"                 ),
         /*03*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/sqrt.cl.cc",                          "kernel_sqrt_float"             ),
         /*04*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/relu.cl.cc",                          "kernel_relu"                   ),
@@ -280,9 +280,10 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
             batchedMat2->getShape()[2]);
     */
 
+    // THESE SHOULD BE EQUAL WITH DEFINED VALUES IN THE KERNEL FILE
     const cl_uint BLOCK_DIM_X=8, BLOCK_DIM_Y=4;
 
-    size_t global_work_size[] = {dim2B, dim1A, dim0A};
+    size_t global_work_size[] = {dim2B*BLOCK_DIM_X, dim1A*BLOCK_DIM_Y, dim0A*1};
     size_t global_padded_work_size[3];
     size_t local_block_size[] = {BLOCK_DIM_X, BLOCK_DIM_Y, 1};
     unsigned long shared_mem_size = (BLOCK_DIM_Y*dim2A + BLOCK_DIM_X* dim1B)*sizeof(float);

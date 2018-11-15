@@ -17,7 +17,7 @@ int main(){
 }
 
 SUITE(SingleOperandKernels){
-    /*
+
     TEST(Kernel_Matmul){
         TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
         TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{10,20,60});
@@ -26,7 +26,7 @@ SUITE(SingleOperandKernels){
         bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
                 CHECK_EQUAL(comparisonResult, true);
     }
-    */
+
 
     TEST(Kernel_Transpose){
         TensorF* tensorCpu = oclTestAll->platformSelector->Transpose(PLATFORMS::CPU,scheduler,oclTestAll->input_pcl_BxNxD);
