@@ -8,8 +8,8 @@
 
 
 ## Ops
-Op Name        | Batch | CPU  | CUDA  | OCL  |Shape1    | Shape2| Comb                          | Sett1         |Val1   |Sett2      |Val2   | Notes|
----            | ---   | ---  | ---   | ---  | ---      | ---   | ---                           | ---           | ---   | ---       | ---   |  --- |
+Op Name        | Batch | CPU  | CUDA  | OCL  |Shape1    | Shape2| Combinations                  | Sett1         |Val1   |Sett2      |Val2   | Notes|
+---            | ---   | ---  | ---   | ---  | ---      | ---   | --------------------          | ---           | ---   | ---       | ---   |  --- |
 Concat2        |     No|Yes   |**Yes**|**Yes**|4D        |4D     |-                              |Concat2        |3      |           |-      |--
 ReduceMax      |     No|Yes   |**Yes**|**Yes**|4D        |-      |-                              |reductionDim   |1,2    |           |-      |--
 ReduceSum4D    |     No|Yes   |**Yes**|**Yes**|4D        |-      |{1-1-1-0}                      |               |-      |           |-      |--
