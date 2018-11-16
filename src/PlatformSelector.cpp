@@ -45,10 +45,15 @@ PlatformSelector::PlatformSelector(PLATFORMS defaultPlatform, vector<PLATFORMS> 
     }
 
     weightsLoader = new WeightsLoader(neededPlatforms);
+#ifdef USE_OCL
     weightsLoader->LoadFromDisk(REPO_DIR "/data/weights/",
                                 REPO_DIR "/data/weights/filelist.txt",
                                 openclPlatformClass->getContext(),
                                 openclPlatformClass->getQueue());
+#else
+    weightsLoader->LoadFromDisk(REPO_DIR "/data/weights/",
+                                REPO_DIR "/data/weights/filelist.txt" );
+#endif
 }
 
 TensorF* PlatformSelector::CrossThePlatform(TensorF *srcTn, PLATFORMS platform) {

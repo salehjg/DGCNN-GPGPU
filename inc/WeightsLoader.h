@@ -32,7 +32,12 @@ using namespace std;
 class WeightsLoader {
 public:
     WeightsLoader(vector<PLATFORMS> neededPlatforms);
-    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList, cl_context oclContex, cl_command_queue oclQueue);
+#ifdef USE_OCL
+    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList, cl_context oclContex, cl_command_queue oclQueue) ;
+#else
+    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList) ;
+#endif
+
     TensorF* AccessWeights(PLATFORMS platform, string name);
 
 private:
