@@ -151,7 +151,7 @@ TensorF* WeightsLoader::AccessWeights(PLATFORMS platform, string name) {
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL:{
-            throw "Not Implemented.";
+            return weightsOCL[strToIndexMap[name]];
             break;
         }
 #endif
