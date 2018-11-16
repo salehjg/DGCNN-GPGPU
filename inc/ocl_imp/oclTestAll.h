@@ -40,7 +40,7 @@ public:
     TensorI*    GetLabels();
     float float_rand( float min, float max );
     TensorF* GenerateTensor(int pattern, vector<unsigned int> shape);
-
+    TensorI* GenerateTensor(int intMin, int intMax, vector<unsigned int> shape);
     unsigned int B=-1;
     unsigned int N=-1;
     unsigned int K=-1;

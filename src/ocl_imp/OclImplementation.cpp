@@ -35,6 +35,7 @@ OclImplementation::OclImplementation(int aa) {
         /*11*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_mean.cl.cc",                   "kernel_divide_by_const_try01"  ),
         /*12*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_variance.cl.cc",               "kernel_multiply_const_sub_try01"  ),
         /*13*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/conv2d_mlp.cl.cc",                    "kernel_conv2d_mlp_try01"  ),
+        /*14*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/gather.cl.cc",                        "kernel_group_point_gpu"  ),
     };
 
     for(OclKernelObject *kernel : oclKernels){
@@ -1561,8 +1562,57 @@ TensorI* OclImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, i
 
 TensorF* OclImplementation::Gather(WorkScheduler scheduler, TensorF* inputTn, TensorI* indices, int indices_axis){
     PrintInfo("Gather","indices_axis",indices_axis,"",0,"",0,inputTn->getShape(),indices->getShape(),{});
+    assert(inputTn->getRank()==3);
+    assert(indices->getRank()==3);
+    assert(inputTn->getShape()[0]==indices->getShape()[0]);
 
-    return nullptr;
+    unsigned int b,n,m,c,nsample;
+    b = inputTn->getShape()[0];
+    n = inputTn->getShape()[1];
+    c = inputTn->getShape()[2];
+    m = indices->getShape()[1];
+    nsample = indices->getShape()[2];
+
+    OclTensorF* rsltTn = new OclTensorF(context,{b,m,nsample,c});
+
+    //gather(inputTn->_buff,indices->_buff,rsltTn->_buff,b,n,c,m,nsample);
+    OclKernelObject *kernelObject = oclKernels[14];
+    cl_int error;
+
+    error =  clSetKernelArg(kernelObject->kernel, 0 , sizeof(cl_mem) , (void*)&((OclTensorF*)inputTn)->ocl_buff);
+    error |= clSetKernelArg(kernelObject->kernel, 1 , sizeof(cl_mem) , (void*)&((OclTensorI*)indices)->ocl_buff);
+    error |= clSetKernelArg(kernelObject->kernel, 2 , sizeof(cl_mem) , (void*)&((OclTensorF*)rsltTn)->ocl_buff);
+    error |= clSetKernelArg(kernelObject->kernel, 3 , sizeof(cl_uint) , (void*)&b);
+    error |= clSetKernelArg(kernelObject->kernel, 4 , sizeof(cl_uint) , (void*)&n);
+    error |= clSetKernelArg(kernelObject->kernel, 5 , sizeof(cl_uint) , (void*)&c);
+    error |= clSetKernelArg(kernelObject->kernel, 6 , sizeof(cl_uint) , (void*)&m);
+    error |= clSetKernelArg(kernelObject->kernel, 7 , sizeof(cl_uint) , (void*)&nsample);
+
+    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+    assert(error==0);
+
+    cl_event exeEvt;
+    size_t localThreads[]  = {256};
+    size_t globalThreads[] = {b*localThreads[0]};
+
+    error = clEnqueueNDRangeKernel(queue,
+                                   kernelObject->kernel,
+                                   1,
+                                   NULL,
+                                   globalThreads,
+                                   localThreads,
+                                   0,
+                                   NULL,
+                                   &exeEvt);
+    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+    clWaitForEvents(1, &exeEvt);
+
+    if(error != CL_SUCCESS) {
+        printf("Kernel execution failure!\n");
+        exit(-22);
+    }
+
+    return rsltTn;
 }
 
 TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2){

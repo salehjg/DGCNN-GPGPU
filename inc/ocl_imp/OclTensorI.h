@@ -20,9 +20,9 @@ public:
     void InitWithHostData(cl_context context, cl_command_queue queue, std::vector<unsigned int> shape, int *hostBuff);
     TensorI* TransferToHost(cl_command_queue queue);
     ~OclTensorI();
-
-private:
     cl_mem ocl_buff;
+private:
+
 
 };
 

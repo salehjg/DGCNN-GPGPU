@@ -415,6 +415,17 @@ SUITE(Kernel_Conv2D_Mlp){
                 CHECK_EQUAL(comparisonResult, true);
     }
 }
+SUITE(Kernel_Gather){
+
+    TEST(Test_1){
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(3,{5,1024,6});
+        TensorI* tensorIndices = oclTestAll->GenerateTensor(0,1023,{5,1024,20});
+        TensorF* tensorCpu = oclTestAll->platformSelector->Gather(PLATFORMS::CPU,scheduler,tensorSrc,tensorIndices,1);
+        TensorF* tensorGpu = oclTestAll->platformSelector->Gather(PLATFORMS::GPU_OCL,scheduler,tensorSrc,tensorIndices,1);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
 
 OclTestAll::OclTestAll(int dataset_offset, int batchsize, int pointcount, int knn_k) {
     platformSelector = new PlatformSelector(PLATFORMS::CPU,{PLATFORMS::CPU,PLATFORMS::GPU_OCL});
@@ -481,6 +492,17 @@ TensorF* OclTestAll::GenerateTensor(int pattern, vector<unsigned int> shape){
             testTn->_buff[i] = pattern;
         }
     }
+    return testTn;
+}
+
+TensorI* OclTestAll::GenerateTensor(int intMin, int intMax, vector<unsigned int> shape){
+    TensorI *testTn = new TensorI(shape);
+    unsigned long _len = testTn->getLength();
+
+    for (unsigned long i = 0; i < _len; i++) {
+        testTn->_buff[i] = (int)float_rand((float)intMin,(float)intMax);
+    }
+
     return testTn;
 }
 

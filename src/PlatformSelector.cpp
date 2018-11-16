@@ -752,7 +752,7 @@ TensorF* PlatformSelector::Gather(PLATFORMS platform, WorkScheduler scheduler, T
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->Gather(scheduler, __inputTn, __indices, indices_axis);
             break;
         }
 #endif
