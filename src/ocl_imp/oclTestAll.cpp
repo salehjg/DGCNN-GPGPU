@@ -415,6 +415,7 @@ SUITE(Kernel_Conv2D_Mlp){
                 CHECK_EQUAL(comparisonResult, true);
     }
 }
+
 SUITE(Kernel_Gather){
 
     TEST(Test_1){
@@ -424,6 +425,32 @@ SUITE(Kernel_Gather){
         TensorF* tensorGpu = oclTestAll->platformSelector->Gather(PLATFORMS::GPU_OCL,scheduler,tensorSrc,tensorIndices,1);
         bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
                 CHECK_EQUAL(comparisonResult, true);
+    }
+}
+
+SUITE(Kernel_TopK){
+
+    TEST(Test_1) {
+        TensorF *tensorSrc = oclTestAll->GenerateTensor(0, {5, 1024, 1024});
+        TensorI *tensorCpu = oclTestAll->platformSelector->TopK(PLATFORMS::CPU, scheduler, tensorSrc, 2, 20);
+        TensorI *tensorGpu = oclTestAll->platformSelector->TopK(PLATFORMS::GPU_OCL, scheduler, tensorSrc, 2, 20);
+        bool comparisonResult = true;
+        if (tensorCpu->getShape() != tensorGpu->getShape()){
+        //    comparisonResult = false;
+        //}
+        //else{
+            unsigned long len = tensorCpu->getLength();
+            TensorI *tensorGpuTransfered = oclTestAll->platformSelector->CrossThePlatform(tensorGpu,PLATFORMS::CPU);
+            for (unsigned long i = 0; i < len; i++) {
+                int rCpu = tensorCpu->_buff[i];
+                int rGpu = tensorGpuTransfered->_buff[i];
+                if(rCpu != rGpu){
+                    comparisonResult=false;
+                    break;
+                }
+            }
+        }
+        CHECK_EQUAL(comparisonResult, true);
     }
 }
 

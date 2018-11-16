@@ -728,7 +728,7 @@ TensorI* PlatformSelector::TopK(PLATFORMS platform, WorkScheduler scheduler, Ten
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            return openclPlatformClass->TopK(scheduler, __batchedMat, axis, k);
             break;
         }
 #endif

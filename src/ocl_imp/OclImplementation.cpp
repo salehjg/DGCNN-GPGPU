@@ -21,21 +21,24 @@ OclImplementation::OclImplementation(int aa) {
     assert(err == CL_SUCCESS);
 
     oclKernels = {
-        /*00*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/transpose.cl.cc",                     "transposeBatch_try01"          ),
-        /*01*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/matmul.cl.cc",                        "kernel_batch_matmul"           ),
-        /*02*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/square.cl.cc",                        "kernel_square"                 ),
-        /*03*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/sqrt.cl.cc",                          "kernel_sqrt_float"             ),
-        /*04*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/relu.cl.cc",                          "kernel_relu"                   ),
-        /*05*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/mat_add_sub_elementwisemul.cl.cc",    "kernel_mat_ops_try01"          ),
-        /*06*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/concat.cl.cc",                        "kernel_concat_try01"           ),
-        /*07*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/tile.cl.cc",                          "kernel_tile_try03"             ),
-        /*08*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_max.cl.cc",                    "kernel_reduce_max_try01"       ),
-        /*09*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_sum_3d.cl.cc",                 "kernel_reduce_sum_3d_try03"    ),
-        /*10*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_sum_4d.cl.cc",                 "kernel_reduce_sum_4d_try04"    ),
-        /*11*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_mean.cl.cc",                   "kernel_divide_by_const_try01"  ),
+        /*00*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/transpose.cl.cc",                     "transposeBatch_try01"             ),
+        /*01*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/matmul.cl.cc",                        "kernel_batch_matmul"              ),
+        /*02*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/square.cl.cc",                        "kernel_square"                    ),
+        /*03*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/sqrt.cl.cc",                          "kernel_sqrt_float"                ),
+        /*04*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/relu.cl.cc",                          "kernel_relu"                      ),
+        /*05*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/mat_add_sub_elementwisemul.cl.cc",    "kernel_mat_ops_try01"             ),
+        /*06*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/concat.cl.cc",                        "kernel_concat_try01"              ),
+        /*07*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/tile.cl.cc",                          "kernel_tile_try03"                ),
+        /*08*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_max.cl.cc",                    "kernel_reduce_max_try01"          ),
+        /*09*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_sum_3d.cl.cc",                 "kernel_reduce_sum_3d_try03"       ),
+        /*10*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_sum_4d.cl.cc",                 "kernel_reduce_sum_4d_try04"       ),
+        /*11*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_mean.cl.cc",                   "kernel_divide_by_const_try01"     ),
         /*12*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_variance.cl.cc",               "kernel_multiply_const_sub_try01"  ),
-        /*13*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/conv2d_mlp.cl.cc",                    "kernel_conv2d_mlp_try01"  ),
-        /*14*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/gather.cl.cc",                        "kernel_group_point_gpu"  ),
+        /*13*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/conv2d_mlp.cl.cc",                    "kernel_conv2d_mlp_try01"          ),
+        /*14*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/gather.cl.cc",                        "kernel_group_point_gpu"           ),
+        /*15*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/split_float.cl.cc",                   "kernel_split_3d_overdim2_float"   ),
+        /*16*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/split_integer.cl.cc",                 "kernel_split_3d_overdim2_integer" ),
+        /*17*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/topk.cl.cc",                          "kernel_selection_sort_gpu" ),
     };
 
     for(OclKernelObject *kernel : oclKernels){
@@ -1557,7 +1560,156 @@ TensorF* OclImplementation::ReduceMax(
 TensorI* OclImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, int axis, int k){
     PrintInfo("TopK","axis",axis,"k",k,"",0,batchedMat->getShape(),{},{});
 
-    return nullptr;
+    assert(batchedMat->getRank()==3);
+    unsigned int b,m,n;
+    b = batchedMat->getShape()[0];
+    m = batchedMat->getShape()[1];
+    n = batchedMat->getShape()[2];
+
+    OclTensorI *rsltIndicesTn = new OclTensorI(context,{
+            b,
+            m,
+            (unsigned int)k
+    });
+    OclTensorF *rsltValTn = new OclTensorF(context,{
+            b,
+            m,
+            (unsigned int)k
+    });
+
+    OclTensorI *tmpIndicesTn = new OclTensorI(context,{
+            b,
+            m,
+            n
+    });
+    OclTensorF *tmpValTn = new OclTensorF(context,{
+            b,
+            m,
+            n
+    });
+
+    //top_k(batchedMat->_buff,rsltIndicesTn->_buff,rsltValTn->_buff,b,n,m,k);
+
+    //==================================================================================================================
+    {//1.topk.cl.cc
+        //unsigned int blockSize = 256;
+        //kernel_selection_sort_gpu<<<b,blockSize>>>(b,n,m,k,distance_matrix,tmpIndices,tmpVal);
+
+        OclKernelObject *kernelObject = oclKernels[17];
+        cl_int error;
+
+        error =  clSetKernelArg(kernelObject->kernel, 0 , sizeof(cl_mem) , (void*)&((OclTensorF*)batchedMat)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 1 , sizeof(cl_mem) , (void*)&((OclTensorI*)tmpIndicesTn)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 2 , sizeof(cl_mem) , (void*)&((OclTensorF*)tmpValTn)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 3 , sizeof(cl_int) , (void*)&b);
+        error |= clSetKernelArg(kernelObject->kernel, 4 , sizeof(cl_int) , (void*)&n);
+        error |= clSetKernelArg(kernelObject->kernel, 5 , sizeof(cl_int) , (void*)&m);
+        error |= clSetKernelArg(kernelObject->kernel, 6 , sizeof(cl_int) , (void*)&k);
+
+        if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+        assert(error==0);
+
+        cl_event exeEvt;
+        size_t localThreads[]  = {256};
+        size_t globalThreads[] = {b*localThreads[0]};
+
+        error = clEnqueueNDRangeKernel(queue,
+                                       kernelObject->kernel,
+                                       1,
+                                       NULL,
+                                       globalThreads,
+                                       localThreads,
+                                       0,
+                                       NULL,
+                                       &exeEvt);
+        if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+        clWaitForEvents(1, &exeEvt);
+
+        if(error != CL_SUCCESS) {
+            printf("Kernel execution failure!\n");
+            exit(-22);
+        }
+    }
+    //==================================================================================================================
+    {//2.split_float.cl.cc
+        //split_3d_overdim2_float(tmpVal, output_values,b,m,n,k);     //split BxMxN into BxMxK (float)
+
+        OclKernelObject *kernelObject = oclKernels[15];
+        cl_int error;
+
+        error =  clSetKernelArg(kernelObject->kernel, 0 , sizeof(cl_mem) , (void*)&((OclTensorF*)tmpValTn)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 1 , sizeof(cl_mem) , (void*)&((OclTensorF*)rsltValTn)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 2 , sizeof(cl_int) , (void*)&b);
+        error |= clSetKernelArg(kernelObject->kernel, 3 , sizeof(cl_int) , (void*)&m);
+        error |= clSetKernelArg(kernelObject->kernel, 4 , sizeof(cl_int) , (void*)&n);
+        error |= clSetKernelArg(kernelObject->kernel, 5 , sizeof(cl_int) , (void*)&k);
+
+        if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+        assert(error==0);
+
+        cl_event exeEvt;
+        size_t localThreads[]  = {256};
+        size_t globalThreads[] = {b*localThreads[0]};
+
+        error = clEnqueueNDRangeKernel(queue,
+                                       kernelObject->kernel,
+                                       1,
+                                       NULL,
+                                       globalThreads,
+                                       localThreads,
+                                       0,
+                                       NULL,
+                                       &exeEvt);
+        if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+        clWaitForEvents(1, &exeEvt);
+
+        if(error != CL_SUCCESS) {
+            printf("Kernel execution failure!\n");
+            exit(-22);
+        }
+    }
+    //==================================================================================================================
+    {//3.split_integer.cl.cc
+        //split_3d_overdim2_integer(tmpIndices, output_indices,b,m,n,k);  //split BxMxN into BxMxK (integer)
+
+        OclKernelObject *kernelObject = oclKernels[16];
+        cl_int error;
+
+        error =  clSetKernelArg(kernelObject->kernel, 0 , sizeof(cl_mem) , (void*)&((OclTensorI*)tmpIndicesTn)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 1 , sizeof(cl_mem) , (void*)&((OclTensorI*)rsltIndicesTn)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 2 , sizeof(cl_int) , (void*)&b);
+        error |= clSetKernelArg(kernelObject->kernel, 3 , sizeof(cl_int) , (void*)&m);
+        error |= clSetKernelArg(kernelObject->kernel, 4 , sizeof(cl_int) , (void*)&n);
+        error |= clSetKernelArg(kernelObject->kernel, 5 , sizeof(cl_int) , (void*)&k);
+
+        if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+        assert(error==0);
+
+        cl_event exeEvt;
+        size_t localThreads[]  = {256};
+        size_t globalThreads[] = {b*localThreads[0]};
+
+        error = clEnqueueNDRangeKernel(queue,
+                                       kernelObject->kernel,
+                                       1,
+                                       NULL,
+                                       globalThreads,
+                                       localThreads,
+                                       0,
+                                       NULL,
+                                       &exeEvt);
+        if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+        clWaitForEvents(1, &exeEvt);
+
+        if(error != CL_SUCCESS) {
+            printf("Kernel execution failure!\n");
+            exit(-22);
+        }
+    }
+    //==================================================================================================================
+    delete(tmpIndicesTn);
+    delete(tmpValTn);
+    return rsltIndicesTn;
 }
 
 TensorF* OclImplementation::Gather(WorkScheduler scheduler, TensorF* inputTn, TensorI* indices, int indices_axis){
