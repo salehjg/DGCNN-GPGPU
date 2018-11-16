@@ -285,7 +285,7 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
     */
 
     // THESE SHOULD BE EQUAL WITH DEFINED VALUES IN THE KERNEL FILE
-    const cl_uint BLOCK_DIM_X=8, BLOCK_DIM_Y=4;
+    const cl_uint BLOCK_DIM_X=4, BLOCK_DIM_Y=4;
 
     size_t global_work_size[] = {dim2B*BLOCK_DIM_X, dim1A*BLOCK_DIM_Y, dim0A*1};
     size_t global_padded_work_size[3];
@@ -539,7 +539,7 @@ TensorF* OclImplementation::ReduceSum4D(WorkScheduler scheduler,
             over_axis3); */
 
     unsigned long SPT,TGC,TGO,TGPB,TPG;
-    unsigned int BLOCK_SIZE = 512;
+    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
 
     //Dim3 slice per thread
     SPT = 2048; //cte
@@ -674,7 +674,7 @@ TensorF* OclImplementation::Mean(
     OclKernelObject *kernelObject_coef = oclKernels[11];
 
     unsigned long SPT,TGC,TGO,TGPB,TPG;
-    unsigned int BLOCK_SIZE = 512;
+    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
 
     //Dim3 slice per thread
     SPT = 2048; //cte
@@ -831,16 +831,16 @@ TensorF* OclImplementation::Variance(
     _dim2 = inputTn->getShape()[2];
     _dim3 = inputTn->getShape()[3];
 
-    OclTensorF* tmpTn = new OclTensorF(context, {_dim3}); // TTTF
-    OclTensorF* medianTn = new OclTensorF(context, {_dim3}); // TTTF
-    OclTensorF* varianceXi2Tn = new OclTensorF(context, {_dim3}); // TTTF
-    OclTensorF* rsltTn = new OclTensorF(context, {_dim3}); // TTTF
+    OclTensorF* tmpTn           = new OclTensorF(context, {_dim3}); // TTTF
+    OclTensorF* medianTn        = new OclTensorF(context, {_dim3}); // TTTF
+    OclTensorF* varianceXi2Tn   = new OclTensorF(context, {_dim3}); // TTTF
+    OclTensorF* rsltTn          = new OclTensorF(context, {_dim3}); // TTTF
     OclKernelObject *kernelObject_reduction = oclKernels[10];
     OclKernelObject *kernelObject_coef = oclKernels[11];
     OclKernelObject *kernelObject_coef2 = oclKernels[12];
 
     unsigned long SPT,TGC,TGO,TGPB,TPG;
-    unsigned int BLOCK_SIZE = 512;
+    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
 
     //Dim3 slice per thread
     SPT = 512; //cte
