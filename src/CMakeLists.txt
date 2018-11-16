@@ -2,8 +2,10 @@ subdirs(cpu_imp)
 
 option(USE_CUDA "CUDA Switch" ON)
 option(USE_OCL "OCL  Switch" ON)
-set(USE_CUDA ON)
+option(NVIDIA_INTEL "Backend Selection for OpenCL. ON:USE NVIDIA PLATFORM, OFF:USE INTEL PLATFORM" ON)
+set(USE_CUDA OFF)
 set(USE_OCL ON)
+set(NVIDIA_INTEL OFF)
 set(REPO_DIR_CMAKE  ${PROJECT_SOURCE_DIR})
 set(BIN_DIR_CMAKE   ${CMAKE_BINARY_DIR})
 configure_file(../inc/build_config.h.in ${CMAKE_BINARY_DIR}/build_config.h)
@@ -38,7 +40,9 @@ endif (USE_CUDA)
 
 if(USE_OCL)
     set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
-    set(OPENCL_ROOT /opt/cuda/)
+    if(NVIDIA_INTEL)
+        set(OPENCL_ROOT /opt/cuda/)
+    endif()
     find_package(OpenCL REQUIRED)
     message(${OPENCL_INCLUDE_DIRS})
     message(${OPENCL_LIBRARY})
@@ -113,6 +117,15 @@ if(NOT(USE_CUDA) AND USE_OCL)
             ClassifierMultiPlatform.cpp
             ${SOURCE_FILES_ALL} )
     target_link_libraries(ClassifierMultiplatform cnpy z pthread ${OPENCL_LIBRARY})
+
+    find_package(UnitTest++ REQUIRED)
+    add_executable(oclTestAll
+            ocl_imp/oclTestAll.cpp
+            ${SOURCE_FILES_CPU}
+            ${SOURCE_FILES_OCL}
+            )
+    target_link_libraries(oclTestAll cnpy z pthread ${OPENCL_LIBRARY} UnitTest++)
+
 endif()
 
 if(NOT(USE_CUDA) AND NOT(USE_OCL))
