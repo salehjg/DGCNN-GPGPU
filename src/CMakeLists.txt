@@ -3,7 +3,7 @@ subdirs(cpu_imp)
 option(USE_CUDA "CUDA Switch" ON)
 option(USE_OCL "OCL  Switch" ON)
 set(USE_CUDA ON)
-set(USE_OCL OFF)
+set(USE_OCL ON)
 set(REPO_DIR_CMAKE  ${PROJECT_SOURCE_DIR})
 set(BIN_DIR_CMAKE   ${CMAKE_BINARY_DIR})
 configure_file(../inc/build_config.h.in ${CMAKE_BINARY_DIR}/build_config.h)
@@ -37,7 +37,13 @@ if (USE_CUDA)
 endif (USE_CUDA)
 
 if(USE_OCL)
+    set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+    set(OPENCL_ROOT /opt/cuda/)
     find_package(OpenCL REQUIRED)
+    message(${OPENCL_INCLUDE_DIRS})
+    message(${OPENCL_LIBRARY})
+
+
     set(SOURCE_FILES_OCL
             ocl_imp/OclImplementation.cpp
             ocl_imp/OclTensorF.cpp
@@ -67,20 +73,31 @@ include_directories(
         ${PROJECT_SOURCE_DIR}/inc/cpu_imp
         ${PROJECT_SOURCE_DIR}/inc/cuda_imp
         ${CUDA_INCLUDE_DIRS}
-        ${OpenCL_INCLUDE_DIRS}
+        ${OPENCL_INCLUDE_DIRS}
 )
 
 link_directories(
         ${PROJECT_SOURCE_DIR}/submodules/cnpy
         ${CUDA_LIBRARY_DIRS}
-        ${OpenCL_LIBRARY})
+        ${OPENCL_LIBRARY})
 
 if(USE_CUDA AND USE_OCL)
     cuda_add_executable(ClassifierMultiplatform
             ClassifierMultiPlatform.cpp
             ${SOURCE_FILES_ALL}
             ${KERNEL_SOURCES})
-    target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OpenCL_LIBRARY})
+    target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OPENCL_LIBRARY})
+
+    find_package(UnitTest++ REQUIRED)
+    cuda_add_executable(oclTestAll
+            ocl_imp/oclTestAll.cpp
+            ${SOURCE_FILES_CPU}
+            ${SOURCE_FILES_CUDA}
+            ${SOURCE_FILES_OCL}
+            ${KERNEL_SOURCES}
+            )
+    target_link_libraries(oclTestAll cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OPENCL_LIBRARY} UnitTest++)
+
 endif(USE_CUDA AND USE_OCL)
 
 if(USE_CUDA AND NOT(USE_OCL))
@@ -95,7 +112,7 @@ if(NOT(USE_CUDA) AND USE_OCL)
     add_executable(ClassifierMultiplatform
             ClassifierMultiPlatform.cpp
             ${SOURCE_FILES_ALL} )
-    target_link_libraries(ClassifierMultiplatform cnpy z pthread ${OpenCL_LIBRARY})
+    target_link_libraries(ClassifierMultiplatform cnpy z pthread ${OPENCL_LIBRARY})
 endif()
 
 if(NOT(USE_CUDA) AND NOT(USE_OCL))
@@ -103,15 +120,4 @@ if(NOT(USE_CUDA) AND NOT(USE_OCL))
             ClassifierMultiPlatform.cpp
             ${SOURCE_FILES_ALL} )
     target_link_libraries(ClassifierMultiplatform cnpy z pthread )
-endif()
-
-if(USE_OCL)
-    find_package(UnitTest++ REQUIRED)
-    add_executable(oclTestAll
-            ocl_imp/oclTestAll.cpp
-            ${SOURCE_FILES_CPU}
-            ${SOURCE_FILES_OCL}
-            )
-    target_link_libraries(oclTestAll cnpy z pthread ${OpenCL_LIBRARY} UnitTest++)
-
 endif()
