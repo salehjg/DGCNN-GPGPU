@@ -285,7 +285,7 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
     */
 
     // THESE SHOULD BE EQUAL WITH DEFINED VALUES IN THE KERNEL FILE
-    const cl_uint BLOCK_DIM_X=4, BLOCK_DIM_Y=4;
+    const cl_uint BLOCK_DIM_X=8, BLOCK_DIM_Y=4;
 
     size_t global_work_size[] = {dim2B*BLOCK_DIM_X, dim1A*BLOCK_DIM_Y, dim0A*1};
     size_t global_padded_work_size[3];
