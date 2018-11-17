@@ -17,17 +17,6 @@ int main(){
 }
 
 SUITE(SingleOperandKernels){
-
-    TEST(Kernel_Matmul){
-        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
-        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{10,20,60});
-        TensorF* tensorCpu = oclTestAll->platformSelector->MatMul(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2);
-        TensorF* tensorGpu = oclTestAll->platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2);
-        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
-                CHECK_EQUAL(comparisonResult, true);
-    }
-
-
     TEST(Kernel_Transpose){
         TensorF* tensorCpu = oclTestAll->platformSelector->Transpose(PLATFORMS::CPU,scheduler,oclTestAll->input_pcl_BxNxD);
         TensorF* tensorGpu = oclTestAll->platformSelector->Transpose(PLATFORMS::GPU_OCL,scheduler,oclTestAll->input_pcl_BxNxD);
@@ -61,6 +50,16 @@ SUITE(SingleOperandKernels){
 
 }
 
+SUITE(Kernel_MatMul){
+    TEST(Kernel_Matmul){
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{10,20,60});
+        TensorF* tensorCpu = oclTestAll->platformSelector->MatMul(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2);
+        TensorF* tensorGpu = oclTestAll->platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+}
 SUITE(Kernel_MatOps){
     TEST(Rank_4_4){
         //Ranks: 4,4
@@ -384,7 +383,7 @@ SUITE(Kernel_ReduceSum_4D){
 SUITE(Kernel_Mean){
 
     TEST(Rank4_TTTF){
-        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{5,1024,20,512});
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{5,1024,20,256});
         TensorF* tensorCpu = oclTestAll->platformSelector->Mean(PLATFORMS::CPU,scheduler,tensorSrc,true,true,true,false);
         TensorF* tensorGpu = oclTestAll->platformSelector->Mean(PLATFORMS::GPU_OCL,scheduler,tensorSrc,true,true,true,false);
         bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
@@ -395,7 +394,7 @@ SUITE(Kernel_Mean){
 SUITE(Kernel_Variance){
 
     TEST(Rank4_TTTF){
-        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{5,1024,20,512});
+        TensorF* tensorSrc = oclTestAll->GenerateTensor(1,{5,1024,20,256});
         TensorF* tensorCpu = oclTestAll->platformSelector->Variance(PLATFORMS::CPU,scheduler,tensorSrc,true,true,true,false);
         TensorF* tensorGpu = oclTestAll->platformSelector->Variance(PLATFORMS::GPU_OCL,scheduler,tensorSrc,true,true,true,false);
         bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);

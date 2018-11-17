@@ -660,13 +660,32 @@ TensorF* OclImplementation::Mean(
         bool mean_axis3){
 
     PrintInfo("Mean","",0,"",0,"",0,inputTn->getShape(),{},{mean_axis0,mean_axis1,mean_axis2,mean_axis3});
-    assert(mean_axis0&&mean_axis1&&mean_axis2&&!mean_axis3); // TTTF ONLY
-
     unsigned int _dim0,_dim1,_dim2,_dim3;
-    _dim0 = inputTn->getShape()[0];
-    _dim1 = inputTn->getShape()[1];
-    _dim2 = inputTn->getShape()[2];
-    _dim3 = inputTn->getShape()[3];
+    bool _mean_axis0, _mean_axis1, _mean_axis2, _mean_axis3;
+    assert(inputTn->getRank()==2 || inputTn->getRank()==4);
+    assert(
+            (mean_axis0 && mean_axis1 && mean_axis2 && !mean_axis3 && inputTn->getRank()==4) ||
+            (mean_axis0 && !mean_axis1 && !mean_axis2 && !mean_axis3 && inputTn->getRank()==2)
+    );
+    if(inputTn->getRank()==4){
+        _dim0 = inputTn->getShape()[0];
+        _dim1 = inputTn->getShape()[1];
+        _dim2 = inputTn->getShape()[2];
+        _dim3 = inputTn->getShape()[3];
+        _mean_axis0 = mean_axis0;
+        _mean_axis1 = mean_axis1;
+        _mean_axis2 = mean_axis2;
+        _mean_axis3 = mean_axis3;
+    }else if (inputTn->getRank()==2){
+        _dim0 = 1;
+        _dim1 = 1;
+        _dim2 = inputTn->getShape()[0];
+        _dim3 = inputTn->getShape()[1];
+        _mean_axis0 = true;
+        _mean_axis1 = true;
+        _mean_axis2 = true;
+        _mean_axis3 = false;
+    }
 
     OclTensorF* tmpTn = new OclTensorF(context, {_dim3}); // TTTF
     OclTensorF* rsltTn = new OclTensorF(context, {_dim3}); // TTTF
@@ -724,10 +743,10 @@ TensorF* OclImplementation::Mean(
     cl_int error;
     cl_int pow_y = 1;
     cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
-    _overAxis0 = mean_axis0;
-    _overAxis1 = mean_axis1;
-    _overAxis2 = mean_axis2;
-    _overAxis3 = mean_axis3;
+    _overAxis0 = _mean_axis0;
+    _overAxis1 = _mean_axis1;
+    _overAxis2 = _mean_axis2;
+    _overAxis3 = _mean_axis3;
     error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);
@@ -822,14 +841,33 @@ TensorF* OclImplementation::Variance(
         bool variance_axis2,
         bool variance_axis3){
     PrintInfo("Variance","",0,"",0,"",0,inputTn->getShape(),{},{variance_axis0,variance_axis1,variance_axis2,variance_axis3});
-
-    assert(variance_axis0&&variance_axis1&&variance_axis2&&!variance_axis3); // TTTF ONLY
-
     unsigned int _dim0,_dim1,_dim2,_dim3;
-    _dim0 = inputTn->getShape()[0];
-    _dim1 = inputTn->getShape()[1];
-    _dim2 = inputTn->getShape()[2];
-    _dim3 = inputTn->getShape()[3];
+    bool _variance_axis0, _variance_axis1, _variance_axis2, _variance_axis3;
+    assert(inputTn->getRank()==2 || inputTn->getRank()==4);
+    assert(
+            (variance_axis0 && variance_axis1 && variance_axis2 && !variance_axis3 && inputTn->getRank()==4) ||
+            (variance_axis0 && !variance_axis1 && !variance_axis2 && !variance_axis3 && inputTn->getRank()==2)
+    );
+    if(inputTn->getRank()==4){
+        _dim0 = inputTn->getShape()[0];
+        _dim1 = inputTn->getShape()[1];
+        _dim2 = inputTn->getShape()[2];
+        _dim3 = inputTn->getShape()[3];
+        _variance_axis0 = variance_axis0;
+        _variance_axis1 = variance_axis1;
+        _variance_axis2 = variance_axis2;
+        _variance_axis3 = variance_axis3;
+    }else if (inputTn->getRank()==2){
+        _dim0 = 1;
+        _dim1 = 1;
+        _dim2 = inputTn->getShape()[0];
+        _dim3 = inputTn->getShape()[1];
+        _variance_axis0 = true;
+        _variance_axis1 = true;
+        _variance_axis2 = true;
+        _variance_axis3 = false;
+    }
+
 
     OclTensorF* tmpTn           = new OclTensorF(context, {_dim3}); // TTTF
     OclTensorF* medianTn        = new OclTensorF(context, {_dim3}); // TTTF
@@ -898,10 +936,10 @@ TensorF* OclImplementation::Variance(
     cl_int error;
     cl_int pow_y = 1;
     cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
-    _overAxis0 = variance_axis0;
-    _overAxis1 = variance_axis1;
-    _overAxis2 = variance_axis2;
-    _overAxis3 = variance_axis3;
+    _overAxis0 = _variance_axis0;
+    _overAxis1 = _variance_axis1;
+    _overAxis2 = _variance_axis2;
+    _overAxis3 = _variance_axis3;
     error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);

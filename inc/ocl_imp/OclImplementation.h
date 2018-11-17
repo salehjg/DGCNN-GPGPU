@@ -11,7 +11,7 @@
 #include "../../inc/ocl_imp/OclTensorI.h"
 #include <CL/cl.h>
 
-#define OCL_BOTTLENCK_BLOCKSIZE 1024
+#define OCL_BOTTLENCK_BLOCKSIZE 256
 
 struct OclKernelObject{
     const char *fileName;
