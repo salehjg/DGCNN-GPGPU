@@ -410,7 +410,7 @@ SUITE(Kernel_Conv2D_Mlp){
     TEST(Test_1){
         TensorF* tensorSrc = oclTestAll->GenerateTensor(3,{5,3,3,6});
         TensorF* tensorWeight = oclTestAll->GenerateTensor(3,{1,1,6,7});
-        TensorF* tensorBiases = oclTestAll->GenerateTensor(1,{1,1,1,7});
+        TensorF* tensorBiases = oclTestAll->GenerateTensor(-1,{7}); //THE SHAPE SHOULD BE 1D, NOT 4D LIKE {1,1,1,7}
         TensorF* tensorCpu = oclTestAll->platformSelector->Conv2D(PLATFORMS::CPU,scheduler,tensorSrc,tensorWeight,tensorBiases);
         TensorF* tensorGpu = oclTestAll->platformSelector->Conv2D(PLATFORMS::GPU_OCL,scheduler,tensorSrc,tensorWeight,tensorBiases);
         bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);

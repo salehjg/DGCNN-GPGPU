@@ -1864,7 +1864,7 @@ TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, Te
     assert(error==0);
 
     cl_event exeEvt;
-    //unsigned long localThreads[]  = {D};
+    size_t localThreads[]  = {D};
     size_t globalThreads[] = {B*N*K*D};
 
     error = clEnqueueNDRangeKernel(queue,
@@ -1872,7 +1872,7 @@ TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, Te
                                    1,
                                    NULL,
                                    globalThreads,
-                                   NULL, //localThreads,
+                                   localThreads, //localThreads,
                                    0,
                                    NULL,
                                    &exeEvt);
