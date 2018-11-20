@@ -138,7 +138,7 @@ TensorI::~TensorI() {
             std::cout<<"--- TensorI: destructed.\n";
             delete(_buff);
         }
-    }else if(platform == PLATFORMS::GPU_CUDA){
+    }/*else if(platform == PLATFORMS::GPU_CUDA){
 #ifdef USE_CUDA
         cudaError_t cuda_stat;
         if(initialized){
@@ -149,4 +149,5 @@ TensorI::~TensorI() {
         cudaCheckErrors("~CudaTensorI@CudaTensorI: ERR04");
 #endif
     }
+    */
 }

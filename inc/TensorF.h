@@ -31,7 +31,7 @@ public:
     PLATFORMS getPlatform();
     unsigned long getLength();
     unsigned long getLengthBytes();
-    ~TensorF();
+    virtual ~TensorF();
 
     float* _buff;
 

@@ -63,6 +63,7 @@ set(SOURCE_FILES_CPU
         TensorI.cpp
         WorkScheduler.cpp
         WeightsLoader.cpp
+        #ModelArchTop04.cpp
         ModelArchTop05.cpp
         )
 

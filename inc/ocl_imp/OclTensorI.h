@@ -19,7 +19,7 @@ public:
     void Init(std::vector<unsigned int> shape, cl_mem clBuff);
     void InitWithHostData(cl_context context, cl_command_queue queue, std::vector<unsigned int> shape, int *hostBuff);
     TensorI* TransferToHost(cl_command_queue queue);
-    ~OclTensorI();
+    virtual ~OclTensorI();
     cl_mem ocl_buff;
 private:
 

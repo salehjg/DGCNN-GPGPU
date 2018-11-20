@@ -144,7 +144,7 @@ TensorF::~TensorF() {
             //std::cout<<"--- TensorF: destructed.\n";
             delete(_buff);
         }
-    }else if(platform == PLATFORMS::GPU_CUDA){
+    } /*else if(platform == PLATFORMS::GPU_CUDA){
 
 #ifdef USE_CUDA
         cudaError_t cuda_stat;
@@ -155,6 +155,8 @@ TensorF::~TensorF() {
         }
         cudaCheckErrors("~TensorF-CUDA@TensorF: ERR04");
 #endif
-    }
+    }else if (platform == PLATFORMS::GPU_OCL){
+
+    }*/
 
 }

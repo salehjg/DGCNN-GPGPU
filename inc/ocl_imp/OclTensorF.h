@@ -18,7 +18,7 @@ public:
     void Init(std::vector<unsigned int> shape, cl_mem clBuff);
     void InitWithHostData(cl_context context, cl_command_queue queue, std::vector<unsigned int> shape, float *hostBuff);
     TensorF* TransferToHost(cl_command_queue queue);
-    ~OclTensorF();
+    virtual ~OclTensorF();
 
     cl_mem ocl_buff;
 private:
