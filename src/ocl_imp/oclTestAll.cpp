@@ -17,14 +17,6 @@ int main(){
 }
 
 SUITE(SingleOperandKernels){
-    TEST(Kernel_Matmul){
-        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{10,50,20});
-        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{10,20,60});
-        TensorF* tensorCpu = oclTestAll->platformSelector->MatMul(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2);
-        TensorF* tensorGpu = oclTestAll->platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2);
-        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
-                CHECK_EQUAL(comparisonResult, true);
-    }
 
     TEST(Kernel_Transpose){
         TensorF* tensorCpu = oclTestAll->platformSelector->Transpose(PLATFORMS::CPU,scheduler,oclTestAll->input_pcl_BxNxD);
@@ -58,11 +50,27 @@ SUITE(SingleOperandKernels){
     }
 
 }
-/*
-SUITE(Kernel_MatMul){
 
+SUITE(Kernel_MatMul){
+    TEST(Kernel_Matmul1){
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(0,{1,50,20});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(0,{1,20,60});
+        TensorF* tensorCpu = oclTestAll->platformSelector->MatMul(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2);
+        TensorF* tensorGpu = oclTestAll->platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
+
+    TEST(Kernel_Matmul2){
+        TensorF* tensorSrc1 = oclTestAll->GenerateTensor(3,{25,1024});
+        TensorF* tensorSrc2 = oclTestAll->GenerateTensor(3,{1024,512});
+        TensorF* tensorCpu = oclTestAll->platformSelector->MatMul(PLATFORMS::CPU,scheduler,tensorSrc1,tensorSrc2);
+        TensorF* tensorGpu = oclTestAll->platformSelector->MatMul(PLATFORMS::GPU_OCL,scheduler,tensorSrc1,tensorSrc2);
+        bool comparisonResult = oclTestAll->platformSelector->CompareTensors(PLATFORMS::CPU,scheduler,tensorCpu,tensorGpu);
+                CHECK_EQUAL(comparisonResult, true);
+    }
 }
-*/
+
 SUITE(Kernel_MatOps){
     TEST(Rank_4_4){
         //Ranks: 4,4

@@ -285,9 +285,10 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
     */
 
     // THESE SHOULD BE EQUAL WITH DEFINED VALUES IN THE KERNEL FILE
-    const cl_uint BLOCK_DIM_X=8, BLOCK_DIM_Y=4;
+    const cl_uint BLOCK_DIM_X=4, BLOCK_DIM_Y=4;
 
-    size_t global_work_size[] = {dim2B*BLOCK_DIM_X, dim1A*BLOCK_DIM_Y, dim0A*1};
+    size_t global_work_size[] = {dim2B, dim1A, dim0A*1};
+    //size_t global_work_size[] = {dim2B*BLOCK_DIM_X, dim1A*BLOCK_DIM_Y, dim0A*1};
     size_t global_padded_work_size[3];
     size_t local_block_size[] = {BLOCK_DIM_X, BLOCK_DIM_Y, 1};
     unsigned long shared_mem_size = (BLOCK_DIM_Y*dim2A + BLOCK_DIM_X* dim1B)*sizeof(float);
@@ -297,9 +298,6 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
     cout<< "LOCAL:      " << local_block_size[0] << ", " <<local_block_size[1] << ", " <<local_block_size[2] << "\n";
     cout<< "GLOBAL:     " << global_work_size[0] << ", " <<global_work_size[1] << ", " <<global_work_size[2] << "\n";
     cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << ", " <<global_padded_work_size[1] << ", " <<global_padded_work_size[2] << "\n";
-
-
-
 
     err  = clSetKernelArg(kernelObject->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)batchedMat1)->ocl_buff);
     err |= clSetKernelArg(kernelObject->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)batchedMat2)->ocl_buff);
@@ -321,7 +319,6 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
     err |= clSetKernelArg(kernelObject->kernel, 11, sizeof(cl_uint), (void*)& global_work_size[0]);
     err |= clSetKernelArg(kernelObject->kernel, 12, sizeof(cl_uint), (void*)& global_work_size[1]);
     err |= clSetKernelArg(kernelObject->kernel, 13, sizeof(cl_uint), (void*)& global_work_size[2]);
-
 
 
     /*
@@ -372,7 +369,6 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
     }
 
     return rsltTn;
-    return nullptr;
 }
 
 TensorF* OclImplementation::Square(WorkScheduler scheduler, TensorF* batchedMat){
