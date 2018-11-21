@@ -1842,7 +1842,7 @@ TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, Te
     unsigned int D      = inputTn->getShape()[3];
     unsigned int chOut  = weights->getShape()[3];
 
-    assert(D<=1024); // this kernel cannot accept dim3>1024
+    assert(D<=OCL_BOTTLENCK_BLOCKSIZE); // this kernel cannot accept dim3>OCL_BOTTLENCK_BLOCKSIZE
 
     OclKernelObject *kernelObject = oclKernels[13];
     cl_int error;
