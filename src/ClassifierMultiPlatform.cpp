@@ -60,10 +60,10 @@ void CalculateAccuracy(TensorF* scores, TensorI* labels, int B, int classCount){
 
 int main(){
     WorkScheduler scheduler;
-    int batchsize=25;
+    int batchsize=5;
     ModelArchTop05 modelArchTop(0,batchsize,1024,20);
-    modelArchTop.SetModelInput_data(REPO_DIR "/data/dataset/dataset_B2048_pcl.npy");
-    modelArchTop.SetModelInput_labels(REPO_DIR"/data/dataset/dataset_B2048_labels_int32.npy");
+    modelArchTop.SetModelInput_data(REPO_DIR "/data/dataset/dataset_B5_pcl.npy");
+    modelArchTop.SetModelInput_labels(REPO_DIR"/data/dataset/dataset_B5_labels_int32.npy");
 
     double timerStart = seconds();
     TensorF* classScores = modelArchTop.Execute(scheduler);

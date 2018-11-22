@@ -853,7 +853,8 @@ void PlatformSelector::DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, s
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            TensorF* __inputTn2 = CrossThePlatform(inputTn, PLATFORMS::CPU);
+            return cpuPlatformClass->DumpMatrix(scheduler, npy_fname,__inputTn2,npy_dir);
             break;
         }
 #endif
@@ -876,7 +877,8 @@ void PlatformSelector::DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, s
 #endif
 #ifdef USE_OCL
         case PLATFORMS::GPU_OCL :{
-            throw "Not Implement.";
+            TensorI* __inputTn2 = CrossThePlatform(inputTn, PLATFORMS::CPU);
+            return cpuPlatformClass->DumpMatrix(scheduler, npy_fname,__inputTn2,npy_dir);
             break;
         }
 #endif

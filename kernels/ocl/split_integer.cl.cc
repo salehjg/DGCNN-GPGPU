@@ -5,16 +5,21 @@ kernel void kernel_split_3d_overdim2_integer(
         const unsigned int dim0,
         const unsigned int dim1,
         const unsigned int dim2,
-        const unsigned int new_dim2){
-    // threads are mapped into output tensor
-    const unsigned long _len_output = dim0*dim1*new_dim2;
-    unsigned int idx = (get_group_id(0) * get_local_size(0) + get_local_id(0));
-    if(idx < _len_output) {
-        unsigned int d0 = idx / (dim1 * new_dim2);
-        unsigned int d1 = (idx % (dim1 * new_dim2)) / (new_dim2);
-        unsigned int d2 = (idx % (new_dim2)) / 1;
+        const unsigned int new_dim2,
+        const unsigned long worksize_x){
 
-        g_o[idx] = g_i[d0 * dim1 * dim2 + d1 * dim2 + d2];
+    unsigned int idx = get_group_id(0) * get_local_size(0) + get_local_id(0);
+    //Padded because non-uniform work-group is not available in OCL1.2 (Trying to implement dynamic shared memory)
+    if(idx < worksize_x ) {
+        // threads are mapped into output tensor
+        const unsigned long _len_output = dim0 * dim1 * new_dim2;
+        if (idx < _len_output) {
+            unsigned int d0 = idx / (dim1 * new_dim2);
+            unsigned int d1 = (idx % (dim1 * new_dim2)) / (new_dim2);
+            unsigned int d2 = (idx % (new_dim2)) / 1;
+
+            g_o[idx] = g_i[d0 * dim1 * dim2 + d1 * dim2 + d2];
+        }
     }
 }
 

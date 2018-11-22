@@ -295,9 +295,9 @@ TensorF* OclImplementation::MatMul(WorkScheduler scheduler,
 
     GetPaddedWorkSize(3, local_block_size, global_work_size, global_padded_work_size);
 
-    cout<< "LOCAL:      " << local_block_size[0] << ", " <<local_block_size[1] << ", " <<local_block_size[2] << "\n";
-    cout<< "GLOBAL:     " << global_work_size[0] << ", " <<global_work_size[1] << ", " <<global_work_size[2] << "\n";
-    cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << ", " <<global_padded_work_size[1] << ", " <<global_padded_work_size[2] << "\n";
+    //cout<< "LOCAL:      " << local_block_size[0] << ", " <<local_block_size[1] << ", " <<local_block_size[2] << "\n";
+    //cout<< "GLOBAL:     " << global_work_size[0] << ", " <<global_work_size[1] << ", " <<global_work_size[2] << "\n";
+    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << ", " <<global_padded_work_size[1] << ", " <<global_padded_work_size[2] << "\n";
 
     err  = clSetKernelArg(kernelObject->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)batchedMat1)->ocl_buff);
     err |= clSetKernelArg(kernelObject->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)batchedMat2)->ocl_buff);
@@ -461,9 +461,9 @@ TensorF* OclImplementation::ReduceSum(WorkScheduler scheduler,
         global_work_size[0] = local_block_size[0] * rsltTn->getLength();
     }
 
-    cout<< "LOCAL:      " << local_block_size[0] << "\n";
-    cout<< "GLOBAL:     " << global_work_size[0] << "\n";
-    cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
 
     cl_int error;
     error =  clSetKernelArg(kernelObject->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
@@ -588,9 +588,9 @@ TensorF* OclImplementation::ReduceSum4D(WorkScheduler scheduler,
     GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
 
 
-    cout<< "LOCAL:      " << local_block_size[0] << "\n";
-    cout<< "GLOBAL:     " << global_work_size[0] << "\n";
-    cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
 
     cl_int error;
     cl_int pow_y = 1;
@@ -732,9 +732,9 @@ TensorF* OclImplementation::Mean(
     GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
 
 
-    cout<< "LOCAL:      " << local_block_size[0] << "\n";
-    cout<< "GLOBAL:     " << global_work_size[0] << "\n";
-    cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
 
     cl_int error;
     cl_int pow_y = 1;
@@ -925,9 +925,9 @@ TensorF* OclImplementation::Variance(
     GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
 
 
-    cout<< "LOCAL:      " << local_block_size[0] << "\n";
-    cout<< "GLOBAL:     " << global_work_size[0] << "\n";
-    cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
 
     cl_int error;
     cl_int pow_y = 1;
@@ -1273,9 +1273,9 @@ TensorF* OclImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, T
         error |= clSetKernelArg(kernelObject->kernel, 9, sizeof(cl_uint), (void*)&dim2B);
         error |= clSetKernelArg(kernelObject->kernel, 10, sizeof(cl_uint), (void*)&dim3B);
         error |= clSetKernelArg(kernelObject->kernel, 11, sizeof(cl_uint), (void*)&dimB0_IsNotZero);
-        error |= clSetKernelArg(kernelObject->kernel, 12, sizeof(cl_uint), (void*)&dimB0_IsNotZero);
-        error |= clSetKernelArg(kernelObject->kernel, 13, sizeof(cl_uint), (void*)&dimB0_IsNotZero);
-        error |= clSetKernelArg(kernelObject->kernel, 14, sizeof(cl_uint), (void*)&dimB0_IsNotZero);
+        error |= clSetKernelArg(kernelObject->kernel, 12, sizeof(cl_uint), (void*)&dimB1_IsNotZero);
+        error |= clSetKernelArg(kernelObject->kernel, 13, sizeof(cl_uint), (void*)&dimB2_IsNotZero);
+        error |= clSetKernelArg(kernelObject->kernel, 14, sizeof(cl_uint), (void*)&dimB3_IsNotZero);
         error |= clSetKernelArg(kernelObject->kernel, 15, sizeof(cl_int), (void*)&operationMode);
         error |= clSetKernelArg(kernelObject->kernel, 16, sizeof(cl_int), (void*)&EPT);
         error |= clSetKernelArg(kernelObject->kernel, 17, sizeof(cl_ulong), (void*)&lenA);
@@ -1668,6 +1668,11 @@ TensorI* OclImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, i
     {//2.split_float.cl.cc
         //split_3d_overdim2_float(tmpVal, output_values,b,m,n,k);     //split BxMxN into BxMxK (float)
 
+        size_t local_block_size[]  = {256};
+        size_t global_work_size[] = {b*m*k};
+        size_t global_padded_work_size[1];
+        GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
+
         OclKernelObject *kernelObject = oclKernels[15];
         cl_int error;
 
@@ -1677,20 +1682,19 @@ TensorI* OclImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, i
         error |= clSetKernelArg(kernelObject->kernel, 3 , sizeof(cl_int) , (void*)&m);
         error |= clSetKernelArg(kernelObject->kernel, 4 , sizeof(cl_int) , (void*)&n);
         error |= clSetKernelArg(kernelObject->kernel, 5 , sizeof(cl_int) , (void*)&k);
+        error |= clSetKernelArg(kernelObject->kernel, 6 , sizeof(cl_ulong) , (void*)&global_padded_work_size);
 
         if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
         assert(error==0);
 
         cl_event exeEvt;
-        size_t localThreads[]  = {256};
-        size_t globalThreads[] = {b*localThreads[0]};
 
         error = clEnqueueNDRangeKernel(queue,
                                        kernelObject->kernel,
                                        1,
                                        NULL,
-                                       globalThreads,
-                                       localThreads,
+                                       global_padded_work_size,
+                                       local_block_size,
                                        0,
                                        NULL,
                                        &exeEvt);
@@ -1706,6 +1710,10 @@ TensorI* OclImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, i
     {//3.split_integer.cl.cc
         //split_3d_overdim2_integer(tmpIndices, output_indices,b,m,n,k);  //split BxMxN into BxMxK (integer)
 
+        size_t local_block_size[]  = {256};
+        size_t global_work_size[] = {b*m*k};
+        size_t global_padded_work_size[1];
+
         OclKernelObject *kernelObject = oclKernels[16];
         cl_int error;
 
@@ -1715,20 +1723,21 @@ TensorI* OclImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, i
         error |= clSetKernelArg(kernelObject->kernel, 3 , sizeof(cl_int) , (void*)&m);
         error |= clSetKernelArg(kernelObject->kernel, 4 , sizeof(cl_int) , (void*)&n);
         error |= clSetKernelArg(kernelObject->kernel, 5 , sizeof(cl_int) , (void*)&k);
+        error |= clSetKernelArg(kernelObject->kernel, 6 , sizeof(cl_ulong) , (void*)&global_work_size);
 
         if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
         assert(error==0);
 
         cl_event exeEvt;
-        size_t localThreads[]  = {256};
-        size_t globalThreads[] = {b*localThreads[0]};
+
+        GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
 
         error = clEnqueueNDRangeKernel(queue,
                                        kernelObject->kernel,
                                        1,
                                        NULL,
-                                       globalThreads,
-                                       localThreads,
+                                       global_padded_work_size,
+                                       local_block_size,
                                        0,
                                        NULL,
                                        &exeEvt);
