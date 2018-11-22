@@ -11,6 +11,10 @@ ModelArchTop05::ModelArchTop05(int dataset_offset, int batchsize, int pointcount
     B = (unsigned int)batchsize;
     N = (unsigned int)pointcount;
     K = (unsigned int)knn_k;
+#ifndef USE_OCL
+    cout<<"This ModelArch needs OpenCL enabled.\nTerminating..."<<endl;
+    exit(1);
+#endif
 }
 
 ModelInfo ModelArchTop05::GetModelInfo() {

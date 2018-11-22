@@ -11,6 +11,10 @@ ModelArchTop03::ModelArchTop03(int dataset_offset, int batchsize, int pointcount
     B = (unsigned int)batchsize;
     N = (unsigned int)pointcount;
     K = (unsigned int)knn_k;
+#ifndef USE_CUDA
+    cout<<"This ModelArch needs CUDA enabled.\nTerminating..."<<endl;
+    exit(1);
+#endif
 }
 
 ModelInfo ModelArchTop03::GetModelInfo() {

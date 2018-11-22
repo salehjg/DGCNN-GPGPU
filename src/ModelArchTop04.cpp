@@ -6,11 +6,15 @@
 
 
 ModelArchTop04::ModelArchTop04(int dataset_offset, int batchsize, int pointcount, int knn_k) {
-    platformSelector = new PlatformSelector(PLATFORMS::CPU,{PLATFORMS::CPU,PLATFORMS::GPU_CUDA,PLATFORMS::GPU_OCL});
+    platformSelector = new PlatformSelector(PLATFORMS::CPU,{PLATFORMS::CPU,PLATFORMS::GPU_CUDA});
     DB_OFFSET = dataset_offset;
     B = (unsigned int)batchsize;
     N = (unsigned int)pointcount;
     K = (unsigned int)knn_k;
+#ifndef USE_CUDA
+    cout<<"This ModelArch needs CUDA enabled.\nTerminating..."<<endl;
+    exit(1);
+#endif
 }
 
 ModelInfo ModelArchTop04::GetModelInfo() {

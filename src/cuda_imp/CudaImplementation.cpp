@@ -194,7 +194,11 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
     _dim2 = inputTn->getShape()[2];
 
     CudaTensorF* rsltTn ;
+
     if(inputTn->getRank()==3 &&  !over_axis0 && !over_axis1 && over_axis2)rsltTn= new CudaTensorF({_dim0,_dim1});
+    if(inputTn->getRank()==3 &&  !over_axis0 && over_axis1 && !over_axis2)rsltTn= new CudaTensorF({_dim0,_dim2});
+    if(inputTn->getRank()==3 &&  over_axis0 && !over_axis1 && !over_axis2)rsltTn= new CudaTensorF({_dim1,_dim2});
+
     if(inputTn->getRank()==2 &&  !over_axis0 && over_axis1 )rsltTn= new CudaTensorF({_dim0});
 
     //CHECK(cudaDeviceSynchronize());

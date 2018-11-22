@@ -94,14 +94,23 @@ if(USE_CUDA AND USE_OCL)
     target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OPENCL_LIBRARY})
 
     find_package(UnitTest++ REQUIRED)
-    cuda_add_executable(oclTestAll
-            ocl_imp/oclTestAll.cpp
+    cuda_add_executable(OclTestAll
+            ocl_imp/OclTestAll.cpp
             ${SOURCE_FILES_CPU}
             ${SOURCE_FILES_CUDA}
             ${SOURCE_FILES_OCL}
             ${KERNEL_SOURCES}
             )
-    target_link_libraries(oclTestAll cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OPENCL_LIBRARY} UnitTest++)
+    target_link_libraries(OclTestAll cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OPENCL_LIBRARY} UnitTest++)
+
+    cuda_add_executable(CudaTestAll
+            cuda_imp/CudaTestAll.cpp
+            ${SOURCE_FILES_CPU}
+            ${SOURCE_FILES_CUDA}
+            ${SOURCE_FILES_OCL}
+            ${KERNEL_SOURCES}
+            )
+    target_link_libraries(CudaTestAll cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} ${OPENCL_LIBRARY} UnitTest++)
 
 endif(USE_CUDA AND USE_OCL)
 
@@ -111,6 +120,15 @@ if(USE_CUDA AND NOT(USE_OCL))
             ${SOURCE_FILES_ALL}
             ${KERNEL_SOURCES})
     target_link_libraries(ClassifierMultiplatform cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} )
+
+    cuda_add_executable(CudaTestAll
+            cuda_imp/CudaTestAll.cpp
+            ${SOURCE_FILES_CPU}
+            ${SOURCE_FILES_CUDA}
+            ${SOURCE_FILES_OCL}
+            ${KERNEL_SOURCES}
+            )
+    target_link_libraries(CudaTestAll cnpy z pthread ${CUDA_LIBRARIES} ${KERNEL_OBJs} UnitTest++)
 endif()
 
 if(NOT(USE_CUDA) AND USE_OCL)
@@ -120,12 +138,12 @@ if(NOT(USE_CUDA) AND USE_OCL)
     target_link_libraries(ClassifierMultiplatform cnpy z pthread ${OPENCL_LIBRARY})
 
     find_package(UnitTest++ REQUIRED)
-    add_executable(oclTestAll
-            ocl_imp/oclTestAll.cpp
+    add_executable(OclTestAll
+            ocl_imp/OclTestAll.cpp
             ${SOURCE_FILES_CPU}
             ${SOURCE_FILES_OCL}
             )
-    target_link_libraries(oclTestAll cnpy z pthread ${OPENCL_LIBRARY} UnitTest++)
+    target_link_libraries(OclTestAll cnpy z pthread ${OPENCL_LIBRARY} UnitTest++)
 
 endif()
 

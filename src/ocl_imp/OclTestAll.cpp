@@ -2,7 +2,7 @@
 // Created by saleh on 8/28/18.
 //
 
-#include "../../inc/ocl_imp/oclTestAll.h"
+#include "ocl_imp/OclTestAll.h"
 #include "UnitTest++/UnitTest++.h"
 
 OclTestAll *oclTestAll;
