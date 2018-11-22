@@ -1,11 +1,14 @@
-subdirs(cpu_imp)
-
 option(USE_CUDA "CUDA Switch" ON)
 option(USE_OCL "OCL  Switch" ON)
 option(NVIDIA_INTEL "Backend Selection for OpenCL. ON:USE NVIDIA PLATFORM, OFF:USE INTEL PLATFORM" ON)
+# ----------------------------------------------------------------------------------------------------------------------
+
+# Manual Switch Control:
 set(USE_CUDA OFF)
 set(USE_OCL ON)
 set(NVIDIA_INTEL ON)
+# ----------------------------------------------------------------------------------------------------------------------
+
 set(REPO_DIR_CMAKE  ${PROJECT_SOURCE_DIR})
 set(BIN_DIR_CMAKE   ${CMAKE_BINARY_DIR})
 configure_file(../inc/build_config.h.in ${CMAKE_BINARY_DIR}/build_config.h)
