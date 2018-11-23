@@ -6,7 +6,7 @@
 #define DEEPPOINTV1_TENSORF_H
 
 #include <vector>
-
+#include <build_config.h>
 enum class PLATFORMS{
     DEFAULT,
     CPU,
@@ -31,7 +31,7 @@ public:
     PLATFORMS getPlatform();
     unsigned long getLength();
     unsigned long getLengthBytes();
-    ~TensorF();
+    virtual ~TensorF();
 
     float* _buff;
 

@@ -5,16 +5,39 @@
 #ifndef DEEPPOINTV1_WEIGHTSLOADER_H
 #define DEEPPOINTV1_WEIGHTSLOADER_H
 
+#include <build_config.h>
 #include "../inc/TensorF.h"
+
+#ifdef USE_CUDA
 #include "../inc/cuda_imp/CudaTensorF.h"
+#endif
+
+#ifdef USE_OCL
+#include "../inc/ocl_imp/OclTensorF.h"
+#endif
+
 #include "../../submodules/cnpy/cnpy.h"
 #include <vector>
 using namespace std;
 
+#ifndef USE_OCL
+    struct cl_context{
+
+    };
+    struct cl_command_queue{
+
+    };
+#endif
+
 class WeightsLoader {
 public:
     WeightsLoader(vector<PLATFORMS> neededPlatforms);
-    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList);
+#ifdef USE_OCL
+    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList, cl_context oclContex, cl_command_queue oclQueue) ;
+#else
+    void LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList) ;
+#endif
+
     TensorF* AccessWeights(PLATFORMS platform, string name);
 
 private:

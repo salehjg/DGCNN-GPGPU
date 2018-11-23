@@ -17,7 +17,7 @@ public:
     void Init(std::vector<unsigned int> shape, float* buff);
     void InitWithHostData(std::vector<unsigned int> shape,float* hostBuff);
     TensorF* TransferToHost();
-    ~CudaTensorF();
+    virtual ~CudaTensorF();
 
     float** ConvertDevice1D_to_Device2D(float* input_batched_1d, int batchsize, int perBatchLen);
     float** ConvertDevice1D_to_Device2D(float* input_batched_1d, std::vector<int> shape);

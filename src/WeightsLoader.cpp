@@ -5,6 +5,9 @@
 #include <fstream>
 #include <algorithm>
 #include "../inc/WeightsLoader.h"
+#ifdef USE_OCL
+#include <CL/cl.h>
+#endif
 
 WeightsLoader::WeightsLoader(vector<PLATFORMS> neededPlatforms) {
     for(std::vector<PLATFORMS>::iterator it = neededPlatforms.begin(); it != neededPlatforms.end(); ++it) {
@@ -13,19 +16,26 @@ WeightsLoader::WeightsLoader(vector<PLATFORMS> neededPlatforms) {
                 _isUsedCPU = true;
                 break;
             }
+#ifdef USE_CUDA
             case PLATFORMS::GPU_CUDA : {
                 _isUsedCUDA = true;
                 break;
             }
+#endif
+#ifdef USE_OCL
             case PLATFORMS::GPU_OCL : {
                 _isUsedOCL = true;
                 break;
             }
+#endif
         }
     }
 }
-
+#ifdef USE_OCL
+void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList, cl_context oclContex, cl_command_queue oclQueue) {
+#else
 void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameList) {
+#endif
     string line; int idx=-1;
 
     std::ifstream inFile(pathToTxtFnameList);
@@ -56,14 +66,21 @@ void WeightsLoader::LoadFromDisk(string weightsBaseDir, string pathToTxtFnameLis
             );
         }
 
+#ifdef USE_CUDA
         if(_isUsedCUDA){
             weightsCUDA[idx] = new CudaTensorF();
             ((CudaTensorF*)weightsCUDA[idx])->InitWithHostData(__shape, _cnpyBuff.back().data<float>());
         }
+#endif
 
+#ifdef USE_OCL
         if(_isUsedOCL){
-            throw "Not Implemented.";
+            if(__shape.size()==1 && __shape[0]==0) continue;
+            weightsOCL[idx] = new OclTensorF();
+            ((OclTensorF*)weightsOCL[idx])->InitWithHostData(oclContex,oclQueue,__shape,_cnpyBuff.back().data<float>());
+
         }
+#endif
     }
 
     txtfile.close();
@@ -126,12 +143,20 @@ TensorF* WeightsLoader::AccessWeights(PLATFORMS platform, string name) {
             return weightsCPU[strToIndexMap[name]];
             break;
         }
+#ifdef USE_CUDA
         case PLATFORMS::GPU_CUDA:{
             return weightsCUDA[strToIndexMap[name]];
             break;
         }
+#endif
+#ifdef USE_OCL
         case PLATFORMS::GPU_OCL:{
-            throw "Not Implemented.";
+            return weightsOCL[strToIndexMap[name]];
+            break;
+        }
+#endif
+        default:{
+            throw "Unknown Platform.";
             break;
         }
     }

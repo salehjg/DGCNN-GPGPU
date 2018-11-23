@@ -10,6 +10,12 @@
 #include "../inc/TensorI.h"
 #include "../inc/WeightsLoader.h"
 #include "../inc/PlatformImplementation.h"
+#include <build_config.h>
+#ifdef USE_OCL
+#include "../inc/ocl_imp/OclImplementation.h"
+#include <CL/cl.h>
+#endif
+#include <build_config.h>
 using namespace std;
 
 
@@ -48,8 +54,8 @@ public:
     TensorF* ReLU(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn);
     TensorF* Tile(PLATFORMS platform, WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount);
 
-    void     DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir="/home/saleh/00_repos/tensorflow_repo/00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/data/matrix_dumps/");
-    void     DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir="/home/saleh/00_repos/tensorflow_repo/00_Projects/deeppoint_repo/DeepPoint-V1-GPGPU/data/matrix_dumps/");
+    void     DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir=REPO_DIR"/data/matrix_dumps/");
+    void     DumpMatrix(PLATFORMS platform, WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir=REPO_DIR"/data/matrix_dumps/");
     bool     CompareTensors(PLATFORMS platform, WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2);
 
     WeightsLoader* weightsLoader;
@@ -57,8 +63,10 @@ public:
 private:
     PlatformImplementation *cpuPlatformClass;
     PlatformImplementation *cudaPlatformClass;
-    PlatformImplementation *openclPlatformClass;
-    PlatformImplementation *fpgaPlatformClass;
+#ifdef USE_OCL
+    OclImplementation *openclPlatformClass;
+#endif
+
 
 
 };

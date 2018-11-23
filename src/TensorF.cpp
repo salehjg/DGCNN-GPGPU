@@ -6,8 +6,9 @@
 #include "../inc/TensorF.h"
 #include <vector>
 #include <iostream>
+
+#ifdef USE_CUDA
 #include <cuda_runtime.h>
-#include <cublas_v2.h>
 
 #ifndef cudaCheckErrors
 #define cudaCheckErrors(msg) \
@@ -21,7 +22,7 @@
             } \
         } while (0)
 #endif
-
+#endif
 TensorF::TensorF() {
     initialized = false;
     platform = PLATFORMS::DEFAULT; //Till it's not initialized, keep it general
@@ -143,7 +144,9 @@ TensorF::~TensorF() {
             //std::cout<<"--- TensorF: destructed.\n";
             delete(_buff);
         }
-    }else if(platform == PLATFORMS::GPU_CUDA){
+    } /*else if(platform == PLATFORMS::GPU_CUDA){
+
+#ifdef USE_CUDA
         cudaError_t cuda_stat;
         if(initialized){
             //std::cout<<"--- CudaTensorF: buffer deleted.\n";
@@ -151,6 +154,9 @@ TensorF::~TensorF() {
             assert(cuda_stat==cudaSuccess);
         }
         cudaCheckErrors("~TensorF-CUDA@TensorF: ERR04");
-    }
+#endif
+    }else if (platform == PLATFORMS::GPU_OCL){
+
+    }*/
 
 }

@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "../inc/TensorF.h"
+#include <build_config.h>
 
 class TensorI {
 public:
@@ -25,7 +26,7 @@ public:
     PLATFORMS getPlatform();
     unsigned long getLength();
     unsigned long getLengthBytes();
-    ~TensorI();
+    virtual ~TensorI();
 
     int* _buff;
 

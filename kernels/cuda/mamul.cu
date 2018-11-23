@@ -180,7 +180,7 @@ void batch_matmul(
     if(dim2A != dim1B){printf("ERR@batched_matmul: BAD SHAPE.\n"); return;}
     if(dim0B != dim0A){printf("ERR@batched_matmul: BAD BATCH SIZES.\n"); return;}
 
-    const int BLOCK_DIM_X = 8;
+    const int BLOCK_DIM_X = 4;
     const int BLOCK_DIM_Y = 4;
 
     dim3 blocksize(BLOCK_DIM_X,BLOCK_DIM_Y,1);
@@ -194,8 +194,8 @@ void batch_matmul(
     //printf("\t GRID:(%d, %d, %d)\n",gridsize.x,gridsize.y,gridsize.z);
     //printf("\t SHARED: %d Bytes\n",sharedmemsize);
 
-    if(BLOCK_DIM_X==8 && BLOCK_DIM_Y==4){
-        kernel_batch_matmul<8,4> <<<gridsize, blocksize, sharedmemsize>>>(
+    if(BLOCK_DIM_X==4 && BLOCK_DIM_Y==4){
+        kernel_batch_matmul<4,4> <<<gridsize, blocksize, sharedmemsize>>>(
                 matA,
                         matB,
                         matC,

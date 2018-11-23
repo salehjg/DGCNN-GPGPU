@@ -282,7 +282,7 @@ __global__ void kernel_reduce_sum_3d_try03(
 
             for (unsigned int i = 0; i < dim1; i++)
             {
-                printf("idx: %03d \t\t tidx: %03d\n",idx,tidx);
+                //printf("idx: %03d \t\t tidx: %03d\n",idx,tidx);
                 tsum += g_idata[tidx];
                 tidx += dim0;
             }

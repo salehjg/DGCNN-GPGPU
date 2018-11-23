@@ -38,7 +38,7 @@ float float_rand( float min, float max )
 
 TensorF* getTestTensor(int mode){
     if(mode==0){
-        vector<unsigned int> shape = {100,16,32};
+        vector<unsigned int> shape = {10,50,20};
         TensorF *testTn = new TensorF(shape);
         unsigned long _len = testTn->getLength();
         for (unsigned long i = 0; i < _len; i++) {
@@ -47,7 +47,7 @@ TensorF* getTestTensor(int mode){
         return testTn;
     }
     if(mode==1){
-        vector<unsigned int> shape = {100,32,64};
+        vector<unsigned int> shape = {10,20,60};
         TensorF *testTn = new TensorF(shape);
         unsigned long _len = testTn->getLength();
         for (unsigned long i = 0; i < _len; i++) {

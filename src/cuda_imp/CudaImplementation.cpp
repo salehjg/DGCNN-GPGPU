@@ -194,7 +194,11 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
     _dim2 = inputTn->getShape()[2];
 
     CudaTensorF* rsltTn ;
+
     if(inputTn->getRank()==3 &&  !over_axis0 && !over_axis1 && over_axis2)rsltTn= new CudaTensorF({_dim0,_dim1});
+    if(inputTn->getRank()==3 &&  !over_axis0 && over_axis1 && !over_axis2)rsltTn= new CudaTensorF({_dim0,_dim2});
+    if(inputTn->getRank()==3 &&  over_axis0 && !over_axis1 && !over_axis2)rsltTn= new CudaTensorF({_dim1,_dim2});
+
     if(inputTn->getRank()==2 &&  !over_axis0 && over_axis1 )rsltTn= new CudaTensorF({_dim0});
 
     //CHECK(cudaDeviceSynchronize());
@@ -577,6 +581,7 @@ TensorF* CudaImplementation::ReduceMax(
         TensorF* inputTn,
         int reductionDim){
     PrintInfo("ReduceMax","reductionDim",reductionDim,"",0,"",0,inputTn->getShape(),{},{});
+    assert(inputTn->getRank()==3 || inputTn->getRank()==4);
 
     unsigned int _dim0,_dim1,_dim2,_dim3;
     _dim0 = inputTn->getShape()[0];
@@ -618,8 +623,6 @@ TensorF* CudaImplementation::ReduceMax(
 
     cudaCheckErrors("ReduceMax@CudaImplementation: KERNEL_ERROR");
     return rsltTn;
-
-
 }
 
 TensorI* CudaImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, int axis, int k){
@@ -703,13 +706,12 @@ TensorF* CudaImplementation::ReLU(WorkScheduler scheduler, TensorF* inputTn){
 
 TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount) {
     //Makes new tensor with same rank as inputTn's with tileAxis, tileCount times multiplied
-    //tileAxis is in respect to the input tensor's axes.
+    //tileAxis is with respect to the input tensor's axes.
     //----------------------------------------------------------------------------------------
     // inputTn       rsltTn         tileAxis        inputTn's Rank
     // BxNx1xD ----> BxNxKxD        2               4
     // BxNx1   ----> BxNxK          2               3
     // Bx1xN   ----> BxKxN          1               3
-    // 1xD     ----> KxD            0               2
 
     PrintInfo("Tile","tileAxis",tileAxis,"tileCount",tileCount,"",0,inputTn->getShape(),{},{});
 
