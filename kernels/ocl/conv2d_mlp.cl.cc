@@ -96,18 +96,18 @@ kernel void kernel_conv2d_mlp_try02(
     tid = get_local_id(0);
     for(int iCh = 0; iCh<chOut; iCh++){
         smem[tid] = inputVal * gWeight_i[iCh*dim3+d3] ;
-        __syncthreads();
+        barrier(CLK_LOCAL_MEM_FENCE);
         //--------------------------------------------------------------
         // 3. Parallel reduction to get 1 element of output tensor
         // in-place reduction in shared memory
         if (get_local_size(0) >= 1024 && tid < 512) smem[tid] += smem[tid + 512];
-        __syncthreads();
+        barrier(CLK_LOCAL_MEM_FENCE);
         if (get_local_size(0) >= 512 && tid < 256) smem[tid] += smem[tid + 256];
-        __syncthreads();
+        barrier(CLK_LOCAL_MEM_FENCE);
         if (get_local_size(0) >= 256 && tid < 128) smem[tid] += smem[tid + 128];
-        __syncthreads();
+        barrier(CLK_LOCAL_MEM_FENCE);
         if (get_local_size(0) >= 128 && tid < 64)  smem[tid] += smem[tid + 64];
-        __syncthreads();
+        barrier(CLK_LOCAL_MEM_FENCE);
 
         // unrolling warp
         if (tid < 32) {
