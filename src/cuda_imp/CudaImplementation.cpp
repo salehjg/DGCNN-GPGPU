@@ -680,7 +680,7 @@ TensorF* CudaImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, T
                 weights->getShape()[3]});
     TensorF* rsltTn ;
 
-    conv2d_mlp_try01(
+    conv2d_mlp_try02(
             inputTn->_buff,
             weights->_buff,
             buffTn->_buff,

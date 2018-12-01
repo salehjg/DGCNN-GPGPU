@@ -21,7 +21,7 @@
 using namespace std;
 
 extern
-void conv2d_mlp_try01(
+void conv2d_mlp_try02(
         const float* __restrict__ gInput_i,
         const float* __restrict__ gWeight_i,
         float* gOutput_o,
@@ -175,7 +175,7 @@ void Test_try01()
     iStart = seconds();
 
     ///TODO: ADD KERNEL LAUNCH HERE
-    conv2d_mlp_try01(
+    conv2d_mlp_try02(
             inputTn_GPU->_buff,
             weightTn_GPU->_buff,
             tmpBuff_GPU->_buff,

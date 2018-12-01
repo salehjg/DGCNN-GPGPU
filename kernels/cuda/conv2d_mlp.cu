@@ -7,6 +7,14 @@
 #include <cuda_runtime_api.h>
 #include "common.h"
 
+extern
+void transpose(
+        const float* g_i,
+        float* g_o,
+        unsigned int dim0,
+        unsigned int dim1,
+        unsigned int dim2);
+
 __global__ void kernel_conv2d_mlp_try01(
         const float*  __restrict__ gInput_i,
         const float*  __restrict__ gWeight_i,
@@ -37,6 +45,165 @@ __global__ void kernel_conv2d_mlp_try01(
     }
 }
 
+
+
+__global__ void kernel_conv2d_mlp_try02(
+        const float*  __restrict__ gInput_i,
+        const float*  __restrict__ gWeight_i,
+        float*  __restrict__ gOutput_o,
+        const unsigned int dim0,
+        const unsigned int dim1,
+        const unsigned int dim2,
+        const unsigned int dim3,
+        const unsigned int chOut){
+    __shared__ float smem[1024];
+    /*********************************************************
+     * 1. blockDim.x should be equal to 1024
+     * 2. D should be less or equal to 1024.
+     * 3. reduction algorithm will always reduce entire smem.
+     *    so it should be padded with zeros
+     * 4. each thread block grabs a single slice of last dim 'D'
+     * 5.
+     *********************************************************/
+
+    // Dimension Example:
+    //      input shape  = 5 x 1024 x 20 x 6
+    //      weight shape = 1 x 1 x 6 x 64
+    //      chOut = 64
+
+    unsigned long tid = blockIdx.x * dim3 + threadIdx.x;
+
+    //----------------------------------------------------------------
+    // 1. Zero Padding smem:
+    //int sidx=0;
+    //while(sidx<1024){
+    //    smem[sidx]=0;
+    //    sidx+=blockDim.x;
+    //}
+
+    //----------------------------------------------------------------
+    // 2.
+    unsigned int d3 = tid % dim3;
+    unsigned int d2 = (tid % (dim2*dim3)) / (dim3);
+    unsigned int d1 = (tid % (dim1*dim2*dim3)) / (dim2*dim3);
+    unsigned int d0 = tid / (dim1*dim2*dim3);
+    unsigned long idx1;
+    float inputVal;
+
+    if(d0 < dim0 && (threadIdx.x<dim3) ){
+        inputVal = gInput_i[tid];
+    }else{
+        inputVal = 0;
+    }
+
+
+    for(int iCh = 0; iCh<chOut; iCh++){
+        smem[threadIdx.x] = inputVal * gWeight_i[iCh*dim3+d3] ;
+        __syncthreads();
+
+        //--------------------------------------------------------------
+        // 3. Parallel reduction to get 1 element of output tensor
+        for(int stride = blockDim.x >> 1; stride > 0; stride = stride >> 1){
+            __syncthreads();
+            if(threadIdx.x < stride){
+                smem[threadIdx.x] += smem[threadIdx.x + stride];
+            }
+        }
+        __syncthreads();
+
+        //--------------------------------------------------------------
+        // 4. Assigning element to output tensor
+        if(d0 < dim0 && (threadIdx.x<dim3) && threadIdx.x==0) {
+            idx1 = d0*dim1*dim2*chOut+ d1*dim2*chOut+ d2*chOut+ iCh ;
+            gOutput_o[idx1] = smem[0];
+        }
+    }
+}
+__global__ void kernel_conv2d_mlp_try03(
+        const float*  __restrict__ gInput_i,
+        const float*  __restrict__ gWeight_i,
+        float*  __restrict__ gOutput_o,
+        const unsigned int dim0,
+        const unsigned int dim1,
+        const unsigned int dim2,
+        const unsigned int dim3,
+        const unsigned int chOut){
+    __shared__ float smem[1024];
+    /*********************************************************
+     * 1. blockDim.x should be equal to 1024
+     * 2. D should be less or equal to 1024.
+     * 3. reduction algorithm will always reduce entire smem.
+     *    so it should be padded with zeros
+     * 4. each thread block grabs a single slice of last dim 'D'
+     * 5.
+     *********************************************************/
+
+    // Dimension Example:
+    //      input shape  = 5 x 1024 x 20 x 6
+    //      weight shape = 1 x 1 x 6 x 64
+    //      chOut = 64
+
+    unsigned long tid = blockIdx.x * dim3 + threadIdx.x;
+
+    //----------------------------------------------------------------
+    // 1. Zero Padding smem:
+    //int sidx=0;
+    //while(sidx<1024){
+    //    smem[sidx]=0;
+    //    sidx+=blockDim.x;
+    //}
+
+    //----------------------------------------------------------------
+    // 2.
+    unsigned int d3 = tid % dim3;
+    unsigned int d2 = (tid % (dim2*dim3)) / (dim3);
+    unsigned int d1 = (tid % (dim1*dim2*dim3)) / (dim2*dim3);
+    unsigned int d0 = tid / (dim1*dim2*dim3);
+    unsigned long idx1;
+    float inputVal;
+
+    if(d0 < dim0 && (threadIdx.x<dim3) ){
+        inputVal = gInput_i[tid];
+    }else{
+        inputVal = 0;
+    }
+
+    tid = threadIdx.x;
+    for(int iCh = 0; iCh<chOut; iCh++){
+        smem[tid] = inputVal * gWeight_i[iCh*dim3+d3] ;
+        __syncthreads();
+        //--------------------------------------------------------------
+        // 3. Parallel reduction to get 1 element of output tensor
+        // in-place reduction in shared memory
+        if (blockDim.x >= 1024 && tid < 512) smem[tid] += smem[tid + 512];
+        __syncthreads();
+        if (blockDim.x >= 512 && tid < 256) smem[tid] += smem[tid + 256];
+        __syncthreads();
+        if (blockDim.x >= 256 && tid < 128) smem[tid] += smem[tid + 128];
+        __syncthreads();
+        if (blockDim.x >= 128 && tid < 64)  smem[tid] += smem[tid + 64];
+        __syncthreads();
+
+        // unrolling warp
+        if (tid < 32) {
+            volatile float *vsmem = smem;
+            vsmem[tid] += vsmem[tid + 32];
+            vsmem[tid] += vsmem[tid + 16];
+            vsmem[tid] += vsmem[tid +  8];
+            vsmem[tid] += vsmem[tid +  4];
+            vsmem[tid] += vsmem[tid +  2];
+            vsmem[tid] += vsmem[tid +  1];
+        }
+        //--------------------------------------------------------------
+        // 4. Assigning element to output tensor
+        if(d0 < dim0 && (threadIdx.x<dim3) && threadIdx.x==0) {
+            idx1 = d0*dim1*dim2*chOut+ d1*dim2*chOut+ d2*chOut+ iCh ;
+            gOutput_o[idx1] = smem[0];
+        }
+    }
+}
+
+
 void conv2d_mlp_try01(
         const float* gInput_i,
         const float* gWeight_i,
@@ -64,6 +231,30 @@ void conv2d_mlp_try01(
 }
 
 
+
+void conv2d_mlp_try02(
+        const float* gInput_i,
+        const float* gWeight_i,
+        float* gOutput_o,
+        unsigned int B,
+        unsigned int N,
+        unsigned int K,
+        unsigned int D,
+        unsigned int chOut){
+    assert(D<=1024); // this kernel cannot accept dim3>1024
+    ///TODO: CHECK GRID SIZE DEVICE LIMITATION
+    unsigned long blockSize = 1024; // = D;
+    unsigned long gridSize = B*N*K;
+
+    // weight shape = 6x64  .  D x chOut
+    float* gWeightTransposed;
+    CHECK(cudaMalloc((float**)&gWeightTransposed, (D*chOut)*sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
+    transpose(gWeight_i,gWeightTransposed,1,D,chOut);
+
+    kernel_conv2d_mlp_try03 <<<gridSize, blockSize>>>(
+            gInput_i, gWeightTransposed, gOutput_o, B, N, K, D, chOut);
+    CHECK(cudaFree(gWeightTransposed));
+}
 
 
 

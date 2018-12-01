@@ -134,6 +134,17 @@ void conv2d_mlp_try01(
         unsigned int chOut);
 
 extern
+void conv2d_mlp_try02(
+        const float* __restrict__ gInput_i,
+        const float* __restrict__ gWeight_i,
+        float* gOutput_o,
+        unsigned int B,
+        unsigned int N,
+        unsigned int K,
+        unsigned int D,
+        unsigned int chOut);
+
+extern
 void transpose(
         const float* g_i,
         float* g_o,

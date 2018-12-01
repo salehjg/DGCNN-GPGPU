@@ -3,7 +3,7 @@
 //
 #include <stdio.h>
 #include <cuda_runtime_api.h>
-#include "../../../../../../../../../opt/cuda/include/vector_types.h"
+#include <vector_types.h>
 
 #define BLOCK_SIZE 256
 
