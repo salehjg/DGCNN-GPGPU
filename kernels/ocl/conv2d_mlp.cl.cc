@@ -44,7 +44,7 @@ kernel void kernel_conv2d_mlp_try01(
     }
 }
 
-kernel void kernel_conv2d_mlp_try02(
+kernel void kernel_conv2d_mlp_try03(
         global const float*  __restrict__ gInput_i,
         global const float*  __restrict__ gWeight_i,
         global float*  __restrict__ gOutput_o,
@@ -127,30 +127,3 @@ kernel void kernel_conv2d_mlp_try02(
         }
     }
 }
-
-/*
-void conv2d_mlp_try01(
-        const float* gInput_i,
-        const float* gWeight_i,
-        float* gOutput_o,
-        unsigned int B,
-        unsigned int N,
-        unsigned int K,
-        unsigned int D,
-        unsigned int chOut){
-    assert(D<=1024); // this kernel cannot accept dim3>1024
-    ///TODO: CHECK GRID SIZE DEVICE LIMITATION
-    unsigned long blockSize = D;
-    unsigned long gridSize = B*N*K;
-
-    //printf("BlockSize: \t%lu\n",blockSize);
-    //printf("GridSize: \t%lu\n",gridSize);
-    //printf("B: %u\n",B);
-    //printf("N: %u\n",N);
-    //printf("K: %u\n",K);
-    //printf("D: %u\n",D);
-    //printf("C: %u\n",chOut);
-
-    kernel_conv2d_mlp_try01 <<<gridSize, blockSize>>>(
-            gInput_i, gWeight_i, gOutput_o, B, N, K, D, chOut);
-}*/

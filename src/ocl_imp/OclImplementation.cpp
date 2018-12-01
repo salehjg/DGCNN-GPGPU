@@ -34,7 +34,7 @@ OclImplementation::OclImplementation(int aa) {
         /*10*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_sum_4d.cl.cc",                 "kernel_reduce_sum_4d_try04"       ),
         /*11*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_mean.cl.cc",                   "kernel_divide_by_const_try01"     ),
         /*12*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_variance.cl.cc",               "kernel_multiply_const_sub_try01"  ),
-        /*13*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/conv2d_mlp.cl.cc",                    "kernel_conv2d_mlp_try02"          ),
+        /*13*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/conv2d_mlp.cl.cc",                    "kernel_conv2d_mlp_try03"          ),
         /*14*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/gather.cl.cc",                        "kernel_group_point_gpu"           ),
         /*15*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/split_float.cl.cc",                   "kernel_split_3d_overdim2_float"   ),
         /*16*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/split_integer.cl.cc",                 "kernel_split_3d_overdim2_integer" ),
@@ -1819,18 +1819,13 @@ TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, Te
                                          inputTn->getShape()[2],
                                          weights->getShape()[3]});
 
-    /*
-    OclTensorF* wightTransposedTn = new OclTensorF(context,
-                                        {1,
-                                         inputTn->getShape()[3],
-                                         weights->getShape()[3]});*/
-
     weights->SqueezeDimZero();
     OclTensorF* wightTransposedTn = (OclTensorF*) Transpose(scheduler,weights);
-    //OclTensorF* wightTransposedTn = (OclTensorF*)weights;
+    //OclTensorF* wightTransposedTn = (OclTensorF*)weights; //For kernel_try01
     weights->ExpandDimZero();
 
-    // Fill the buffer with the initial value
+    // Fill the buffer with the initial value(Only needed for kernel_try01)
+    /*
     cl_float initlValue = 0;
     err = clEnqueueFillBuffer(
             queue,
@@ -1848,7 +1843,7 @@ TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, Te
         exit(1);
     }
     clFinish(queue);
-
+    */
 
 
 
@@ -1858,30 +1853,12 @@ TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, Te
     unsigned int N      = inputTn->getShape()[1];
     unsigned int K      = inputTn->getShape()[2];
     unsigned int D      = inputTn->getShape()[3];
-    unsigned int chOut  = wightTransposedTn->getShape()[3];
+    unsigned int chOut  = weights->getShape()[3];
 
     assert(D<=OCL_BOTTLENCK_BLOCKSIZE); // this kernel cannot accept dim3>OCL_BOTTLENCK_BLOCKSIZE
 
     OclKernelObject *kernelObject = oclKernels[13];
     cl_int error;
-
-    /*
-    error =  clSetKernelArg(kernelObject->kernel, 0 , sizeof(cl_mem) , (void*)&((OclTensorF*)inputTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject->kernel, 1 , sizeof(cl_mem) , (void*)&((OclTensorF*)weights)->ocl_buff);
-    error |= clSetKernelArg(kernelObject->kernel, 2 , sizeof(cl_mem) , (void*)&((OclTensorF*)buffTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject->kernel, 3 , sizeof(cl_uint) , (void*)&B);
-    error |= clSetKernelArg(kernelObject->kernel, 4 , sizeof(cl_uint) , (void*)&N);
-    error |= clSetKernelArg(kernelObject->kernel, 5 , sizeof(cl_uint) , (void*)&K);
-    error |= clSetKernelArg(kernelObject->kernel, 6 , sizeof(cl_uint) , (void*)&D);
-    error |= clSetKernelArg(kernelObject->kernel, 7 , sizeof(cl_uint) , (void*)&chOut);
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    assert(error==0);
-
-    cl_event exeEvt;
-    size_t localThreads[]  = {D};
-    size_t globalThreads[] = {B*N*K*D};
-    */
 
     error =  clSetKernelArg(kernelObject->kernel, 0 , sizeof(cl_mem) , (void*)&((OclTensorF*)inputTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject->kernel, 1 , sizeof(cl_mem) , (void*)&((OclTensorF*)wightTransposedTn)->ocl_buff);
@@ -1909,6 +1886,7 @@ TensorF* OclImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, Te
                                    0,
                                    NULL,
                                    &exeEvt);
+
     if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
     clWaitForEvents(1, &exeEvt);
 
