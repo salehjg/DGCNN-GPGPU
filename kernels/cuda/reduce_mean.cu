@@ -61,6 +61,18 @@ extern __global__ void kernel_reduce_sum_4d_try04(
         const unsigned long SPT,
         const unsigned long TGO);
 
+extern void reduce_sum_4d_try05(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3);
+
 
 // Multiplies constant coef. into whole array element wise.
 __global__ void kernel_divide_by_const_try01(
@@ -169,6 +181,55 @@ void reduce_mean_4d_try02(
         kernel_divide_by_const_try01 << < grid, block, 0/*, local_stream */>> > (
                 g_tempbuff, g_odata, len, coef
                 );
+        CHECK(cudaFree(g_tempbuff));
+    }
+
+}
+
+
+void reduce_mean_4d_try03(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3){
+
+    //cudaStream_t local_stream;
+    //cudaStreamCreate(&local_stream);
+
+    float* g_tempbuff;
+
+    if( !(overaxis0 && overaxis1 && overaxis2 && !overaxis3) ) {
+        printf("ERROR @reduce_sum_4d_try01 --NOT IMPLEMENTED\n"); return;
+    }
+
+    // 1. reduce_sum
+    {
+        CHECK(cudaMalloc((float **) &g_tempbuff, (dim3) * sizeof(float)));
+        reduce_sum_4d_try05(g_idata,g_tempbuff,dim0,dim1,dim2,dim3,overaxis0,overaxis1,overaxis2,overaxis3);
+    }
+
+    //CHECK(cudaDeviceSynchronize());
+
+    // 2. Multiplying (1/n) to each element of resulted tensor from step 1.
+    {
+        unsigned long len = dim3; //Axes combination is TTTF
+        unsigned long block,grid;
+
+        float coef = (dim0*dim1*dim2);
+        //printf("WRAPPER: COEF: %f\n",coef);
+
+
+        block = BLOCK_SIZE;
+        grid = (len + block -1 )/(block);
+        kernel_divide_by_const_try01 << < grid, block, 0/*, local_stream */>> > (
+                g_tempbuff, g_odata, len, coef
+        );
         CHECK(cudaFree(g_tempbuff));
     }
 

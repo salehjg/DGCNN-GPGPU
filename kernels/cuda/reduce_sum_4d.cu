@@ -531,14 +531,14 @@ void reduce_sum_4d_try05(
 
     TPG = (unsigned long)dim3; //threads per group
 
-    printf("-------------------------------------------------------\n");
-    printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
-    printf("KERNEL_GRID  : %ld\n", grid);
-    printf("KERNEL_BLOCK : %ld\n", block);
-    printf("KERNEL_SPT :   %ld\n", SPT);
-    printf("KERNEL_TGO :   %ld\n", TGO);
-    printf("KERNEL_TGC :   %ld\n", TGC);
-    printf("KERNEL_TGPB :  %ld\n", TGPB);
+    //printf("-------------------------------------------------------\n");
+    //printf("KERNEL_SHAPE  : %ldx%ldx%ldx%ld\n", dim0,dim1,dim2,dim3);
+    //printf("KERNEL_GRID  : %ld\n", grid);
+    //printf("KERNEL_BLOCK : %ld\n", block);
+    //printf("KERNEL_SPT :   %ld\n", SPT);
+    //printf("KERNEL_TGO :   %ld\n", TGO);
+    //printf("KERNEL_TGC :   %ld\n", TGC);
+    //printf("KERNEL_TGPB :  %ld\n", TGPB);
 
     CHECK(cudaMemset(g_odata,0,(dim3)*sizeof(float)));
 
@@ -552,8 +552,8 @@ void reduce_sum_4d_try05(
     long iLast = __Find_Kernel_Launches_Needed(dim0*dim1*dim2,SPT,TGPB) ;
     int grid_old=0;
     for(long i=0;i<=(iLast);i++){
-        printf("i=%d of %d\n",i,iLast);
-        printf("launching kernel_reduce_sum_4d_try05...\n");
+        //printf("i=%d of %d\n",i,iLast);
+        //printf("launching kernel_reduce_sum_4d_try05...\n");
         kernel_reduce_sum_4d_try05 <<<grid, block, TGPB*TPG*sizeof(float)>>> (
                 (i==0)? g_idata : (i%2)?g_buffer1:g_buffer2,
                 //(i==0 && iLast!=0)? g_buffer1 : (i==iLast)? g_odata : g_buffer2,
@@ -571,11 +571,11 @@ void reduce_sum_4d_try05(
         TGC = (unsigned long)((TGC+(SPT-1))/SPT);
         grid_old = grid;
         grid = ( TGC+(TGPB-1) ) / TGPB;
-        printf("========================\n");
-        printf("KERNEL_TGC_NEXT   :   %ld\n", TGC);
-        printf("KERNEL_GRID_NEXT  :   %ld\n", grid);
-
-
+        //printf("========================\n");
+        //printf("KERNEL_TGC_NEXT   :   %ld\n", TGC);
+        //printf("KERNEL_GRID_NEXT  :   %ld\n", grid);
     }
 
+    CHECK(cudaFree(g_buffer1));
+    CHECK(cudaFree(g_buffer2));
 }

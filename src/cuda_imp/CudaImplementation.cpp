@@ -293,7 +293,7 @@ TensorF* CudaImplementation::Mean(
     }
     CudaTensorF* rsltTn = new CudaTensorF({(unsigned int)_dim3});
     //CHECK(cudaDeviceSynchronize());
-    reduce_mean_4d_try02(
+    reduce_mean_4d_try03(
             inputTn->_buff,
             rsltTn->_buff,
             _dim0,
