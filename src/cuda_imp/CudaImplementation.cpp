@@ -237,7 +237,7 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
     CudaTensorF* rsltTn = new CudaTensorF({_dim3}); // TTTF
 
     //CHECK(cudaDeviceSynchronize());
-    reduce_sum_4d_try04(
+    reduce_sum_4d_try05(
             inputTn->_buff,
             rsltTn->_buff,
             _dim0,

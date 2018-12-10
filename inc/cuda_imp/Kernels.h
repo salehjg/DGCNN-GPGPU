@@ -199,4 +199,17 @@ void sqrt_float(
         float *g_odata,
         unsigned long len);
 
+extern
+void reduce_sum_4d_try05(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3);
+
 #endif //DEEPPOINTV1_KERNELS_H

@@ -38,6 +38,19 @@ void reduce_sum_4d_try04(
         bool overaxis2,
         bool overaxis3);
 
+extern
+void reduce_sum_4d_try05(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3);
+
 template<typename T> int DumpMatrix(
         string npy_fname,
         int rank,
@@ -140,16 +153,12 @@ int main(int argc, char **argv)
      *      60,1024,1 ,1024---------> 1.1873 ms
      *
      */
-    /*
-    const unsigned int  dim0 = 60 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 17x1024x1024x2 , STH IS WRONG WHIT THAT KERNEL!
-                        dim1 = 1024 ,
-                        dim2 = 1,
-                        dim3 = 1024;
-                        */
-    const unsigned int  dim0 = 1 , //_LIMIT FOR OVER DIM0 IS SOMEHOW 17x1024x1024x2 , STH IS WRONG WHIT THAT KERNEL!
-            dim1 = 1 ,
-            dim2 = 5,
-            dim3 = 256;
+
+    const unsigned int
+            dim0 = 60 ,
+            dim1 = 1024 ,
+            dim2 = 1,
+            dim3 = 1024;
 
     unsigned int size = dim0 * dim1 * dim2 * dim3;
     printf("\nwith array size %d  \n", size);
@@ -196,23 +205,10 @@ int main(int argc, char **argv)
     //reduce_sum_4d_try02(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
     //reduce_sum_4d_try03(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
 
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
-    reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    //reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+
+    reduce_sum_4d_try05(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+
 
 
 
