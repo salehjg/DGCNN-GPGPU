@@ -281,62 +281,9 @@ void reduce_variance_4d_try02(
 
     // 1. reduce_sum (MEDIAN )
     {
-        unsigned long block = BLOCK_SIZE;
-        unsigned long SPT, TGC, TGO, TGPB, grid, TPG;
-
-        //Dim3 slice per thread
-        SPT = 512; //cte
-
-        //thread group offset
-        TGO = dim3 * SPT;
-
-        //thread group count
-        TGC = (unsigned long) ((dim0 * dim1 * dim2 + (SPT - 1)) / SPT);
-
-        //thread group per block
-        TGPB = (unsigned long) ((BLOCK_SIZE) / dim3);
-        if (TGPB % 2 && TGPB > 1) TGPB--;
-
-        //grid size
-        grid = (TGC + (TGPB - 1)) / TGPB;
-
-        TPG = (unsigned long) dim3; //threads per group
-
-        //printf("-------------------------------------------------------\n");
-        //printf("KERNEL_GRID  : %ld\n", grid);
-        //printf("KERNEL_BLOCK : %ld\n", block);
-        //printf("KERNEL_SPT :   %ld\n", SPT);
-        //printf("KERNEL_TGO :   %ld\n", TGO);
-        //printf("KERNEL_TGC :   %ld\n", TGC);
-        //printf("KERNEL_TGPB :  %ld\n", TGPB);
-
         CHECK(cudaMalloc((float **) &g_tempbuff, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
         CHECK(cudaMalloc((float **) &g_median, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
         CHECK(cudaMalloc((float **) &g_variance_xi2, (dim3) * sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
-
-        CHECK(cudaMemset(g_tempbuff, 0, (dim3) * sizeof(float)));
-        //kernel_reduce_sum_4d_try04 << < grid, block, TGPB * TPG * sizeof(float) >> > (
-        //        g_idata, nullptr, g_tempbuff,1,
-        //                dim0, dim1, dim2, dim3,
-        //                overaxis0, overaxis1, overaxis2, overaxis3,
-        //                TGC,
-        //                TGPB,
-        //                SPT,
-        //                TGO
-        //);
-
-        //CHECK(cudaMemset(g_variance_xi2, 0, (dim3) * sizeof(float)));
-        //kernel_reduce_sum_4d_try04 << < grid, block, TGPB * TPG * sizeof(float) >> > (
-        //        g_idata, nullptr, g_variance_xi2,2,
-        //                dim0, dim1, dim2, dim3,
-        //                overaxis0, overaxis1, overaxis2, overaxis3,
-        //                TGC,
-        //                TGPB,
-        //                SPT,
-        //                TGO
-        //);
-        //reduce_sum_4d_try05(g_idata,g_variance_xi2,dim0,dim1,dim2,dim3,overaxis0,overaxis1,overaxis2,overaxis3,2);
-
 
         reduce_sum_4d_try05(g_idata,g_tempbuff,dim0,dim1,dim2,dim3,overaxis0,overaxis1,overaxis2,overaxis3,1);
         reduce_sum_4d_try05(g_idata,g_variance_xi2,dim0,dim1,dim2,dim3,overaxis0,overaxis1,overaxis2,overaxis3,2);
