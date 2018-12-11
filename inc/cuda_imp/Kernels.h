@@ -199,8 +199,21 @@ void sqrt_float(
         float *g_odata,
         unsigned long len);
 
+extern void reduce_sum_4d_try05(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3,
+        int pow_y);
+
 extern
-void reduce_sum_4d_try05(
+void reduce_mean_4d_try03(
         float* g_idata,
         float* g_odata,
         unsigned long dim0,
@@ -213,7 +226,7 @@ void reduce_sum_4d_try05(
         bool overaxis3);
 
 extern
-void reduce_mean_4d_try03(
+void reduce_variance_4d_try02(
         float* g_idata,
         float* g_odata,
         unsigned long dim0,

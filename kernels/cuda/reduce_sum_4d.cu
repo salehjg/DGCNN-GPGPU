@@ -504,7 +504,8 @@ void reduce_sum_4d_try05(
         bool overaxis0,
         bool overaxis1,
         bool overaxis2,
-        bool overaxis3)
+        bool overaxis3,
+        int pow_y)
 {
     if( !(overaxis0 && overaxis1 && overaxis2 && !overaxis3) ) {
         printf("ERROR @reduce_sum_4d_try01 --NOT IMPLEMENTED\n"); return;
@@ -558,8 +559,8 @@ void reduce_sum_4d_try05(
                 (i==0)? g_idata : (i%2)?g_buffer1:g_buffer2,
                 //(i==0 && iLast!=0)? g_buffer1 : (i==iLast)? g_odata : g_buffer2,
                 (i==iLast)?g_odata: (i%2)?g_buffer2:g_buffer1,
-                1,
-                (i==0) ? dim0*dim1*dim2 :grid_old*TGPB,
+                (i==0)?pow_y:1,
+                (i==0) ? dim0*dim1*dim2 :grid_old,
                 dim3,
                 overaxis0, overaxis1, overaxis2, overaxis3,
                 TGC,

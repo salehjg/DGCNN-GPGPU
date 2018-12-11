@@ -49,7 +49,8 @@ void reduce_sum_4d_try05(
         bool overaxis0,
         bool overaxis1,
         bool overaxis2,
-        bool overaxis3);
+        bool overaxis3,
+        int pow_y);
 
 template<typename T> int DumpMatrix(
         string npy_fname,
@@ -152,13 +153,28 @@ int main(int argc, char **argv)
      *      60,1024,20,128 ---------> 2.9376 ms
      *      60,1024,1 ,1024---------> 1.1873 ms
      *
+     * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result:1
+     * Variance: , Shape1=5x1024x20x128x,   , Combination=1-1-1-0-, Test Result:1
+     * Variance: , Shape1=5x256x,           , Combination=1-0-0-0-, Test Result:1
+     * Variance: , Shape1=5x512x,           , Combination=1-0-0-0-, Test Result:1
+     * Variance: , Shape1=5x1024x1x1024x,   , Combination=1-1-1-0-, Test Result:1
+     * Variance: , Shape1=5x1024x20x128x,   , Combination=1-1-1-0-, Test Result:1
+     * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result:1
+     * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result:1
+     * Variance: , Shape1=5x256x,           , Combination=1-0-0-0-, Test Result:1
+     * Variance: , Shape1=5x512x,           , Combination=1-0-0-0-, Test Result:1
+     * Variance: , Shape1=5x1024x1x1024x,   , Combination=1-1-1-0-, Test Result:1
+     * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result:1
+     *
+     *
+     *
      */
 
     const unsigned int
-            dim0 = 60 ,
+            dim0 = 5 ,
             dim1 = 1024 ,
-            dim2 = 1,
-            dim3 = 1024;
+            dim2 = 20,
+            dim3 = 64;
 
     unsigned int size = dim0 * dim1 * dim2 * dim3;
     printf("\nwith array size %d  \n", size);
@@ -207,7 +223,7 @@ int main(int argc, char **argv)
 
     //reduce_sum_4d_try04(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
 
-    reduce_sum_4d_try05(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false);
+    reduce_sum_4d_try05(d_f_idata, d_f_odata_overdim012, dim0, dim1, dim2, dim3, true,true,true,false,1);
 
 
 

@@ -25,7 +25,18 @@ void reduce_variance_4d_try01(
         bool overaxis2,
         bool overaxis3);
 
-
+extern
+void reduce_variance_4d_try02(
+        float* g_idata,
+        float* g_odata,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3);
 
 
 
@@ -374,6 +385,11 @@ float* LA_Variance(
     return nullptr;
 }
 
+float float_rand( float min, float max )
+{
+    float scale = rand() / (float) RAND_MAX; /* [0, 1.0] */
+    return min + scale * ( max - min );      /* [min, max] */
+}
 
 int Test_4d_FFTF() //FFTF
 {
@@ -384,11 +400,25 @@ int Test_4d_FFTF() //FFTF
     printf("\ndevice %d: %s ", dev, deviceProp.name);
     CHECK(cudaSetDevice(dev));
 
-
-    const unsigned int  dim0 = 60 ,
+/**
+ *
+ *   * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result: 1
+     * Variance: , Shape1=5x1024x20x128x,   , Combination=1-1-1-0-, Test Result: 1
+     * Variance: , Shape1=5x256x,           , Combination=1-0-0-0-, Test Result: 1
+     * Variance: , Shape1=5x512x,           , Combination=1-0-0-0-, Test Result: 1
+     * Variance: , Shape1=5x1024x1x1024x,   , Combination=1-1-1-0-, Test Result: 1
+     * Variance: , Shape1=5x1024x20x128x,   , Combination=1-1-1-0-, Test Result: 1
+     * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result: 1
+     * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result: 1
+     * Variance: , Shape1=5x256x,           , Combination=1-0-0-0-, Test Result: 1
+     * Variance: , Shape1=5x512x,           , Combination=1-0-0-0-, Test Result: 1
+     * Variance: , Shape1=5x1024x1x1024x,   , Combination=1-1-1-0-, Test Result: 1
+     * Variance: , Shape1=5x1024x20x64x,    , Combination=1-1-1-0-, Test Result: 1
+ */
+    const unsigned int  dim0 = 5 ,
                         dim1 = 1024 ,
                         dim2 = 20,
-                        dim3 = 128;
+                        dim3 = 512;
 
     unsigned int size = dim0 * dim1 * dim2 * dim3;
     printf("\nwith array size %d  \n", size);
@@ -407,7 +437,7 @@ int Test_4d_FFTF() //FFTF
                 for(int d2=0;d2<dim2;d2++){
                     for(int d3=0;d3<dim3;d3++){
                         indx = d0*dim1*dim2*dim3 + d1*dim2*dim3 + d2*dim3 + d3;
-                        h_f_idata[indx] = (float)(1.5f);
+                        h_f_idata[indx] = (float)(1.5f) + float_rand(-5.5f,5.5f);
                     }
                 }
             }

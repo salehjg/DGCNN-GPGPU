@@ -247,7 +247,8 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
             over_axis0,
             over_axis1,
             over_axis2,
-            over_axis3);
+            over_axis3,
+            1);
     //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("ReduceSum4D@CudaImplementation: KERNEL_ERROR");
@@ -346,7 +347,7 @@ TensorF* CudaImplementation::Variance(
     }
     CudaTensorF* rsltTn = new CudaTensorF({(unsigned int)_dim3});
     //CHECK(cudaDeviceSynchronize());
-    reduce_variance_4d_try01(
+    reduce_variance_4d_try02(
             inputTn->_buff,
             rsltTn->_buff,
             _dim0,

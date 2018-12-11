@@ -71,7 +71,8 @@ extern void reduce_sum_4d_try05(
         bool overaxis0,
         bool overaxis1,
         bool overaxis2,
-        bool overaxis3);
+        bool overaxis3,
+        int pow_y);
 
 
 // Multiplies constant coef. into whole array element wise.
@@ -211,7 +212,7 @@ void reduce_mean_4d_try03(
     // 1. reduce_sum
     {
         CHECK(cudaMalloc((float **) &g_tempbuff, (dim3) * sizeof(float)));
-        reduce_sum_4d_try05(g_idata,g_tempbuff,dim0,dim1,dim2,dim3,overaxis0,overaxis1,overaxis2,overaxis3);
+        reduce_sum_4d_try05(g_idata,g_tempbuff,dim0,dim1,dim2,dim3,overaxis0,overaxis1,overaxis2,overaxis3,1);
     }
 
     //CHECK(cudaDeviceSynchronize());
