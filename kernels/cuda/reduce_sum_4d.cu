@@ -541,14 +541,14 @@ void reduce_sum_4d_try05(
     //printf("KERNEL_TGC :   %ld\n", TGC);
     //printf("KERNEL_TGPB :  %ld\n", TGPB);
 
-    CHECK(cudaMemset(g_odata,0,(dim3)*sizeof(float)));
+    //CHECK(cudaMemset(g_odata,0,(dim3)*sizeof(float)));
 
 
     float* g_buffer1,*g_buffer2;
     CHECK(cudaMalloc((float**)&g_buffer1, (grid*dim3)*sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
-    CHECK(cudaMemset(g_buffer1,0,(grid*dim3)*sizeof(float)));
+    //CHECK(cudaMemset(g_buffer1,0,(grid*dim3)*sizeof(float)));
     CHECK(cudaMalloc((float**)&g_buffer2, (grid*dim3)*sizeof(float))); // ThreadGroupCount * ThreadsPerGroup
-    CHECK(cudaMemset(g_buffer2,0,(grid*dim3)*sizeof(float)));
+    //CHECK(cudaMemset(g_buffer2,0,(grid*dim3)*sizeof(float)));
 
     long iLast = __Find_Kernel_Launches_Needed(dim0*dim1*dim2,SPT,TGPB) ;
     int grid_old=0;
@@ -568,7 +568,7 @@ void reduce_sum_4d_try05(
                 SPT,
                 TGO
         );
-        cudaDeviceSynchronize();
+        //cudaDeviceSynchronize();
         TGC = (unsigned long)((TGC+(SPT-1))/SPT);
         grid_old = grid;
         grid = ( TGC+(TGPB-1) ) / TGPB;

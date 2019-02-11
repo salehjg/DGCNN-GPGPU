@@ -38,7 +38,8 @@ OclImplementation::OclImplementation(int aa) {
         /*14*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/gather.cl.cc",                        "kernel_group_point_gpu"           ),
         /*15*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/split_float.cl.cc",                   "kernel_split_3d_overdim2_float"   ),
         /*16*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/split_integer.cl.cc",                 "kernel_split_3d_overdim2_integer" ),
-        /*17*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/topk.cl.cc",                          "kernel_selection_sort_gpu" ),
+        /*17*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/topk.cl.cc",                          "kernel_selection_sort_gpu"        ),
+        /*18*/ new OclKernelObject(KERNEL_DIR , "/kernels/ocl/reduce_sum_4d_try05.cl.cc",           "kernel_reduce_sum_4d_try05"       ),
     };
 
     for(OclKernelObject *kernel : oclKernels){
@@ -501,6 +502,295 @@ TensorF* OclImplementation::ReduceSum(WorkScheduler scheduler,
     return rsltTn;
 }
 
+int OclImplementation::_reduce_sum_4d_try05_Find_Kernel_Launches_Needed(int sliceCount, int SPT, int TGPB){
+    int i=0, sliceLeft=sliceCount,p=sliceCount,q=SPT*TGPB;
+    int LIMIT=50;
+    for(i=0;i<LIMIT;i++){
+        if(i==0){
+            sliceLeft = ( p + (q-1) ) / q;
+        }else{
+            sliceLeft = ( sliceLeft + (q-1) ) / q;
+        }
+        if(sliceLeft==1){
+            return i;
+        }
+    }
+    return -1;
+}
+
+void OclImplementation::_reduce_sum_4d_try05(
+        TensorF* inputTn,
+        TensorF* outputTn,
+        unsigned long dim0,
+        unsigned long dim1,
+        unsigned long dim2,
+        unsigned long dim3,
+        bool overaxis0,
+        bool overaxis1,
+        bool overaxis2,
+        bool overaxis3,
+        int pow_y){
+    //assert(over_axis0&&over_axis1&&over_axis2&&!over_axis3); // TTTF ONLY
+
+    //OclTensorF* rsltTn = new OclTensorF(context, {_dim3}); // TTTF
+    OclKernelObject *kernelObject = oclKernels[18];
+
+    unsigned long SPT,TGC,TGO,TGPB,TPG;
+    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
+
+    //Dim3 slice per thread
+    SPT = 2048; //cte
+
+    //thread group offset
+    TGO = dim3 * SPT;
+
+    //thread group count
+    TGC = (unsigned long)((dim0*dim1*dim2+(SPT-1))/SPT);
+
+    //thread group per block
+    TGPB = (unsigned long)((BLOCK_SIZE)/ dim3);
+    if(TGPB%2 && TGPB > 1) TGPB--;
+
+    TPG = (unsigned long)dim3; //threads per group
+
+    unsigned long grid = ( TGC+(TGPB-1) ) / TGPB;
+    size_t global_work_size[] = {grid*(BLOCK_SIZE)};
+    size_t global_padded_work_size[1];
+    size_t local_block_size[] = {BLOCK_SIZE};
+    unsigned long shared_mem_size = (TGPB*TPG)*sizeof(cl_float);
+    GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
+
+
+    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+
+
+    OclTensorF* g_buffer1, *g_buffer2;
+    g_buffer1 = new OclTensorF(context, {grid * dim3});
+    g_buffer2 = new OclTensorF(context, {grid * dim3});
+
+    cl_int error;
+    cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
+    _overAxis0 = overaxis0;
+    _overAxis1 = overaxis1;
+    _overAxis2 = overaxis2;
+    _overAxis3 = overaxis3;
+
+    long iLast = _reduce_sum_4d_try05_Find_Kernel_Launches_Needed(dim0*dim1*dim2,SPT,TGPB) ;
+    int grid_old=0,_pow_y=pow_y;
+    cl_event exeEvt;
+    long _limit = dim0*dim1*dim2;
+
+    for(long i=0;i<=(iLast);i++){
+        //printf("i=%d of %d\n",i,iLast);
+        //printf("launching kernel_reduce_sum_4d_try05...\n");
+        if(i>0){
+            _pow_y=1;
+            _limit=grid_old;
+        }
+        error  = clSetKernelArg(kernelObject->kernel, 0, sizeof(cl_mem), (void *) &((i==0)    ? (OclTensorF *)inputTn : (i%2)?g_buffer1:g_buffer2)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 1, sizeof(cl_mem), (void *) &((i==iLast)? (OclTensorF *)outputTn: (i%2)?g_buffer2:g_buffer1)->ocl_buff);
+        error |= clSetKernelArg(kernelObject->kernel, 2, shared_mem_size, NULL);
+        error |= clSetKernelArg(kernelObject->kernel, 3, sizeof(cl_int), (void *) &_pow_y);
+
+        error |= clSetKernelArg(kernelObject->kernel, 4, sizeof(cl_ulong), (void *) &_limit);
+        error |= clSetKernelArg(kernelObject->kernel, 5, sizeof(cl_ulong), (void *) &(dim3));
+
+        error |= clSetKernelArg(kernelObject->kernel, 6, sizeof(cl_int), (void *) &_overAxis0);
+        error |= clSetKernelArg(kernelObject->kernel, 7, sizeof(cl_int), (void *) &_overAxis1);
+        error |= clSetKernelArg(kernelObject->kernel, 8, sizeof(cl_int), (void *) &_overAxis2);
+        error |= clSetKernelArg(kernelObject->kernel, 9, sizeof(cl_int), (void *) &_overAxis3);
+
+        error |= clSetKernelArg(kernelObject->kernel, 10, sizeof(cl_ulong), (void *) &TGC);
+        error |= clSetKernelArg(kernelObject->kernel, 11, sizeof(cl_ulong), (void *) &TGPB);
+        error |= clSetKernelArg(kernelObject->kernel, 12, sizeof(cl_ulong), (void *) &SPT);
+        error |= clSetKernelArg(kernelObject->kernel, 13, sizeof(cl_ulong), (void *) &TGO);
+
+
+        if (error != CL_SUCCESS) cout << getErrorString(error) << endl;
+        assert(error == 0);
+
+        error = clEnqueueNDRangeKernel(queue,
+                                       kernelObject->kernel,
+                                       1,
+                                       NULL,
+                                       global_padded_work_size,
+                                       local_block_size,
+                                       0,
+                                       NULL,
+                                       &exeEvt);
+
+        if (error != CL_SUCCESS) cout << getErrorString(error) << endl;
+
+        TGC = (unsigned long)((TGC+(SPT-1))/SPT);
+        grid_old = grid;
+        grid = ( TGC+(TGPB-1) ) / TGPB;
+        global_work_size[0] = grid*(BLOCK_SIZE);
+        GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
+        //printf("========================\n");
+        //printf("KERNEL_TGC_NEXT   :   %ld\n", TGC);
+        //printf("KERNEL_GRID_NEXT  :   %ld\n", grid);
+    }
+
+
+    clWaitForEvents(1, &exeEvt);
+
+    if(error != CL_SUCCESS) {
+        printf("Kernel execution failure!\n");
+        exit(-22);
+    }
+    delete(g_buffer1);
+    delete(g_buffer2);
+
+}
+
+///[axis0,axis1,axis2,axis3] //No batch op, uses data as is
+//TensorF* OclImplementation::ReduceSum4D(WorkScheduler scheduler,
+//                                        TensorF* inputTn,
+//                                        bool over_axis0,
+//                                        bool over_axis1,
+//                                        bool over_axis2,
+//                                        bool over_axis3){
+//
+//    PrintInfo("ReduceSum4D","",0,"",0,"",0,inputTn->getShape(),{},{over_axis0,over_axis1,over_axis2,over_axis3});
+//    assert(over_axis0&&over_axis1&&over_axis2&&!over_axis3); // TTTF ONLY
+//
+//    unsigned int _dim0,_dim1,_dim2,_dim3;
+//    _dim0 = inputTn->getShape()[0];
+//    _dim1 = inputTn->getShape()[1];
+//    _dim2 = inputTn->getShape()[2];
+//    _dim3 = inputTn->getShape()[3];
+//
+//    OclTensorF* rsltTn = new OclTensorF(context, {_dim3}); // TTTF
+//    OclKernelObject *kernelObject = oclKernels[10];
+//
+//    /*
+//    reduce_sum_4d_try04(
+//            inputTn->_buff,
+//            rsltTn->_buff,
+//            _dim0,
+//            _dim1,
+//            _dim2,
+//            _dim3,
+//            over_axis0,
+//            over_axis1,
+//            over_axis2,
+//            over_axis3); */
+//
+//    unsigned long SPT,TGC,TGO,TGPB,TPG;
+//    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
+//
+//    //Dim3 slice per thread
+//    SPT = 2048; //cte
+//
+//    //thread group offset
+//    TGO = _dim3 * SPT;
+//
+//    //thread group count
+//    TGC = (unsigned long)((_dim0*_dim1*_dim2+(SPT-1))/SPT);
+//
+//    //thread group per block
+//    TGPB = (unsigned long)((BLOCK_SIZE)/ _dim3);
+//    if(TGPB%2 && TGPB > 1) TGPB--;
+//
+//    TPG = (unsigned long)_dim3; //threads per group
+//
+//    // Fill the buffer with the initial value
+//    cl_float initlValue = 0;
+//    err = clEnqueueFillBuffer(
+//            queue,
+//            rsltTn->ocl_buff,
+//            &initlValue,
+//            sizeof(cl_float),
+//            0,
+//            (size_t)(rsltTn->getLength()*sizeof(cl_float)),
+//            0,
+//            NULL,
+//            NULL);
+//
+//    if(err != CL_SUCCESS) {
+//        perror("Couldn't fill a buffer object");
+//        exit(1);
+//    }
+//    clFinish(queue);
+//
+//    /*kernel_reduce_sum_4d_try04 <<<grid, block, TGPB*TPG*sizeof(float)>>> (
+//            g_idata, g_buffer, g_odata, 1,
+//                    dim0, dim1, dim2, dim3,
+//                    overaxis0, overaxis1, overaxis2, overaxis3,
+//                    TGC,
+//                    TGPB,
+//                    SPT,
+//                    TGO
+//    );*/
+//
+//    size_t global_work_size[] = {(( TGC+(TGPB-1) ) / TGPB)*(BLOCK_SIZE)};
+//    size_t global_padded_work_size[1];
+//    size_t local_block_size[] = {BLOCK_SIZE};
+//    unsigned long shared_mem_size = (TGPB*TPG)*sizeof(cl_float);
+//    GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
+//
+//
+//    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+//    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+//    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+//
+//    cl_int error;
+//    cl_int pow_y = 1;
+//    cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
+//    _overAxis0 = over_axis0;
+//    _overAxis1 = over_axis1;
+//    _overAxis2 = over_axis2;
+//    _overAxis3 = over_axis3;
+//    error =  clSetKernelArg(kernelObject->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)rsltTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject->kernel, 2, shared_mem_size, NULL);
+//    error |= clSetKernelArg(kernelObject->kernel, 3, sizeof(cl_int), (void*)&pow_y);
+//
+//    error |= clSetKernelArg(kernelObject->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
+//    error |= clSetKernelArg(kernelObject->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
+//    error |= clSetKernelArg(kernelObject->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
+//    error |= clSetKernelArg(kernelObject->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
+//
+//    error |= clSetKernelArg(kernelObject->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
+//    error |= clSetKernelArg(kernelObject->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
+//    error |= clSetKernelArg(kernelObject->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
+//    error |= clSetKernelArg(kernelObject->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
+//
+//    error |= clSetKernelArg(kernelObject->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
+//    error |= clSetKernelArg(kernelObject->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
+//    error |= clSetKernelArg(kernelObject->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
+//    error |= clSetKernelArg(kernelObject->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
+//    error |= clSetKernelArg(kernelObject->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
+//
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    assert(error==0);
+//
+//    cl_event exeEvt;
+//
+//    error = clEnqueueNDRangeKernel(queue,
+//                                   kernelObject->kernel,
+//                                   1,
+//                                   NULL,
+//                                   global_padded_work_size,
+//                                   local_block_size,
+//                                   0,
+//                                   NULL,
+//                                   &exeEvt);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    clWaitForEvents(1, &exeEvt);
+//
+//    if(error != CL_SUCCESS) {
+//        printf("Kernel execution failure!\n");
+//        exit(-22);
+//    }
+//
+//    return rsltTn;
+//}
+
 ///[axis0,axis1,axis2,axis3] //No batch op, uses data as is
 TensorF* OclImplementation::ReduceSum4D(WorkScheduler scheduler,
                                         TensorF* inputTn,
@@ -519,133 +809,191 @@ TensorF* OclImplementation::ReduceSum4D(WorkScheduler scheduler,
     _dim3 = inputTn->getShape()[3];
 
     OclTensorF* rsltTn = new OclTensorF(context, {_dim3}); // TTTF
-    OclKernelObject *kernelObject = oclKernels[10];
-
-    /*
-    reduce_sum_4d_try04(
-            inputTn->_buff,
-            rsltTn->_buff,
-            _dim0,
-            _dim1,
-            _dim2,
-            _dim3,
-            over_axis0,
-            over_axis1,
-            over_axis2,
-            over_axis3); */
-
-    unsigned long SPT,TGC,TGO,TGPB,TPG;
-    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
-
-    //Dim3 slice per thread
-    SPT = 2048; //cte
-
-    //thread group offset
-    TGO = _dim3 * SPT;
-
-    //thread group count
-    TGC = (unsigned long)((_dim0*_dim1*_dim2+(SPT-1))/SPT);
-
-    //thread group per block
-    TGPB = (unsigned long)((BLOCK_SIZE)/ _dim3);
-    if(TGPB%2 && TGPB > 1) TGPB--;
-
-    TPG = (unsigned long)_dim3; //threads per group
-
-    // Fill the buffer with the initial value
-    cl_float initlValue = 0;
-    err = clEnqueueFillBuffer(
-            queue,
-            rsltTn->ocl_buff,
-            &initlValue,
-            sizeof(cl_float),
-            0,
-            (size_t)(rsltTn->getLength()*sizeof(cl_float)),
-            0,
-            NULL,
-            NULL);
-
-    if(err != CL_SUCCESS) {
-        perror("Couldn't fill a buffer object");
-        exit(1);
-    }
-    clFinish(queue);
-
-    /*kernel_reduce_sum_4d_try04 <<<grid, block, TGPB*TPG*sizeof(float)>>> (
-            g_idata, g_buffer, g_odata, 1,
-                    dim0, dim1, dim2, dim3,
-                    overaxis0, overaxis1, overaxis2, overaxis3,
-                    TGC,
-                    TGPB,
-                    SPT,
-                    TGO
-    );*/
-
-    size_t global_work_size[] = {(( TGC+(TGPB-1) ) / TGPB)*(BLOCK_SIZE)};
-    size_t global_padded_work_size[1];
-    size_t local_block_size[] = {BLOCK_SIZE};
-    unsigned long shared_mem_size = (TGPB*TPG)*sizeof(cl_float);
-    GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
-
-
-    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
-    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
-    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
-
-    cl_int error;
-    cl_int pow_y = 1;
-    cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
-    _overAxis0 = over_axis0;
-    _overAxis1 = over_axis1;
-    _overAxis2 = over_axis2;
-    _overAxis3 = over_axis3;
-    error =  clSetKernelArg(kernelObject->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)rsltTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject->kernel, 2, shared_mem_size, NULL);
-    error |= clSetKernelArg(kernelObject->kernel, 3, sizeof(cl_int), (void*)&pow_y);
-
-    error |= clSetKernelArg(kernelObject->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
-    error |= clSetKernelArg(kernelObject->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
-    error |= clSetKernelArg(kernelObject->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
-    error |= clSetKernelArg(kernelObject->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
-
-    error |= clSetKernelArg(kernelObject->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
-    error |= clSetKernelArg(kernelObject->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
-    error |= clSetKernelArg(kernelObject->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
-    error |= clSetKernelArg(kernelObject->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
-
-    error |= clSetKernelArg(kernelObject->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
-    error |= clSetKernelArg(kernelObject->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
-    error |= clSetKernelArg(kernelObject->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
-    error |= clSetKernelArg(kernelObject->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
-    error |= clSetKernelArg(kernelObject->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
-
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    assert(error==0);
-
-    cl_event exeEvt;
-
-    error = clEnqueueNDRangeKernel(queue,
-                                   kernelObject->kernel,
-                                   1,
-                                   NULL,
-                                   global_padded_work_size,
-                                   local_block_size,
-                                   0,
-                                   NULL,
-                                   &exeEvt);
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    clWaitForEvents(1, &exeEvt);
-
-    if(error != CL_SUCCESS) {
-        printf("Kernel execution failure!\n");
-        exit(-22);
-    }
-
+    _reduce_sum_4d_try05(inputTn,rsltTn,_dim0,_dim1,_dim2,_dim3,over_axis0,over_axis1,over_axis2,over_axis3,1);
     return rsltTn;
 }
+
+//TensorF* OclImplementation::Mean(
+//        WorkScheduler scheduler,
+//        TensorF* inputTn,
+//        bool mean_axis0,
+//        bool mean_axis1,
+//        bool mean_axis2,
+//        bool mean_axis3){
+//
+//    PrintInfo("Mean","",0,"",0,"",0,inputTn->getShape(),{},{mean_axis0,mean_axis1,mean_axis2,mean_axis3});
+//    unsigned int _dim0,_dim1,_dim2,_dim3;
+//    bool _mean_axis0, _mean_axis1, _mean_axis2, _mean_axis3;
+//    assert(inputTn->getRank()==2 || inputTn->getRank()==4);
+//    assert(
+//            (mean_axis0 && mean_axis1 && mean_axis2 && !mean_axis3 && inputTn->getRank()==4) ||
+//            (mean_axis0 && !mean_axis1 && !mean_axis2 && !mean_axis3 && inputTn->getRank()==2)
+//    );
+//    if(inputTn->getRank()==4){
+//        _dim0 = inputTn->getShape()[0];
+//        _dim1 = inputTn->getShape()[1];
+//        _dim2 = inputTn->getShape()[2];
+//        _dim3 = inputTn->getShape()[3];
+//        _mean_axis0 = mean_axis0;
+//        _mean_axis1 = mean_axis1;
+//        _mean_axis2 = mean_axis2;
+//        _mean_axis3 = mean_axis3;
+//    }else if (inputTn->getRank()==2){
+//        _dim0 = 1;
+//        _dim1 = 1;
+//        _dim2 = inputTn->getShape()[0];
+//        _dim3 = inputTn->getShape()[1];
+//        _mean_axis0 = true;
+//        _mean_axis1 = true;
+//        _mean_axis2 = true;
+//        _mean_axis3 = false;
+//    }
+//
+//    OclTensorF* tmpTn = new OclTensorF(context, {_dim3}); // TTTF
+//    OclTensorF* rsltTn = new OclTensorF(context, {_dim3}); // TTTF
+//    OclKernelObject *kernelObject_reduction = oclKernels[10];
+//    OclKernelObject *kernelObject_coef = oclKernels[11];
+//
+//    unsigned long SPT,TGC,TGO,TGPB,TPG;
+//    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
+//
+//    //Dim3 slice per thread
+//    SPT = 2048; //cte
+//
+//    //thread group offset
+//    TGO = _dim3 * SPT;
+//
+//    //thread group count
+//    TGC = (unsigned long)((_dim0*_dim1*_dim2+(SPT-1))/SPT);
+//
+//    //thread group per block
+//    TGPB = (unsigned long)((BLOCK_SIZE)/ _dim3);
+//    if(TGPB%2 && TGPB > 1) TGPB--;
+//
+//    TPG = (unsigned long)_dim3; //threads per group
+//
+//    // Fill the buffer with the initial value
+//    cl_float initlValue = 0;
+//    err = clEnqueueFillBuffer(
+//            queue,
+//            tmpTn->ocl_buff,
+//            &initlValue,
+//            sizeof(cl_float),
+//            0,
+//            (size_t)(tmpTn->getLength()*sizeof(cl_float)),
+//            0,
+//            NULL,
+//            NULL);
+//
+//    if(err != CL_SUCCESS) {
+//        perror("Couldn't fill a buffer object");
+//        exit(1);
+//    }
+//    clFinish(queue);
+//
+//    size_t global_work_size[] = {(( TGC+(TGPB-1) ) / TGPB)*(BLOCK_SIZE)};
+//    size_t global_padded_work_size[1];
+//    size_t local_block_size[] = {BLOCK_SIZE};
+//    unsigned long shared_mem_size = (TGPB*TPG)*sizeof(cl_float);
+//    GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
+//
+//
+//    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+//    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+//    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+//
+//    cl_int error;
+//    cl_int pow_y = 1;
+//    cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
+//    _overAxis0 = _mean_axis0;
+//    _overAxis1 = _mean_axis1;
+//    _overAxis2 = _mean_axis2;
+//    _overAxis3 = _mean_axis3;
+//    error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 3, sizeof(cl_int), (void*)&pow_y);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
+//
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    assert(error==0);
+//
+//    cl_event exeEvt;
+//
+//    error = clEnqueueNDRangeKernel(queue,
+//                                   kernelObject_reduction->kernel,
+//                                   1,
+//                                   NULL,
+//                                   global_padded_work_size,
+//                                   local_block_size,
+//                                   0,
+//                                   NULL,
+//                                   &exeEvt);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    clWaitForEvents(1, &exeEvt);
+//
+//    if(error != CL_SUCCESS) {
+//        printf("Kernel execution failure!\n");
+//        exit(-22);
+//    }
+//
+//
+//
+//
+//
+//    // Launching coef kernel
+//
+//    unsigned long len = _dim3; //Axes combination is TTTF
+//    float coef = (_dim0*_dim1*_dim2);
+//    global_work_size[0] = len;
+//
+//    error =  clSetKernelArg(kernelObject_coef->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_coef->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)rsltTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_coef->kernel, 2, sizeof(cl_ulong), (void*)&len);
+//    error |= clSetKernelArg(kernelObject_coef->kernel, 3, sizeof(cl_float), (void*)&coef);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    assert(error==0);
+//
+//    cl_event exeEvt2;
+//    error = clEnqueueNDRangeKernel(queue,
+//                                   kernelObject_coef->kernel,
+//                                   1,
+//                                   NULL,
+//                                   global_work_size,
+//                                   NULL,
+//                                   0,
+//                                   NULL,
+//                                   &exeEvt2);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    clWaitForEvents(1, &exeEvt2);
+//
+//    if(error != CL_SUCCESS) {
+//        printf("Kernel execution failure!\n");
+//        exit(-22);
+//    }
+//
+//    delete(tmpTn);
+//    return rsltTn;
+//}
 
 TensorF* OclImplementation::Mean(
         WorkScheduler scheduler,
@@ -685,118 +1033,19 @@ TensorF* OclImplementation::Mean(
 
     OclTensorF* tmpTn = new OclTensorF(context, {_dim3}); // TTTF
     OclTensorF* rsltTn = new OclTensorF(context, {_dim3}); // TTTF
-    OclKernelObject *kernelObject_reduction = oclKernels[10];
+
     OclKernelObject *kernelObject_coef = oclKernels[11];
 
-    unsigned long SPT,TGC,TGO,TGPB,TPG;
-    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
-
-    //Dim3 slice per thread
-    SPT = 2048; //cte
-
-    //thread group offset
-    TGO = _dim3 * SPT;
-
-    //thread group count
-    TGC = (unsigned long)((_dim0*_dim1*_dim2+(SPT-1))/SPT);
-
-    //thread group per block
-    TGPB = (unsigned long)((BLOCK_SIZE)/ _dim3);
-    if(TGPB%2 && TGPB > 1) TGPB--;
-
-    TPG = (unsigned long)_dim3; //threads per group
-
-    // Fill the buffer with the initial value
-    cl_float initlValue = 0;
-    err = clEnqueueFillBuffer(
-            queue,
-            tmpTn->ocl_buff,
-            &initlValue,
-            sizeof(cl_float),
-            0,
-            (size_t)(tmpTn->getLength()*sizeof(cl_float)),
-            0,
-            NULL,
-            NULL);
-
-    if(err != CL_SUCCESS) {
-        perror("Couldn't fill a buffer object");
-        exit(1);
-    }
-    clFinish(queue);
-
-    size_t global_work_size[] = {(( TGC+(TGPB-1) ) / TGPB)*(BLOCK_SIZE)};
-    size_t global_padded_work_size[1];
-    size_t local_block_size[] = {BLOCK_SIZE};
-    unsigned long shared_mem_size = (TGPB*TPG)*sizeof(cl_float);
-    GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
-
-
-    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
-    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
-    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
-
-    cl_int error;
-    cl_int pow_y = 1;
-    cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
-    _overAxis0 = _mean_axis0;
-    _overAxis1 = _mean_axis1;
-    _overAxis2 = _mean_axis2;
-    _overAxis3 = _mean_axis3;
-    error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 3, sizeof(cl_int), (void*)&pow_y);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
-
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    assert(error==0);
-
-    cl_event exeEvt;
-
-    error = clEnqueueNDRangeKernel(queue,
-                                   kernelObject_reduction->kernel,
-                                   1,
-                                   NULL,
-                                   global_padded_work_size,
-                                   local_block_size,
-                                   0,
-                                   NULL,
-                                   &exeEvt);
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    clWaitForEvents(1, &exeEvt);
-
-    if(error != CL_SUCCESS) {
-        printf("Kernel execution failure!\n");
-        exit(-22);
-    }
-
-
-
+    _reduce_sum_4d_try05(inputTn,tmpTn,_dim0,_dim1,_dim2,_dim3,_mean_axis0,_mean_axis1,_mean_axis2,_mean_axis3,1);
 
 
     // Launching coef kernel
 
+
+    cl_int error;
     unsigned long len = _dim3; //Axes combination is TTTF
     float coef = (_dim0*_dim1*_dim2);
-    global_work_size[0] = len;
+    size_t global_work_size[] = {len};
 
     error =  clSetKernelArg(kernelObject_coef->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_coef->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)rsltTn)->ocl_buff);
@@ -828,6 +1077,285 @@ TensorF* OclImplementation::Mean(
     delete(tmpTn);
     return rsltTn;
 }
+
+//TensorF* OclImplementation::Variance(
+//        WorkScheduler scheduler,
+//        TensorF* inputTn,
+//        bool variance_axis0,
+//        bool variance_axis1,
+//        bool variance_axis2,
+//        bool variance_axis3){
+//    PrintInfo("Variance","",0,"",0,"",0,inputTn->getShape(),{},{variance_axis0,variance_axis1,variance_axis2,variance_axis3});
+//    unsigned int _dim0,_dim1,_dim2,_dim3;
+//    bool _variance_axis0, _variance_axis1, _variance_axis2, _variance_axis3;
+//    assert(inputTn->getRank()==2 || inputTn->getRank()==4);
+//    assert(
+//            (variance_axis0 && variance_axis1 && variance_axis2 && !variance_axis3 && inputTn->getRank()==4) ||
+//            (variance_axis0 && !variance_axis1 && !variance_axis2 && !variance_axis3 && inputTn->getRank()==2)
+//    );
+//    if(inputTn->getRank()==4){
+//        _dim0 = inputTn->getShape()[0];
+//        _dim1 = inputTn->getShape()[1];
+//        _dim2 = inputTn->getShape()[2];
+//        _dim3 = inputTn->getShape()[3];
+//        _variance_axis0 = variance_axis0;
+//        _variance_axis1 = variance_axis1;
+//        _variance_axis2 = variance_axis2;
+//        _variance_axis3 = variance_axis3;
+//    }else if (inputTn->getRank()==2){
+//        _dim0 = 1;
+//        _dim1 = 1;
+//        _dim2 = inputTn->getShape()[0];
+//        _dim3 = inputTn->getShape()[1];
+//        _variance_axis0 = true;
+//        _variance_axis1 = true;
+//        _variance_axis2 = true;
+//        _variance_axis3 = false;
+//    }
+//
+//
+//    OclTensorF* tmpTn           = new OclTensorF(context, {_dim3}); // TTTF
+//    OclTensorF* medianTn        = new OclTensorF(context, {_dim3}); // TTTF
+//    OclTensorF* varianceXi2Tn   = new OclTensorF(context, {_dim3}); // TTTF
+//    OclTensorF* rsltTn          = new OclTensorF(context, {_dim3}); // TTTF
+//    OclKernelObject *kernelObject_reduction = oclKernels[10];
+//    OclKernelObject *kernelObject_coef = oclKernels[11];
+//    OclKernelObject *kernelObject_coef2 = oclKernels[12];
+//
+//    unsigned long SPT,TGC,TGO,TGPB,TPG;
+//    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
+//
+//    //Dim3 slice per thread
+//    SPT = 512; //cte
+//
+//    //thread group offset
+//    TGO = _dim3 * SPT;
+//
+//    //thread group count
+//    TGC = (unsigned long)((_dim0*_dim1*_dim2+(SPT-1))/SPT);
+//
+//    //thread group per block
+//    TGPB = (unsigned long)((BLOCK_SIZE)/ _dim3);
+//    if(TGPB%2 && TGPB > 1) TGPB--;
+//
+//    TPG = (unsigned long)_dim3; //threads per group
+//
+//    // Fill the buffer with the initial value
+//    cl_float initlValue = 0;
+//    err = clEnqueueFillBuffer(
+//            queue,
+//            tmpTn->ocl_buff,
+//            &initlValue,
+//            sizeof(cl_float),
+//            0,
+//            (size_t)(tmpTn->getLength()*sizeof(cl_float)),
+//            0,
+//            NULL,
+//            NULL);
+//
+//
+//
+//
+//    ///TODO: FILL OTHER TENSORS TOO
+//
+//
+//
+//
+//    if(err != CL_SUCCESS) {
+//        perror("Couldn't fill a buffer object");
+//        exit(1);
+//    }
+//    clFinish(queue);
+//
+//    size_t global_work_size[] = {(( TGC+(TGPB-1) ) / TGPB)*(BLOCK_SIZE)};
+//    size_t global_padded_work_size[1];
+//    size_t local_block_size[] = {BLOCK_SIZE};
+//    unsigned long shared_mem_size = (TGPB*TPG)*sizeof(cl_float);
+//    GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
+//
+//
+//    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
+//    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
+//    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
+//
+//    cl_int error;
+//    cl_int pow_y = 1;
+//    cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
+//    _overAxis0 = _variance_axis0;
+//    _overAxis1 = _variance_axis1;
+//    _overAxis2 = _variance_axis2;
+//    _overAxis3 = _variance_axis3;
+//    error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 3, sizeof(cl_int), (void*)&pow_y);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
+//
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    assert(error==0);
+//
+//    cl_event exeEvt,exeEvt2,exeEvt3,exeEvt4;
+//
+//    error = clEnqueueNDRangeKernel(queue,
+//                                   kernelObject_reduction->kernel,
+//                                   1,
+//                                   NULL,
+//                                   global_padded_work_size,
+//                                   local_block_size,
+//                                   0,
+//                                   NULL,
+//                                   &exeEvt);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    clWaitForEvents(1, &exeEvt);
+//
+//    if(error != CL_SUCCESS) {
+//        printf("Kernel execution failure!\n");
+//        exit(-22);
+//    }
+//
+//
+//
+//
+//
+//
+//    ///TODO: Im not sure if I should repeat setKernelArg for the arguments with same params.
+//    pow_y = 2;
+//    error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)varianceXi2Tn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 3, sizeof(cl_int), (void*)&pow_y);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
+//
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
+//    error |= clSetKernelArg(kernelObject_reduction->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
+//
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    assert(error==0);
+//
+//    error = clEnqueueNDRangeKernel(queue,
+//                                   kernelObject_reduction->kernel,
+//                                   1,
+//                                   NULL,
+//                                   global_padded_work_size,
+//                                   local_block_size,
+//                                   0,
+//                                   NULL,
+//                                   &exeEvt2);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    clWaitForEvents(1, &exeEvt2);
+//
+//    if(error != CL_SUCCESS) {
+//        printf("Kernel execution failure!\n");
+//        exit(-22);
+//    }
+//
+//
+//
+//
+//
+//
+//    // Launching coef1 kernel
+//    unsigned long len = _dim3; //Axes combination is TTTF
+//    float coef = (_dim0*_dim1*_dim2);
+//    global_work_size[0] = len;
+//
+//    error =  clSetKernelArg(kernelObject_coef->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_coef->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)medianTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_coef->kernel, 2, sizeof(cl_ulong), (void*)&len);
+//    error |= clSetKernelArg(kernelObject_coef->kernel, 3, sizeof(cl_float), (void*)&coef);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    assert(error==0);
+//
+//    error = clEnqueueNDRangeKernel(queue,
+//                                   kernelObject_coef->kernel,
+//                                   1,
+//                                   NULL,
+//                                   global_work_size,
+//                                   NULL,
+//                                   0,
+//                                   NULL,
+//                                   &exeEvt3);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    clWaitForEvents(1, &exeEvt3);
+//
+//    if(error != CL_SUCCESS) {
+//        printf("Kernel execution failure!\n");
+//        exit(-22);
+//    }
+//
+//
+//
+//
+//
+//
+//
+//    // Launching coef2 kernel
+//    error =  clSetKernelArg(kernelObject_coef2->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)varianceXi2Tn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_coef2->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)medianTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_coef2->kernel, 2, sizeof(cl_float), (void*)&coef);
+//    error |= clSetKernelArg(kernelObject_coef2->kernel, 3, sizeof(cl_mem), (void*)&((OclTensorF*)rsltTn)->ocl_buff);
+//    error |= clSetKernelArg(kernelObject_coef2->kernel, 4, sizeof(cl_ulong), (void*)&len);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    assert(error==0);
+//
+//    error = clEnqueueNDRangeKernel(queue,
+//                                   kernelObject_coef2->kernel,
+//                                   1,
+//                                   NULL,
+//                                   global_work_size,
+//                                   NULL,
+//                                   0,
+//                                   NULL,
+//                                   &exeEvt4);
+//
+//    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
+//    clWaitForEvents(1, &exeEvt4);
+//
+//    if(error != CL_SUCCESS) {
+//        printf("Kernel execution failure!\n");
+//        exit(-22);
+//    }
+//
+//
+//    delete(tmpTn);
+//    delete(varianceXi2Tn);
+//    delete(medianTn);
+//    return rsltTn;
+//}
 
 TensorF* OclImplementation::Variance(
         WorkScheduler scheduler,
@@ -869,167 +1397,13 @@ TensorF* OclImplementation::Variance(
     OclTensorF* medianTn        = new OclTensorF(context, {_dim3}); // TTTF
     OclTensorF* varianceXi2Tn   = new OclTensorF(context, {_dim3}); // TTTF
     OclTensorF* rsltTn          = new OclTensorF(context, {_dim3}); // TTTF
-    OclKernelObject *kernelObject_reduction = oclKernels[10];
+
     OclKernelObject *kernelObject_coef = oclKernels[11];
     OclKernelObject *kernelObject_coef2 = oclKernels[12];
 
-    unsigned long SPT,TGC,TGO,TGPB,TPG;
-    unsigned int BLOCK_SIZE = OCL_BOTTLENCK_BLOCKSIZE;
+    _reduce_sum_4d_try05(inputTn,tmpTn,_dim0,_dim1,_dim2,_dim3,_variance_axis0,_variance_axis1,_variance_axis2,_variance_axis3,1);
+    _reduce_sum_4d_try05(inputTn,varianceXi2Tn,_dim0,_dim1,_dim2,_dim3,_variance_axis0,_variance_axis1,_variance_axis2,_variance_axis3,2);
 
-    //Dim3 slice per thread
-    SPT = 512; //cte
-
-    //thread group offset
-    TGO = _dim3 * SPT;
-
-    //thread group count
-    TGC = (unsigned long)((_dim0*_dim1*_dim2+(SPT-1))/SPT);
-
-    //thread group per block
-    TGPB = (unsigned long)((BLOCK_SIZE)/ _dim3);
-    if(TGPB%2 && TGPB > 1) TGPB--;
-
-    TPG = (unsigned long)_dim3; //threads per group
-
-    // Fill the buffer with the initial value
-    cl_float initlValue = 0;
-    err = clEnqueueFillBuffer(
-            queue,
-            tmpTn->ocl_buff,
-            &initlValue,
-            sizeof(cl_float),
-            0,
-            (size_t)(tmpTn->getLength()*sizeof(cl_float)),
-            0,
-            NULL,
-            NULL);
-
-
-
-
-    ///TODO: FILL OTHER TENSORS TOO
-
-
-
-
-    if(err != CL_SUCCESS) {
-        perror("Couldn't fill a buffer object");
-        exit(1);
-    }
-    clFinish(queue);
-
-    size_t global_work_size[] = {(( TGC+(TGPB-1) ) / TGPB)*(BLOCK_SIZE)};
-    size_t global_padded_work_size[1];
-    size_t local_block_size[] = {BLOCK_SIZE};
-    unsigned long shared_mem_size = (TGPB*TPG)*sizeof(cl_float);
-    GetPaddedWorkSize(1, local_block_size, global_work_size, global_padded_work_size);
-
-
-    //cout<< "LOCAL:      " << local_block_size[0] << "\n";
-    //cout<< "GLOBAL:     " << global_work_size[0] << "\n";
-    //cout<< "GLOBAL_PAD: " << global_padded_work_size[0] << "\n";
-
-    cl_int error;
-    cl_int pow_y = 1;
-    cl_int _overAxis0,_overAxis1,_overAxis2,_overAxis3;
-    _overAxis0 = _variance_axis0;
-    _overAxis1 = _variance_axis1;
-    _overAxis2 = _variance_axis2;
-    _overAxis3 = _variance_axis3;
-    error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 3, sizeof(cl_int), (void*)&pow_y);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
-
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    assert(error==0);
-
-    cl_event exeEvt,exeEvt2,exeEvt3,exeEvt4;
-
-    error = clEnqueueNDRangeKernel(queue,
-                                   kernelObject_reduction->kernel,
-                                   1,
-                                   NULL,
-                                   global_padded_work_size,
-                                   local_block_size,
-                                   0,
-                                   NULL,
-                                   &exeEvt);
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    clWaitForEvents(1, &exeEvt);
-
-    if(error != CL_SUCCESS) {
-        printf("Kernel execution failure!\n");
-        exit(-22);
-    }
-
-
-
-
-
-
-    ///TODO: Im not sure if I should repeat setKernelArg for the arguments with same params.
-    pow_y = 2;
-    error =  clSetKernelArg(kernelObject_reduction->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)inputTn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)varianceXi2Tn)->ocl_buff);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 2, shared_mem_size, NULL);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 3, sizeof(cl_int), (void*)&pow_y);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 4, sizeof(cl_uint), (void*)&_dim0);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 5, sizeof(cl_uint), (void*)&_dim1);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 6, sizeof(cl_uint), (void*)&_dim2);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 7, sizeof(cl_uint), (void*)&_dim3);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 8, sizeof(cl_int), (void*)&_overAxis0);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 9, sizeof(cl_int), (void*)&_overAxis1);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 10, sizeof(cl_int), (void*)&_overAxis2);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 11, sizeof(cl_int), (void*)&_overAxis3);
-
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 12, sizeof(cl_ulong), (void*)&TGC);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 13, sizeof(cl_ulong), (void*)&TGPB);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 14, sizeof(cl_ulong), (void*)&SPT);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 15, sizeof(cl_ulong), (void*)&TGO);
-    error |= clSetKernelArg(kernelObject_reduction->kernel, 16, sizeof(cl_ulong), (void*)&(global_work_size[0]) );
-
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    assert(error==0);
-
-    error = clEnqueueNDRangeKernel(queue,
-                                   kernelObject_reduction->kernel,
-                                   1,
-                                   NULL,
-                                   global_padded_work_size,
-                                   local_block_size,
-                                   0,
-                                   NULL,
-                                   &exeEvt2);
-
-    if(error != CL_SUCCESS) cout<<getErrorString(error)<<endl;
-    clWaitForEvents(1, &exeEvt2);
-
-    if(error != CL_SUCCESS) {
-        printf("Kernel execution failure!\n");
-        exit(-22);
-    }
 
 
 
@@ -1037,9 +1411,12 @@ TensorF* OclImplementation::Variance(
 
 
     // Launching coef1 kernel
+    cl_int error;
+    cl_event exeEvt3;
+
     unsigned long len = _dim3; //Axes combination is TTTF
     float coef = (_dim0*_dim1*_dim2);
-    global_work_size[0] = len;
+    size_t global_work_size[] = {len};
 
     error =  clSetKernelArg(kernelObject_coef->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)tmpTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_coef->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)medianTn)->ocl_buff);
@@ -1074,6 +1451,8 @@ TensorF* OclImplementation::Variance(
 
 
     // Launching coef2 kernel
+    cl_event exeEvt4;
+
     error =  clSetKernelArg(kernelObject_coef2->kernel, 0, sizeof(cl_mem), (void*)&((OclTensorF*)varianceXi2Tn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_coef2->kernel, 1, sizeof(cl_mem), (void*)&((OclTensorF*)medianTn)->ocl_buff);
     error |= clSetKernelArg(kernelObject_coef2->kernel, 2, sizeof(cl_float), (void*)&coef);

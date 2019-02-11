@@ -54,6 +54,9 @@ public:
     TensorF* ReLU(WorkScheduler scheduler, TensorF* inputTn);
     TensorF* Tile(WorkScheduler scheduler, TensorF *inputTn, int tileAxis, int tileCount);
 
+    int _reduce_sum_4d_try05_Find_Kernel_Launches_Needed(int sliceCount, int SPT, int TGPB);
+    void _reduce_sum_4d_try05( TensorF* inputTn, TensorF* outputTn, unsigned long dim0, unsigned long dim1, unsigned long dim2, unsigned long dim3, bool overaxis0, bool overaxis1, bool overaxis2, bool overaxis3, int pow_y);
+
     void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorF* inputTn, string npy_dir);
     void     DumpMatrix(WorkScheduler scheduler, string npy_fname, TensorI* inputTn, string npy_dir);
     bool     CompareTensors(WorkScheduler scheduler, TensorF* inputTn1, TensorF* inputTn2);

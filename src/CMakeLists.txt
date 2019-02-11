@@ -4,8 +4,8 @@ option(NVIDIA_INTEL "Backend Selection for OpenCL. ON:USE NVIDIA PLATFORM, OFF:U
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Manual Switch Control:
-set(USE_CUDA ON)
-set(USE_OCL OFF)
+set(USE_CUDA OFF)
+set(USE_OCL ON)
 set(NVIDIA_INTEL ON)
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -66,8 +66,8 @@ set(SOURCE_FILES_CPU
         TensorI.cpp
         WorkScheduler.cpp
         WeightsLoader.cpp
-        ModelArchTop04.cpp
-        #ModelArchTop05.cpp
+        #ModelArchTop04.cpp
+        ModelArchTop05.cpp
         )
 
 set(SOURCE_FILES_ALL
