@@ -7,8 +7,13 @@
 #include "common.h"
 #include <iostream>
 #include <cuda_imp/CudaMemHelper.h>
+#include <cuda_imp/TimingGPU.h>
 
 using namespace std;
+
+//#undef REPORT_EXECUTION_TIME
+#define REPORT_EXECUTION_TIME
+
 
 CudaImplementation::CudaImplementation(int aa) {
     a = aa;
@@ -37,8 +42,6 @@ CudaImplementation::CudaImplementation(int aa) {
 
 
 
-
-
 void CudaImplementation::PrintInfo(
         string opName,
         const string &setting1, int val1,
@@ -47,7 +50,7 @@ void CudaImplementation::PrintInfo(
         vector<unsigned int> shape1,
         vector<unsigned int> shape2,
         vector<bool> comb){
-
+#ifdef REPORT_EXECUTION_TIME
     string finalStr ;
     if(!setting1.empty() && !setting2.empty()){
         finalStr = "\t\t** " + opName + ": " + setting1+ "=" + to_string(val1)+ ", " + setting2+ "=" + to_string(val2);
@@ -78,12 +81,16 @@ void CudaImplementation::PrintInfo(
         for(bool i : comb){ finalStr += to_string(i) + "-"; }
         finalStr += ", ";
     }
-    finalStr+="\n";
-    //cout<<finalStr;
+    //finalStr+="\n";
+    cout<<finalStr;
+#endif
 }
 
 TensorF* CudaImplementation::Transpose(WorkScheduler scheduler, TensorF *batchedMat){
     PrintInfo("Transpose","",0,"",0,"",0,batchedMat->getShape(),{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(batchedMat->getRank()==2 || batchedMat->getRank()==3);
     int rankDiff = 3 - batchedMat->getRank();
     if(rankDiff) batchedMat->ExpandDimZero();
@@ -107,13 +114,18 @@ TensorF* CudaImplementation::Transpose(WorkScheduler scheduler, TensorF *batched
     //CHECK(cudaDeviceSynchronize());
 
     if(rankDiff) batchedMat->SqueezeDimZero();
-
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
 TensorF* CudaImplementation::MatMul(WorkScheduler scheduler,
                                    TensorF* batchedMat1, TensorF* batchedMat2){
     PrintInfo("MatMul","",0,"",0,"",0,batchedMat1->getShape(),batchedMat2->getShape());
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(batchedMat1->getRank()==3 || batchedMat1->getRank()==2);
     assert(batchedMat2->getRank()==3 || batchedMat2->getRank()==2);
     assert(batchedMat2->getRank()==batchedMat2->getRank());
@@ -159,6 +171,9 @@ TensorF* CudaImplementation::MatMul(WorkScheduler scheduler,
         rsltTn->SqueezeDimZero();
     }
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 
 }
@@ -172,6 +187,9 @@ TensorF* CudaImplementation::MatMul(WorkScheduler scheduler, TensorF* batchedMat
 
 TensorF* CudaImplementation::Square(WorkScheduler scheduler, TensorF* batchedMat){
     PrintInfo("Square","",0,"",0,"",0,batchedMat->getShape(),{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(batchedMat->getLength()!=0);
     CudaTensorF* rsltTn = new CudaTensorF(batchedMat->getShape());
 
@@ -179,6 +197,9 @@ TensorF* CudaImplementation::Square(WorkScheduler scheduler, TensorF* batchedMat
     square(batchedMat->_buff,rsltTn->_buff,batchedMat->getLength());
     //CHECK(cudaDeviceSynchronize());
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
@@ -188,6 +209,9 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
                                       bool over_axis1,
                                       bool over_axis2){
     PrintInfo("ReduceSum","",0,"",0,"",0,inputTn->getShape(),{},{over_axis0,over_axis1,over_axis2});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     unsigned int _dim0,_dim1,_dim2,_dim3;
     _dim0 = inputTn->getShape()[0];
     _dim1 = inputTn->getShape()[1];
@@ -214,6 +238,9 @@ TensorF* CudaImplementation::ReduceSum(WorkScheduler scheduler,
     //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("ReduceSum@CudaImplementation: KERNEL_ERROR");
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
@@ -226,6 +253,9 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
                                         bool over_axis3){
 
     PrintInfo("ReduceSum4D","",0,"",0,"",0,inputTn->getShape(),{},{over_axis0,over_axis1,over_axis2,over_axis3});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(over_axis0&&over_axis1&&over_axis2&&!over_axis3); // TTTF ONLY
 
     unsigned int _dim0,_dim1,_dim2,_dim3;
@@ -253,6 +283,9 @@ TensorF* CudaImplementation::ReduceSum4D(WorkScheduler scheduler,
 
     cudaCheckErrors("ReduceSum4D@CudaImplementation: KERNEL_ERROR");
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 
 }
@@ -266,6 +299,9 @@ TensorF* CudaImplementation::Mean(
         bool mean_axis3){
 
     PrintInfo("Mean","",0,"",0,"",0,inputTn->getShape(),{},{mean_axis0,mean_axis1,mean_axis2,mean_axis3});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     unsigned long _dim0,_dim1,_dim2,_dim3;
     bool _mean_axis0, _mean_axis1, _mean_axis2, _mean_axis3;
     assert(inputTn->getRank()==2 || inputTn->getRank()==4);
@@ -308,6 +344,9 @@ TensorF* CudaImplementation::Mean(
     //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Mean@CudaImplementation: KERNEL_ERROR");
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
@@ -319,6 +358,9 @@ TensorF* CudaImplementation::Variance(
         bool variance_axis2,
         bool variance_axis3){
     PrintInfo("Variance","",0,"",0,"",0,inputTn->getShape(),{},{variance_axis0,variance_axis1,variance_axis2,variance_axis3});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     unsigned long _dim0,_dim1,_dim2,_dim3;
     bool _variance_axis0, _variance_axis1, _variance_axis2, _variance_axis3;
     assert(inputTn->getRank()==2 || inputTn->getRank()==4);
@@ -361,6 +403,9 @@ TensorF* CudaImplementation::Variance(
     //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Mean@CudaImplementation: KERNEL_ERROR");
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
@@ -406,6 +451,9 @@ TensorF* CudaImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, 
                       mode==MAT_OPS::MUL_ELEMENTWISE ? 2 :
                       3),
               "",0,"",0,inputTn1->getShape(),inputTn2->getShape(),{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
 
 
     int rankDiff;
@@ -495,24 +543,35 @@ TensorF* CudaImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, 
         rsltTn->SqueezeDimZero();
     }
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
 TensorF* CudaImplementation::MatOps(WorkScheduler scheduler, TensorF *inputTn1, float scalar, MAT_OPS mode){
-    PrintInfo("MatOps",
+    /*PrintInfo("MatOps",
               "mode",(mode==MAT_OPS::ADD ? 0 :
                       mode==MAT_OPS::SUB ? 1 :
                       mode==MAT_OPS::MUL_ELEMENTWISE ? 2 :
                       3),
               "",0,"",0,inputTn1->getShape(),{},{});
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << std::endl;
+#endif
+     */
     float* val = new float[1]; val[0] = scalar;
     CudaTensorF* tmpTn = new CudaTensorF();
     tmpTn->InitWithHostData({1},val);
-    MatOps(scheduler,inputTn1,tmpTn,mode);
+    TensorF* retTn = MatOps(scheduler,inputTn1,tmpTn,mode);
+    return retTn;
 }
 
 TensorF* CudaImplementation::Sqrt(WorkScheduler scheduler, TensorF* inputTn){
     PrintInfo("MatSubTiled","",0,"",0,"",0,inputTn->getShape(),{},{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
 
     CudaTensorF *rsltTn = new CudaTensorF(inputTn->getShape());
 
@@ -520,6 +579,9 @@ TensorF* CudaImplementation::Sqrt(WorkScheduler scheduler, TensorF* inputTn){
     sqrt_float(inputTn->_buff,rsltTn->_buff,inputTn->getLength());
     //CHECK(cudaDeviceSynchronize());
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
@@ -553,6 +615,9 @@ TensorF* CudaImplementation::Concat2(
         TensorF* inputTn2,
         int concatDim){
     PrintInfo("Concat2","concatDim",concatDim,"",0,"",0,inputTn1->getShape(),inputTn2->getShape(),{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     unsigned int dimA0,dimA1,dimA2,dimA3;
     unsigned int dimB0,dimB1,dimB2,dimB3;
     dimA0 = inputTn1->getShape()[0]; dimB0 = inputTn2->getShape()[0];
@@ -574,6 +639,9 @@ TensorF* CudaImplementation::Concat2(
     //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Concat2@CudaImplementation: KERNEL_ERROR");
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
@@ -582,6 +650,9 @@ TensorF* CudaImplementation::ReduceMax(
         TensorF* inputTn,
         int reductionDim){
     PrintInfo("ReduceMax","reductionDim",reductionDim,"",0,"",0,inputTn->getShape(),{},{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(inputTn->getRank()==3 || inputTn->getRank()==4);
 
     unsigned int _dim0,_dim1,_dim2,_dim3;
@@ -623,11 +694,17 @@ TensorF* CudaImplementation::ReduceMax(
     //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("ReduceMax@CudaImplementation: KERNEL_ERROR");
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
 TensorI* CudaImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, int axis, int k){
     PrintInfo("TopK","axis",axis,"k",k,"",0,batchedMat->getShape(),{},{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(batchedMat->getRank()==3);
     unsigned int b,m,n;
     b = batchedMat->getShape()[0];
@@ -647,11 +724,17 @@ TensorI* CudaImplementation::TopK(WorkScheduler scheduler, TensorF* batchedMat, 
 
     top_k(batchedMat->_buff,rsltIndicesTn->_buff,rsltValTn->_buff,b,n,m,k);
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltIndicesTn;
 }
 
 TensorF* CudaImplementation::Gather(WorkScheduler scheduler, TensorF* inputTn, TensorI* indices, int indices_axis){
     PrintInfo("Gather","indices_axis",indices_axis,"",0,"",0,inputTn->getShape(),indices->getShape(),{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(inputTn->getRank()==3);
     assert(indices->getRank()==3);
     assert(inputTn->getShape()[0]==indices->getShape()[0]);
@@ -669,11 +752,17 @@ TensorF* CudaImplementation::Gather(WorkScheduler scheduler, TensorF* inputTn, T
     gather(inputTn->_buff,indices->_buff,rsltTn->_buff,b,n,c,m,nsample);
     //CHECK(cudaDeviceSynchronize());
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
 TensorF* CudaImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, TensorF* weights, TensorF* biases, int overrideDim2){
     PrintInfo("Conv2D","overrideDim2",overrideDim2,"",0,"",0,inputTn->getShape(),weights->getShape(),{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     CudaTensorF* buffTn = new CudaTensorF({
                 inputTn->getShape()[0],
                 inputTn->getShape()[1],
@@ -691,6 +780,10 @@ TensorF* CudaImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, T
             inputTn->getShape()[3],
             weights->getShape()[3]);
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
+
     rsltTn = MatOps(scheduler,buffTn,biases,MAT_OPS::ADD);
     //delete(buffTn);
     return rsltTn;
@@ -698,10 +791,16 @@ TensorF* CudaImplementation::Conv2D(WorkScheduler scheduler, TensorF* inputTn, T
 
 TensorF* CudaImplementation::ReLU(WorkScheduler scheduler, TensorF* inputTn){
     PrintInfo("ReLU","",0,"",0,"",0,inputTn->getShape(),{},{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
     assert(inputTn->getLength()!=0);
     CudaTensorF *rsltTn = new CudaTensorF(inputTn->getShape());
     activation_relu(inputTn->_buff, rsltTn->_buff, inputTn->getLength());
 
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 
@@ -715,6 +814,9 @@ TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int
     // Bx1xN   ----> BxKxN          1               3
 
     PrintInfo("Tile","tileAxis",tileAxis,"tileCount",tileCount,"",0,inputTn->getShape(),{},{});
+#ifdef REPORT_EXECUTION_TIME
+    TimingGPU timer_GPU; timer_GPU.StartCounter();
+#endif
 
     unsigned int _dim0,_dim1,_dim2,_dim3;
     _dim0 = inputTn->getShape()[0];
@@ -751,6 +853,9 @@ TensorF* CudaImplementation::Tile(WorkScheduler scheduler, TensorF *inputTn, int
     //CHECK(cudaDeviceSynchronize());
 
     cudaCheckErrors("Tile@CudaImplementation: KERNEL_ERROR");
+#ifdef REPORT_EXECUTION_TIME
+    std::cout << ", GPU Timing= " << timer_GPU.GetCounter() << " ms" << std::endl;
+#endif
     return rsltTn;
 }
 

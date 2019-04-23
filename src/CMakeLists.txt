@@ -4,9 +4,9 @@ option(NVIDIA_INTEL "Backend Selection for OpenCL. ON:USE NVIDIA PLATFORM, OFF:U
 # ----------------------------------------------------------------------------------------------------------------------
 
 # Manual Switch Control:
-set(USE_CUDA OFF)
-set(USE_OCL ON)
-set(NVIDIA_INTEL ON)
+set(USE_CUDA ON)
+set(USE_OCL OFF)
+set(NVIDIA_INTEL OFF)
 # ----------------------------------------------------------------------------------------------------------------------
 
 set(REPO_DIR_CMAKE  ${PROJECT_SOURCE_DIR})
@@ -15,13 +15,13 @@ configure_file(../inc/build_config.h.in ${CMAKE_BINARY_DIR}/build_config.h)
 
 if (USE_CUDA)
     subdirs(cuda_imp/kernel_tests)
-    SET(CUDA_INCLUDE_DIRS /opt/cuda/include)
+    SET(CUDA_INCLUDE_DIRS /usr/include)
     SET(CUDA_LIBRARIES cudart cublas)
-    SET(CUDA_LIBRARY_DIRS /opt/cuda/lib64)
+    SET(CUDA_LIBRARY_DIRS /usr/lib/X86_64-linux-gnu)
 
     find_package(CUDA REQUIRED)
 
-    SET(CUDA_HOST_COMPILER /usr/bin/gcc-5)
+    SET(CUDA_HOST_COMPILER /usr/bin/gcc-6)
     set(CUDA_PROPAGATE_HOST_FLAGS False)
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --compiler-options '-fPIC'")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode arch=compute_61,code=sm_61")
@@ -32,6 +32,7 @@ if (USE_CUDA)
             cuda_imp/CudaImplementation.cpp
             cuda_imp/CudaTensorF.cpp
             cuda_imp/CudaTensorI.cpp
+            cuda_imp/TimingGPU.cpp
             )
 
     # Find all cuda kernels
@@ -66,14 +67,14 @@ set(SOURCE_FILES_CPU
         TensorI.cpp
         WorkScheduler.cpp
         WeightsLoader.cpp
-        #ModelArchTop04.cpp
-        ModelArchTop05.cpp
+        ModelArchTop04.cpp
+        #ModelArchTop05.cpp
         )
 
 set(SOURCE_FILES_ALL
         ${SOURCE_FILES_CPU}
         ${SOURCE_FILES_CUDA}
-        ${SOURCE_FILES_OCL})
+        ${SOURCE_FILES_OCL} cuda_imp/TimingGPU.cpp ../inc/cuda_imp/TimingGPU.h)
 
 include_directories(
         ${CMAKE_BINARY_DIR}
